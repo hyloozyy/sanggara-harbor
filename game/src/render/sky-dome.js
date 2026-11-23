@@ -57,8 +57,8 @@ export function createSkyDome(sunDirection) {
     toneMapped: false,
     uniforms: {
       sunDir: { value: sunDirection.clone().normalize() },
-      zenith: { value: new THREE.Color(0.09, 0.13, 0.32) },
-      midSky: { value: new THREE.Color(0.55, 0.42, 0.62) },
+      zenith: { value: new THREE.Color(0.14, 0.2, 0.42) },
+      midSky: { value: new THREE.Color(0.68, 0.5, 0.58) },
       horizon: { value: new THREE.Color(1.45, 0.7, 0.38) },
       sunColor: { value: new THREE.Color(1.6, 0.85, 0.42) },
       time: { value: 0 },

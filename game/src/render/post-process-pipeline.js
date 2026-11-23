@@ -121,7 +121,7 @@ export class PostProcessPipeline {
     this.compositeMat = mat(COMPOSITE_FRAG, {
       tScene: { value: null }, tBloom: { value: null }, bloomStrength: { value: this.bloomStrength },
       exposure: { value: 1.12 }, vignette: { value: 1.25 }, time: { value: 0 }, saturation: { value: 1.12 },
-      shadowTint: { value: new THREE.Vector3(0.82, 0.9, 1.25) }, damageVignette: { value: 0 },
+      shadowTint: { value: new THREE.Vector3(0.92, 0.94, 1.1) }, damageVignette: { value: 0 },
     });
     this.sceneTarget = null;
     this.mips = [];

@@ -2,12 +2,12 @@
 // a sky/ground hemisphere fill and distance fog that melts the city into the haze.
 import * as THREE from 'three';
 
-export const SUN_DIRECTION = new THREE.Vector3(-0.62, 0.2, 0.76).normalize();
+export const SUN_DIRECTION = new THREE.Vector3(-0.62, 0.34, 0.72).normalize();
 
 export class DuskLighting {
   constructor(scene, { shadowSize = 2048, shadows = true } = {}) {
     this.scene = scene;
-    this.sun = new THREE.DirectionalLight(0xffb070, 3.4);
+    this.sun = new THREE.DirectionalLight(0xffb878, 3.9);
     this.sun.castShadow = shadows;
     this.sun.shadow.mapSize.set(shadowSize, shadowSize);
     const cam = this.sun.shadow.camera;
@@ -19,9 +19,9 @@ export class DuskLighting {
     scene.add(this.sun);
     scene.add(this.sun.target);
 
-    this.hemi = new THREE.HemisphereLight(0x8fa0d8, 0x4a3025, 1.05);
+    this.hemi = new THREE.HemisphereLight(0xb0a8c4, 0x5a3a28, 1.1);
     scene.add(this.hemi);
-    this.fill = new THREE.DirectionalLight(0x6f7fd0, 0.35); // cool bounce from the east sky
+    this.fill = new THREE.DirectionalLight(0x8a8ad0, 0.3); // cool bounce from the east sky
     this.fill.position.set(300, 200, -200);
     scene.add(this.fill);
 
