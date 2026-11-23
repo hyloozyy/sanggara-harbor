@@ -225,6 +225,10 @@ const SCENES = {
   async stress(session, gfx) {
     const s = session;
     const log = (...a) => console.log('[stress]', ...a);
+    s.audio.start();
+    log('audio', !!s.audio.ctx, s.audio.ctx && s.audio.ctx.state);
+    for (let k = 0; k < 5; k++) { const st = s.radio.next(); s.radio.update(0.3); log('radio', st && st.name); }
+    s.audio.explosion(10); s.audio.gunshot('shotgun', 5); s.audio.horn(); s.audio.missionJingle(true); s.audio.voiceBlip(3);
     s.start({});
     for (const id of ['pistol', 'smg', 'shotgun']) s.player.arsenal.give(id, 300);
     s.crew.unlock('dimas'); s.crew.unlock('lastri');

@@ -21,6 +21,7 @@ export class MissionRunner {
     this.enemies = [];
     this.spawned = [];         // vehicles spawned by the mission
     this.cooldown = 0;
+    this.armed = true;
   }
 
   get nextMission() { return MISSIONS.find((m) => !this.completed.has(m.id)) || null; }
@@ -166,6 +167,7 @@ export class MissionRunner {
     events.emit('mission-complete', { mission: m });
     g.hud.missionResult(true, m);
     this.cooldown = 4;
+    this.armed = false;
     this.refreshStartMarker();
   }
 
@@ -175,6 +177,7 @@ export class MissionRunner {
     events.emit('mission-failed', { mission: m, reason });
     g.hud.missionResult(false, m, reason);
     this.cooldown = 4;
+    this.armed = false;
     this.refreshStartMarker();
   }
 
@@ -188,7 +191,9 @@ export class MissionRunner {
     }
     if (!this.active) {
       const m = this.nextMission;
-      if (m && this.cooldown <= 0 && p.alive && Math.hypot(p.pos.x - m.start.x, p.pos.z - m.start.z) < 3.2 && (!p.vehicle || Math.abs(p.vehicle.speed) < 4)) this.start(m);
+      // After a mission ends the next marker only arms once Raka has stepped away from it.
+      if (m && !this.armed && Math.hypot(p.pos.x - m.start.x, p.pos.z - m.start.z) > 6) this.armed = true;
+      if (m && this.armed && this.cooldown <= 0 && p.alive && Math.hypot(p.pos.x - m.start.x, p.pos.z - m.start.z) < 3.2 && (!p.vehicle || Math.abs(p.vehicle.speed) < 4)) this.start(m);
       return;
     }
     if (!p.alive) { this.fail('Raka tumbang'); return; }
