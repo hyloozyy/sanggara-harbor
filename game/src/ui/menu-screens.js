@@ -68,7 +68,7 @@ export class MenuScreens {
         return `<li class="${done ? 'done' : next ? 'next' : ''}"><b>${m.chapter}</b>${m.title}${done ? ' ✔' : next ? ' ◄' : ''}</li>`;
       }).join('')}</ul>
       <div class="cast">${['dimas', 'lastri', 'harun', 'rusdi'].map((k) => `<div><b>${CAST[k].full}</b>${CAST[k].role}</div>`).join('')}</div>
-      <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} misi cerita · balap liar · antar martabak · 4 stasiun radio · 6 distrik</div>`;
+      <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} misi cerita · balap liar · antar martabak · narik angkot · 12 kerang emas · 9 kendaraan · 4 stasiun radio · 6 distrik</div>`;
   }
 
   hideTitle() { $('title-screen').classList.add('hidden'); this.current = null; }

@@ -26,7 +26,7 @@ export class PedestrianSystem {
     this.scene = scene;
     this.world = world;
     this.list = [];
-    this.target = 34;
+    this.target = 40;
     void INSET;
   }
 

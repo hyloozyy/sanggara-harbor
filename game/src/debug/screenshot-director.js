@@ -78,6 +78,10 @@ const SCENES = {
       if (!pv) return;
       pv.pos.set(v.pos.x + dx, 0, v.pos.z + dz); pv.heading = v.heading + rot; pv.syncMesh();
     });
+    // Crowd the sidewalks around the chase: people stop, stare and scatter.
+    s.peds.target = 60;
+    for (let k = 0; k < 400 && s.peds.list.length < 60; k++) s.peds.spawn(v.pos.x, v.pos.z - 20, 8, 55);
+    for (let i = 0; i < 20; i++) s.peds.update(DT, s.player, s.vehicles);
     // A fourth patrol car that lost the chase burns against a lamp post.
     const wreck = s.vehicles.spawn('patroli', v.pos.x + 8.6, v.pos.z - 17, Math.PI * 0.62);
     wreck.ai = { kind: 'parked-police' }; wreck.sirenOn = true; wreck.health = wreck.spec.health * 0.12;
