@@ -4,6 +4,7 @@
 import { rng } from '../core/rng.js';
 import { Combatant, POLICE_LOOK } from '../combat/combatant-ai.js';
 import { PoliceHelicopter } from './police-helicopter.js';
+import { Arsenal } from '../combat/weapon-system.js';
 import { N, neighbours, laneLine, chooseNext, steerToward, nearestNode, nodePos } from '../vehicles/road-graph.js';
 import { GRID, streetAt } from '../city/city-layout.js';
 import { clamp } from '../core/math-utils.js';
@@ -30,6 +31,25 @@ export class PoliceDispatcher {
     this.setHeliVisible(false);
     this.spawnTimer = 0;
     this.roadblockTimer = 8;
+    this.heliGunner = new Arsenal(['fists', 'smg'], { smg: 9999 });
+    this.heliGunner.select('smg');
+    this.heliFireT = 3;
+  }
+
+  // From four stars a marksman leans out of Elang-1 and fires short bursts at Raka.
+  heliMarksman(dt, player) {
+    this.heliGunner.update(dt);
+    if (this.game.wanted.level < 4 || !player.alive) return;
+    const h = this.heli;
+    this.heliFireT -= dt;
+    if (this.heliFireT > 0) return;
+    if (this.heliFireT < -0.5) { this.heliFireT = 2.5 + rng.next() * 2; return; }
+    if (!this.heliGunner.canFire()) return;
+    const o = { x: h.pos.x, y: h.pos.y - 1.5, z: h.pos.z };
+    const tx = player.pos.x + rng.range(-2.5, 2.5), ty = player.vehicle ? 1 : player.body.chestY, tz = player.pos.z + rng.range(-2.5, 2.5);
+    const dx = tx - o.x, dy = ty - o.y, dz = tz - o.z, l = Math.hypot(dx, dy, dz);
+    if (l > 90) return;
+    this.game.weapons.fire({ heliShooter: true, vehicle: null, pos: h.pos }, this.heliGunner, o, { x: dx / l, y: dy / l, z: dz / l }, 0.5);
   }
 
   setHeliVisible(on) {
@@ -161,6 +181,7 @@ export class PoliceDispatcher {
       const sc = wanted.lastKnown;
       const heliSees = wanted.unseen < 1.5 || this.heli.illuminates(px, pz);
       this.heli.update(dt, { x: px, z: pz }, sc, heliSees);
+      if (heliSees) this.heliMarksman(dt, player);
       if (this.heli.illuminates(px, pz) && Math.hypot(this.heli.pos.x - px, this.heli.pos.z - pz) < 120) spotted = true;
     }
     wanted.update(dt, spotted, px, pz);
