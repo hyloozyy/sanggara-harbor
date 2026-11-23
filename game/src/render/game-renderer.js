@@ -13,9 +13,9 @@ export const QUALITY_PRESETS = {
 };
 
 export class GameRenderer {
-  constructor(canvas, quality = 'tinggi') {
+  constructor(canvas, quality = 'tinggi', { keepFrames = false } = {}) {
     this.canvas = canvas;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: keepFrames });
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
