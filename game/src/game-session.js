@@ -22,6 +22,7 @@ import { Character } from './characters/character.js';
 import { ParticleSystem } from './effects/particle-system.js';
 import { LightFlashes } from './effects/light-flashes.js';
 import { WorldMarkers } from './world/world-markers.js';
+import { AmbientLife } from './world/ambient-life.js';
 import { buildCity } from './city/city-builder.js';
 import { assets } from './assets/asset-library.js';
 import { writeSave } from './save/save-system.js';
@@ -46,6 +47,7 @@ export class GameSession {
     this.scene.add(city.root);
     this.world = { collision: city.collision };
     this.sea = city.sea;
+    this.ambient = new AmbientLife(this.scene);
     this.particles = new ParticleSystem(this.scene);
     this.lights = new LightFlashes(this.scene);
     this.vehicles = new VehicleManager(this.scene, this.world);
@@ -233,6 +235,7 @@ export class GameSession {
     this.lights.update(dt);
     this.lights.updateSirens(this.police.policeCars, this.gfx.camera.position, this.time);
     this.sea.update(this.time);
+    this.ambient.update(this.time);
     this.cameraRig.update(dt, player, input);
     this.updateHeadlight();
     this.gfx.lighting.follow(player.pos.x, player.pos.z);

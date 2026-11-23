@@ -124,6 +124,7 @@ function frame(now) {
     session.traffic.update(dt, { pos: session.gfx.camera.position.clone().setY(0), vehicle: null }, null);
     session.vehicles.update(dt);
     session.sea.update(now / 1000);
+    session.ambient.update(now / 1000);
     session.lights.update(dt);
   } else if (state === 'playing') {
     session.update(dt);
