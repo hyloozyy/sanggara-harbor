@@ -453,6 +453,14 @@ const SCENES = {
       const cars = s.police.units.map((u) => u.vehicle ? Math.round(Math.hypot(u.vehicle.pos.x - s.player.pos.x, u.vehicle.pos.z - s.player.pos.z)) + ':' + u.state : u.kind);
       log('t', t + 4, 'wanted', s.wanted.level, 'unseen', s.wanted.unseen.toFixed(1), 'hp', Math.round(s.player.body.health), 'armour', Math.round(s.player.body.armour), 'officers', s.police.officers.filter((o) => o.alive).length, 'units', cars.join(' '), 'wasted', s.wastedTimer.toFixed(1), 'busted', !!s.busted);
     }
+    // Escape: get wanted, let them close in, then vanish into the hills of Bukit Hijau.
+    s.wanted.setLevel(2, 'test2');
+    simulate(s, 12);
+    s.player.body.pos.set(-300, 0.16, -330);
+    for (let t = 0; t < 40; t += 5) {
+      simulate(s, 5);
+      log('escape t', t + 5, 'wanted', s.wanted.level, 'unseen', s.wanted.unseen.toFixed(1), 'spotted', s.police.spotted, 'units', s.police.units.length);
+    }
     await finish(s, gfx);
   },
 
