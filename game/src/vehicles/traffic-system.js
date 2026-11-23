@@ -107,7 +107,9 @@ export class TrafficSystem {
     const lateral = Math.abs((v.pos.x - L.ax) * L.dz - (v.pos.z - L.az) * L.dx);
     if (lateral > 9) { const e = edgeFromPose(v.pos.x, v.pos.z, v.heading); ai.from = e.from; ai.to = e.to; L = laneLine(ai.from, ai.to); }
     const look = clamp(along + 6 + Math.abs(v.speed) * 0.5, 0, 80);
-    const tx = L.ax + L.dx * look, tz = L.az + L.dz * look;
+    // While overtaking, aim into the oncoming lane (to the right when traffic keeps left).
+    const shift = ai.overtake > 0 ? 5.2 : 0;
+    const tx = L.ax + L.dx * look - L.dz * shift, tz = L.az + L.dz * look + L.dx * shift;
     const { steer, err } = steerToward(v, tx, tz);
 
     let want = ai.cruise * (1 - Math.min(0.6, Math.abs(err)));
@@ -118,15 +120,21 @@ export class TrafficSystem {
     if (!this.signals.isGreen(L.axis) && stopDist > -1.5 && stopDist < 22 && ai.panic <= 0) want = Math.min(want, Math.max(0, stopDist * 0.7));
 
     // Something ahead (cars, the player, pedestrians on the road)?
-    let blocked = Infinity;
+    let blocked = Infinity, blocker = null;
     for (const o of this.vehicles.list) {
       if (o === v) continue;
       const dx = o.pos.x - v.pos.x, dz = o.pos.z - v.pos.z;
       const fwd = dx * fx + dz * fz;
       if (fwd <= 0 || fwd > 18) continue;
       const side = Math.abs(dx * fz - dz * fx);
-      if (side < 2.4) blocked = Math.min(blocked, fwd - (o.radius + v.radius) * 0.9);
+      if (side < 2.4) { const gap = fwd - (o.radius + v.radius) * 0.9; if (gap < blocked) { blocked = gap; blocker = o; } }
     }
+    // Stuck behind something that is not moving (parked, wrecked, abandoned): go round it.
+    ai.overtake = Math.max(0, (ai.overtake || 0) - dt);
+    const stalled = blocker && Math.abs(blocker.speed) < 0.5 && (!blocker.ai || blocker.ai.kind !== 'traffic' || blocker.wrecked || !blocker.driverModel);
+    ai.blockedT = stalled && blocked < 10 ? (ai.blockedT || 0) + dt : 0;
+    if (ai.blockedT > 2.5) { ai.overtake = 3.5; ai.blockedT = 0; }
+    if (ai.overtake > 0) blocked = Infinity;
     if (!player.vehicle) {
       const dx = player.pos.x - v.pos.x, dz = player.pos.z - v.pos.z;
       const fwd = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);

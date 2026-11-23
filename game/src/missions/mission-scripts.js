@@ -15,7 +15,7 @@ export const MISSIONS = [
     reward: { money: 500000, xp: 150 }, unlockCrew: 'dimas',
     stages: [
       { type: 'talk', text: 'Temui Dimas', lines: [['dimas', 'Raka! Enam tahun di kapal, akhirnya pulang juga, bro.'], ['raka', 'Kota ini kelihatan lebih terang dari yang kuingat.'], ['dimas', 'Terang lampunya, gelap urusannya. Ayo, Bu Lastri nunggu.']] },
-      { type: 'enter-vehicle', text: 'Masuk ke Kancil Mini milik Dimas', vehicle: { model: 'kancil', x: -2.6, z: -26, heading: Math.PI, color: 0xe0b020 } },
+      { type: 'enter-vehicle', text: 'Masuk ke Kancil Mini milik Dimas', vehicle: { model: 'kancil', x: -4.7, z: -26, heading: Math.PI, color: 0xe0b020 } },
       { type: 'drive-to', text: 'Antar Dimas ke Warung Bu Lastri', target: P.lastriWarung, radius: 6, lines: [['dimas', 'Lewat Jalan Raya Sanggara, belok kiri di Jalan Bandar.'], ['dimas', 'Ingat, di sini nyetirnya di kiri. Jangan kebiasaan kapal!']] },
       { type: 'talk', text: 'Dengar kabar dari Bu Lastri', lines: [['lastri', 'Raka... Pamanmu sedang susah, Nak. Hiu Merah minta setoran tiap minggu.'], ['lastri', 'Yang menagih namanya Bayu. Datanglah ke Pasar Ikan kalau kau masih punya nyali.'], ['raka', 'Nyali masih ada, Bu. Kesabaran yang sudah habis.']] },
     ],
