@@ -393,6 +393,16 @@ export class GameSession {
       const near = this.vehicles.nearest(b.pos.x, b.pos.z, 4.2, (c) => !c.wrecked);
       if (near) hint = `<kbd>F</kbd>${near.driverModel ? 'Bajak' : 'Masuk'} ${near.spec.name}`;
     } else if (v) hint = null;
+    const next = this.missions.nextMission;
+    if (!this.missions.active && next && Math.hypot(b.pos.x - next.start.x, b.pos.z - next.start.z) < 10) {
+      hint = `<kbd>${next.chapter}</kbd>${next.title} — masuk ke lingkaran kuning`;
+    }
+    let aimTarget = false;
+    if (b.aiming && !v) {
+      const { origin, dir } = this.cameraRig.aimRay();
+      const hit = this.weapons.trace(b, origin, dir.x, dir.y, dir.z, 90);
+      aimTarget = !!(hit.character && hit.character.faction !== 'civilian');
+    }
     let activity = null;
     if (this.side.mode === 'race') activity = `<b>BALAP LIAR SENJA</b><br>Gerbang ${this.side.cp + 1}/${this.side.routeLength} · rekor ${this.side.record} dtk · ${this.side.time.toFixed(1)} dtk`;
     if (this.side.mode === 'delivery') activity = `<b>ANTAR MARTABAK</b><br>Antaran ${this.side.delivered + 1}/3 · sisa ${Math.ceil(this.side.time)} dtk`;
@@ -412,7 +422,7 @@ export class GameSession {
       } : null,
       radio: v && this.radio.on && !this.radio.silent ? { name: this.radio.station.name, song: this.radio.songTitle, dj: this.radio.station.dj } : null,
       health: b.health / b.maxHealth, armour: b.armour / 100,
-      aiming: b.aiming && !v, aimTarget: false,
+      aiming: b.aiming && !v, aimTarget,
       hint, activity,
       wasted: this.wastedTimer > 0 ? (this.busted ? 'TERTANGKAP' : 'TUMBANG') : null,
     };

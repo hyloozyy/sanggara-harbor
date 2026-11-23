@@ -4,11 +4,12 @@
 import * as THREE from 'three';
 import { assets } from '../assets/asset-library.js';
 import { makeCanvas, toTexture } from '../assets/canvas-tools.js';
+import { mergeGeometries } from '../assets/mesh-batcher.js';
 
 const PROFILES = {
   sedan: { tail: 0.86, deck: 0.96, nose: 0.72, cab: [-0.27, 0.17], rake: [0.58, 0.72], beltPad: 0 },
   hatch: { tail: 0.98, deck: 0.98, nose: 0.74, cab: [-0.47, 0.2], rake: [0.22, 0.7], beltPad: 0 },
-  sports: { tail: 0.76, deck: 0.8, nose: 0.55, cab: [-0.25, 0.1], rake: [0.85, 0.85], beltPad: 0 },
+  sports: { tail: 0.78, deck: 0.82, nose: 0.56, cab: [-0.3, 0.16], rake: [0.62, 0.58], beltPad: 0 },
   pickup: { tail: 1.0, deck: 1.05, nose: 0.92, cab: [-0.08, 0.2], rake: [0.06, 0.5], beltPad: 0, bed: true },
   minibus: { tail: 1.0, deck: 1.02, nose: 0.9, cab: [-0.48, 0.38], rake: [0.04, 0.42], beltPad: 0 },
   van: { tail: 1.05, deck: 1.08, nose: 0.95, cab: [-0.48, 0.36], rake: [0.04, 0.45], beltPad: 0 },
@@ -84,6 +85,25 @@ function decals() {
   return decalCache;
 }
 
+// Bake the body's static parts into one mesh per material (lights and sirens stay separate
+// because their materials change at run time).
+function mergeStaticParts(body, keep) {
+  const buckets = new Map();
+  for (const child of [...body.children]) {
+    if (!child.isMesh || keep.has(child)) continue;
+    child.updateMatrix();
+    if (!buckets.has(child.material)) buckets.set(child.material, []);
+    buckets.get(child.material).push({ geometry: child.geometry, matrix: child.matrix.clone(), cast: child.castShadow });
+    body.remove(child);
+  }
+  for (const [material, list] of buckets) {
+    const m = new THREE.Mesh(mergeGeometries(list), material);
+    m.castShadow = list.some((p) => p.cast);
+    m.receiveShadow = true;
+    body.add(m);
+  }
+}
+
 function makeWheel(spec, front, x, z) {
   const r = spec.wheelRadius, w = spec.twoWheel ? 0.12 : 0.24;
   const pivot = new THREE.Group();
@@ -94,8 +114,12 @@ function makeWheel(spec, front, x, z) {
   const rim = assets.geometry(`rim:${r}:${w}`, () => new THREE.CylinderGeometry(r * 0.62, r * 0.62, w + 0.02, 12).rotateZ(Math.PI / 2));
   const spoke = assets.geometry(`spoke:${r}:${w}`, () => new THREE.BoxGeometry(w + 0.04, r * 1.1, 0.07));
   spin.add(mesh(tire, assets.material('rubber')));
-  spin.add(mesh(rim, assets.material('rim'), 0, 0, 0, false));
-  for (let i = 0; i < 3; i++) { const s = mesh(spoke, assets.material('chrome'), 0, 0, 0, false); s.rotation.x = (i / 3) * Math.PI; spin.add(s); }
+  // Rim and spokes share one merged geometry so a wheel costs two draw calls.
+  const hub = assets.geometry(`hub:${r}:${w}`, () => mergeGeometries([
+    { geometry: rim, matrix: new THREE.Matrix4() },
+    ...[0, 1, 2].map((i) => ({ geometry: spoke, matrix: new THREE.Matrix4().makeRotationX((i / 3) * Math.PI) })),
+  ]));
+  spin.add(mesh(hub, assets.material('rim'), 0, 0, 0, false));
   return { pivot, spin, front, x, z };
 }
 
@@ -113,6 +137,7 @@ function buildScooter(spec, color) {
   body.add(box(assets.material('chrome'), 0.75, 0.05, 0.05, 0, 1.12, 0.48));     // handlebar
   body.add(box(assets.material('headlight'), 0.14, 0.1, 0.06, 0, 1.0, 0.74));
   body.add(box(assets.material('taillight'), 0.18, 0.06, 0.05, 0, 0.78, -0.82));
+  mergeStaticParts(body, new Set());
   const wheels = [makeWheel(spec, true, 0, L / 2 - 0.3), makeWheel(spec, false, 0, -L / 2 + 0.3)];
   for (const w of wheels) root.add(w.pivot);
   return { root, body, wheels, seat: new THREE.Vector3(0, 0.62, -0.25), sirens: null, brakeMeshes: [], headMeshes: [] };
@@ -201,6 +226,10 @@ export function buildVehicleMesh(spec, color) {
     body.add(board);
     body.add(box(assets.material('chrome'), W * 0.8, 0.05, L * 0.5, 0, roofY + 0.12, -0.2));
   }
+
+  const keep = new Set([...headMeshes, ...brakeMeshes]);
+  if (sirens) body.children.forEach((c) => { if (c.material === sirens.red || c.material === sirens.blue) keep.add(c); });
+  mergeStaticParts(body, keep);
 
   const wheels = [];
   const tx = W / 2 - 0.16;

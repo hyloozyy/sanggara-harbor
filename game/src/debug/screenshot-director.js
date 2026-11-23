@@ -33,7 +33,7 @@ function finish(session, gfx) {
     const tick = () => {
       gfx.render(12.5);
       if (++n < 2) requestAnimationFrame(tick);
-      else { window.__shotReady = true; resolve(); }
+      else { console.log('scene draw calls', JSON.stringify(gfx.post.sceneStats)); window.__shotReady = true; resolve(); }
     };
     requestAnimationFrame(tick);
   });
@@ -278,6 +278,19 @@ const SCENES = {
       const v = s.player.vehicle;
       log('t', k + 1, 'speed', v && v.speed.toFixed(1), 'pos', s.player.pos.x.toFixed(1), s.player.pos.z.toFixed(1), 'race', s.side.mode, s.side.cp);
     }
+    await finish(s, gfx);
+  },
+
+  // Every vehicle model side by side (for checking the models).
+  async garage(session, gfx) {
+    const s = session;
+    s.hud.show(false);
+    const keys = ['lestari', 'kancil', 'banteng', 'angkot', 'rajawali', 'taksi', 'patroli', 'taktis', 'bebek'];
+    keys.forEach((k, i) => { const v = s.vehicles.spawn(k, -60 + i * 6.5, 120, 0.6); v.ai = { kind: 'parked' }; v.syncMesh(); });
+    s.peds.populate(-40, 120, 10);
+    s.cameraRig.override = { x: -36, y: 4.5, z: 136, tx: -34, ty: 0.5, tz: 120, fov: 60 };
+    s.cameraRig.update(DT, s.player, s.input);
+    s.gfx.lighting.follow(-34, 120);
     await finish(s, gfx);
   },
 

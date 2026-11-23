@@ -125,9 +125,11 @@ export const assets = {
 
   // Metallic car paint with clearcoat, cached per colour.
   carPaint(hex) {
-    return cached(materialCache, `paint:${hex}`, () => new THREE.MeshPhysicalMaterial({
-      color: hex, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.3,
-    }));
+    return cached(materialCache, `paint:${hex}`, () => {
+      const m = new THREE.MeshPhysicalMaterial({ color: hex, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.3 });
+      m.userData.paint = true;
+      return m;
+    });
   },
 
   // Matte cloth/skin colours for people, cached per colour.

@@ -159,6 +159,7 @@ export class PostProcessPipeline {
     r.autoClear = true;
     r.setRenderTarget(this.sceneTarget);
     r.render(scene, camera);
+    this.sceneStats = { calls: r.info.render.calls, triangles: r.info.render.triangles };
     r.autoClear = false;
 
     this.brightMat.uniforms.tInput.value = this.sceneTarget.texture;

@@ -70,7 +70,7 @@ export class Vehicle {
     const damageFactor = 0.55 + 0.45 * clamp(this.health / s.health, 0, 1);
 
     // Steering eases in and is reduced at speed.
-    const steerTarget = c.steer * 0.62 / (1 + Math.abs(vF) / 22);
+    const steerTarget = c.steer * 0.62 / (1 + Math.abs(vF) / 12);
     this.steer = damp(this.steer, steerTarget, 8, dt);
 
     const prevF = vF;
@@ -98,7 +98,13 @@ export class Vehicle {
     vL *= Math.exp(-grip * dt);
     this.drifting = Math.abs(vL) > 3.2 && Math.abs(vF) > 8;
 
-    const yawTarget = vF * Math.tan(this.steer) / s.wheelbase * (c.handbrake ? 1.45 : 1);
+    let yawTarget = vF * Math.tan(this.steer) / s.wheelbase * (c.handbrake ? 1.45 : 1);
+    // Tyres can only give so much sideways grip (about 2.2 g); beyond that the car understeers,
+    // unless the handbrake breaks traction on purpose.
+    if (!c.handbrake && Math.abs(vF) > 1) {
+      const maxYaw = (s.grip * 2.9) / Math.abs(vF);
+      yawTarget = clamp(yawTarget, -maxYaw, maxYaw);
+    }
     this.angVel = damp(this.angVel, yawTarget, c.handbrake ? 4 : 9, dt);
     this.heading = wrapAngle(this.heading + this.angVel * dt);
 

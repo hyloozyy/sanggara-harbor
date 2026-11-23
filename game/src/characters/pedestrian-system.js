@@ -85,6 +85,7 @@ export class PedestrianSystem {
     for (const p of [...this.list]) {
       const d = Math.hypot(p.pos.x - px, p.pos.z - pz);
       if (d > 150 || (!p.alive && p.deadTime > 25)) { this.remove(p); continue; }
+      p.mesh.visible = d < 95; // distant townspeople are too small to be worth drawing
     }
     if (this.list.length < this.target) this.spawn(px, pz, 45, 120);
 
