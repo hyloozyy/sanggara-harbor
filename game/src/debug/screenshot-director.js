@@ -395,6 +395,53 @@ const SCENES = {
     await finish(s, gfx);
   },
 
+  // Alternative cover: the evidence run along the beach boulevard into the sunset.
+  async cover2(session, gfx) {
+    const s = session;
+    s.player.arsenal.give('pistol', 60); s.player.arsenal.give('smg', 120);
+    s.progression.money = 18450000; s.progression.xp = 2650;
+    s.crew.unlock('dimas'); s.crew.unlock('lastri');
+    s.start({});
+    startMissionAt(s, 'kontainer-27', 3);
+    const v = s.missions.active.vehicle;
+    const X0 = 70, Z0 = 322.6;
+    v.pos.set(X0, 0, Z0); v.heading = -Math.PI / 2; v.vel.set(-24, 0, 0); v.controls.handbrake = false;
+    s.player.arsenal.select('smg');
+    s.player.body.pos.set(v.pos.x, 0, v.pos.z - 2);
+    s.player.tryEnterExit(s);
+    s.missions.update(DT);
+    s.wanted.setLevel(3, 'Pencurian di pelabuhan');
+    for (let i = 0; i < 3; i++) {
+      const u = s.police.spawnCar('car', v.pos.x, v.pos.z, null);
+      if (u) { u.vehicle.pos.set(X0 + 12 + i * 10, 0, Z0 - 2 + (i % 2) * 3); u.vehicle.heading = -Math.PI / 2; u.vehicle.vel.set(-25, 0, 0); u.vehicle.ai.from = [5, 8]; u.vehicle.ai.to = [4, 8]; }
+    }
+    s.traffic.populate(0, 310, 20);
+    s.radio.index = 3; s.radio.on = true;
+    const yaw = -Math.PI / 2 + 0.3, pitch = 0.2;
+    simulate(s, 1.6, () => {
+      s.input.simulateHold('KeyW', true);
+      s.cameraRig.idleMouse = 0; s.cameraRig.yaw = yaw; s.cameraRig.pitch = pitch;
+    });
+    s.input.simulateHold('KeyW', false);
+    const units = s.police.units.filter((u) => u.kind === 'car');
+    [[2.8, 4.5, 0.05], [-1.2, 12, -0.08], [3.2, 22, 0.1]].forEach(([dz, dx, rot], i) => {
+      const pv = units[i] && units[i].vehicle;
+      if (!pv) return;
+      pv.pos.set(v.pos.x + dx, 0, v.pos.z - dz + 1.4); pv.heading = v.heading + rot; pv.syncMesh();
+    });
+    for (let k = 0; k < 300 && s.peds.list.length < 50; k++) s.peds.spawn(v.pos.x - 25, v.pos.z, 6, 45);
+    for (let i = 0; i < 10; i++) s.peds.update(DT, s.player, s.vehicles);
+    const h = s.police.heli;
+    h.pos.set(v.pos.x - 40, 16, v.pos.z - 10); h.heading = Math.PI / 2 - 0.4; h.vel.set(0, 0, 0);
+    h.aim.set(v.pos.x, 0, v.pos.z);
+    h.update(0.001, { x: v.pos.x, z: v.pos.z }, s.wanted.lastKnown, true);
+    h.pos.set(v.pos.x - 40, 16, v.pos.z - 10); h.root.position.copy(h.pos);
+    s.dialogue.say('dimas', 'Polisi di mana-mana! Lewat pantai, Rak!');
+    s.dialogue.update(0.01);
+    s.cameraRig.update(DT, s.player, s.input);
+    await finish(s, gfx);
+  },
+
   async test(session, gfx) {
     session.start({});
     session.missions.start(session.missions.nextMission);
