@@ -81,7 +81,28 @@ function building(batch, collision, spec) {
     const oz = Math.cos(side) * ((side === 0 || side === Math.PI ? d : w) / 2 + 0.06);
     shopfront(batch, x + ox, z + oz, len - 0.6, side);
   }
+  addLedges(batch, x, z, w, d, h, style, floorH, mat);
   collision.addCenteredBox(x, z, w, d, h + CURB_HEIGHT);
+}
+
+// Floor slabs and balcony ledges that stick out of the facade and catch the low sun.
+function addLedges(batch, x, z, w, d, h, style, floorH, mat) {
+  const spec = { office: [1, 0.28, 0.22], apartment: [1, 0.65, 0.14], glass: [4, 0.35, 0.4], ruko: [100, 0.5, 0.25], colonial: [100, 0.35, 0.35] }[style];
+  if (!spec) return;
+  const [every, out, thick] = spec;
+  const slab = style === 'glass' ? assets.material('metal-dark') : style === 'apartment' ? assets.material('white-plaster') : assets.material('concrete');
+  const start = style === 'ruko' || style === 'colonial' ? Math.min(4.4, h - 1) : floorH * every;
+  for (let y = start; y < h - 0.6; y += floorH * every) {
+    const yy = CURB_HEIGHT + y;
+    put(batch, BOX, slab, x, yy, z + d / 2 + out / 2, w + out * 2, thick, out);
+    put(batch, BOX, slab, x, yy, z - d / 2 - out / 2, w + out * 2, thick, out);
+    put(batch, BOX, slab, x + w / 2 + out / 2, yy, z, out, thick, d);
+    put(batch, BOX, slab, x - w / 2 - out / 2, yy, z, out, thick, d);
+    if (style === 'ruko' || style === 'colonial') break; // a single cornice above the shops
+  }
+  // Cornice at the top edge.
+  put(batch, BOX, slab, x, CURB_HEIGHT + h - 0.15, z, w + 0.5, 0.3, d + 0.5);
+  void mat;
 }
 
 // Water tanks (toren), AC units, antennas: the skyline detail of the city.

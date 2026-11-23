@@ -53,8 +53,8 @@ export class CameraRig {
       this.target.set(v.pos.x, v.y, v.pos.z);
     } else {
       this.mode = player.aiming ? 'aim' : 'foot';
-      dist = player.aiming ? 2.3 : 4.4;
-      shoulder = player.aiming ? 0.75 : 0.35;
+      dist = player.aiming ? 2.7 : 4.4;
+      shoulder = player.aiming ? 1.0 : 0.35;
       height = 1.62;
       lookH = 1.55;
       fov = player.aiming ? 50 : 62;
