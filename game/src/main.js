@@ -90,10 +90,29 @@ function titleCamera(dt) {
   session.cameraRig.override = { x: -40 + Math.cos(a) * 190, y: 46 + Math.sin(titleT * 0.1) * 6, z: 210 + Math.sin(a) * 120, tx: 0, ty: 18, tz: 120 };
 }
 
+// Watch the frame rate for the first seconds and step the graphics down if the GPU struggles.
+const perf = { frames: 0, time: 0, done: !!localStorage.getItem('pelabuhan-sanggara-settings-v1') };
+function autoQuality(rawDt) {
+  if (perf.done || state === 'loading') return;
+  perf.frames++; perf.time += rawDt;
+  if (perf.time < 4) return;
+  const fps = perf.frames / perf.time;
+  const order = ['tinggi', 'sedang', 'rendah'];
+  const i = order.indexOf(gfx.quality);
+  if (fps < 34 && i < order.length - 1) {
+    gfx.setQuality(order[i + 1]);
+    settings.quality = order[i + 1];
+    perf.frames = 0; perf.time = 0;
+    if (i + 1 === order.length - 1) perf.done = true;
+  } else perf.done = true;
+}
+
 let last = performance.now();
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const raw = (now - last) / 1000;
+  const dt = Math.min(0.05, raw);
   last = now;
+  autoQuality(Math.min(raw, 0.5));
   if (state === 'title') {
     titleCamera(dt);
     session.cameraRig.update(dt, session.player, input);

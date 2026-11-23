@@ -283,7 +283,8 @@ export class MissionRunner {
   }
 
   // Where the minimap's objective marker points.
-  objectivePoint() {
+  objectivePoint(override = null) {
+    if (!this.active && override) return override;
     if (!this.active) { const m = this.nextMission; return m ? { x: m.start.x, z: m.start.z, kind: 'mission' } : null; }
     const st = this.active.stage;
     if (!st) return null;

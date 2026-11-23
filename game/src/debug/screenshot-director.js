@@ -259,6 +259,20 @@ const SCENES = {
     simulate(s, 3, () => s.input.simulateHold('KeyW', true));
     s.input.simulateHold('KeyW', false);
     log('race mode', s.side.mode, 'cp', s.side.cp, 'car', car2.spec.name);
+    // Angkot passenger job: board and deliver one fare by teleporting to the stops.
+    if (s.player.vehicle) s.player.exitVehicle(s);
+    s.side.mode = null;
+    if (s.missions.active) s.missions.fail('test');
+    s.missions.cooldown = 999;
+    const ang = s.vehicles.spawn('angkot', 2.6, 40, 0);
+    s.player.body.pos.set(4.5, 0, 40); s.player.tryEnterExit(s);
+    simulate(s, 0.2);
+    log('angkot job', s.angkotJob.active, s.angkotJob.phase, 'veh', s.player.vehicle && s.player.vehicle.modelKey, 'wasted', s.wastedTimer, 'busted', s.busted, 'alive', s.player.alive, 'mission', !!s.missions.active, 'side', s.side.mode);
+    for (let k = 0; k < 2 && s.angkotJob.active; k++) {
+      ang.pos.set(s.angkotJob.spot.x, 0, s.angkotJob.spot.z); ang.vel.set(0, 0, 0);
+      simulate(s, 0.3);
+      log('angkot phase', s.angkotJob.phase, 'fares', s.angkotJob.fares);
+    }
     s.saveGame('stress');
     log('save ok', !!localStorage.getItem('pelabuhan-sanggara-save-v1'));
     s.respawn();

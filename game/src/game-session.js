@@ -20,6 +20,7 @@ import { SideActivities } from './missions/side-activities.js';
 import { CrewAbilities } from './missions/crew-abilities.js';
 import { DialogueQueue } from './missions/dialogue-queue.js';
 import { WorldEvents } from './missions/world-events.js';
+import { AngkotJob } from './missions/angkot-job.js';
 import { Hud } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
 import { assets } from './assets/asset-library.js';
@@ -66,6 +67,7 @@ export class GameSession {
     this.side = new SideActivities(this);
     this.crew = new CrewAbilities(this);
     this.worldEvents = new WorldEvents(this);
+    this.angkotJob = new AngkotJob(this);
     this.time = 0;
     this.wastedTimer = 0;
     this.crimeCooldown = {};
@@ -92,6 +94,7 @@ export class GameSession {
     this.peds.populate(p.x, p.z, this.peds.target);
     this.side.placeFixedMarkers();
     this.worldEvents.placeShells();
+    this.worldEvents.placeSupplies();
     this.freeRoam = freeRoam;
     this.missions.refreshStartMarker();
     this.hud.show(true);
@@ -335,6 +338,7 @@ export class GameSession {
     this.missions.update(dt);
     this.side.update(dt);
     this.worldEvents.update(dt);
+    this.angkotJob.update(dt);
     for (const c of [...this.leftoverCombatants]) {
       c.update(dt, this, null);
       if (Math.hypot(c.body.pos.x - player.pos.x, c.body.pos.z - player.pos.z) > 140) { this.scene.remove(c.body.mesh); this.leftoverCombatants.splice(this.leftoverCombatants.indexOf(c), 1); }
@@ -411,6 +415,7 @@ export class GameSession {
     let activity = null;
     if (this.side.mode === 'race') activity = `<b>BALAP LIAR SENJA</b><br>Gerbang ${this.side.cp + 1}/${this.side.routeLength} · rekor ${this.side.record} dtk · ${this.side.time.toFixed(1)} dtk`;
     if (this.side.mode === 'delivery') activity = `<b>ANTAR MARTABAK</b><br>Antaran ${this.side.delivered + 1}/3 · sisa ${Math.ceil(this.side.time)} dtk`;
+    if (!activity) activity = this.angkotJob.hudLine();
     const sp = v ? Math.abs(v.speed) * 3.6 : 0;
     return {
       wanted: this.wanted.level, wantedBlink: this.wanted.blinking,
@@ -447,7 +452,7 @@ export class GameSession {
       police: this.police.policeCars.filter((v) => !v.wrecked).map((v) => ({ x: v.pos.x, z: v.pos.z })).concat(this.police.officers.filter((o) => o.alive).map((o) => ({ x: o.body.pos.x, z: o.body.pos.z }))),
       heli: this.police.heliActive ? { x: this.police.heli.pos.x, z: this.police.heli.pos.z } : null,
       enemies, activities: acts,
-      objective: this.missions.objectivePoint() || (this.side.markers[0] ? { x: this.side.markers[0].x, z: this.side.markers[0].z, kind: 'objective' } : null),
+      objective: this.missions.objectivePoint(this.angkotJob.objective()) || (this.side.markers[0] ? { x: this.side.markers[0].x, z: this.side.markers[0].z, kind: 'objective' } : null),
       searchZone: this.wanted.level > 0 && this.wanted.unseen > 2 ? { x: this.wanted.lastKnown.x, z: this.wanted.lastKnown.z, r: this.wanted.searchRadius } : null,
     };
   }

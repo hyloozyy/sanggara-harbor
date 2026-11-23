@@ -12,6 +12,10 @@ export const SHELL_SPOTS = [
   [200, 300], [-260, 60], [0, 250], [300, 20],
 ];
 
+// Medical kits and body armour in alleys and on rooftops' doorsteps; they come back after a minute.
+const SUPPLIES = [['health', -86.5, 46], ['health', 166.5, -40], ['health', -166.5, 160], ['health', 86.5, 246], ['health', 246, -166.5],
+  ['armour', -246, -86.5], ['armour', 330, -60], ['armour', 6.5, -246], ['pistol', -233, 4], ['smg', 346, 200]];
+
 export class WorldEvents {
   constructor(game) {
     this.game = game;
@@ -20,7 +24,9 @@ export class WorldEvents {
     this.shellsFound = new Set();
     this.shellPickups = [];
     this.wasInTurf = false;
+    this.respawns = [];
     events.on('pickup', (p) => {
+      if (p.supply) this.respawns.push({ supply: p.supply, t: 60 });
       if (p.type !== 'shell') return;
       this.shellsFound.add(p.shellId);
       const n = this.shellsFound.size;
@@ -49,8 +55,17 @@ export class WorldEvents {
     });
   }
 
+  placeSupply(def) {
+    const [type, x, z] = def;
+    const p = this.game.markers.addPickup(type, x, z, type === 'armour' ? 50 : 0);
+    p.supply = def;
+  }
+
+  placeSupplies() { for (const def of SUPPLIES) this.placeSupply(def); }
+
   update(dt) {
     const g = this.game, p = g.player;
+    for (const r of [...this.respawns]) { r.t -= dt; if (r.t <= 0) { this.placeSupply(r.supply); this.respawns.splice(this.respawns.indexOf(r), 1); } }
     const inTurf = districtAt(p.pos.x, p.pos.z) === 'kawasan-industri' && g.missions.completed.has('ikan-busuk');
     if (inTurf && !this.wasInTurf) g.hud.notify('Wilayah Hiu Merah — hati-hati!', 'bad');
     this.wasInTurf = inTurf;
