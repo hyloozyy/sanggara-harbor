@@ -129,6 +129,9 @@ const SCENES = {
     s.player.arsenal.cooldown = 0;
     for (const e of enemies) if (e.alive) { e.arsenal.cooldown = 0; e.reaction = 0; e.los = true; e.update(DT, s, { pos: b.pos, chestY: b.chestY, vehicle: null, body: b }); }
     s.dialogue.clear();
+    // Keep the camera clear: drop blood puffs from hits on Raka himself.
+    s.particles.soft.items = s.particles.soft.items.filter((p) => !(p.color0[0] === 0.45 && Math.hypot(p.x - b.pos.x, p.z - b.pos.z) < 2.5));
+    s.particles.soft.update(0);
     s.dialogue.say('lastri', 'Jangan sampai kaca warungku pecah, Raka!');
     s.dialogue.update(0.01);
     void fireT;
@@ -136,6 +139,36 @@ const SCENES = {
   },
 
   // Street race up the harbour road: cranes, the container ship and the skyline at sunset.
+  // Racing down the container quay under the gantry cranes, the sun low over the strait.
+  async harbor(session, gfx) {
+    const s = session;
+    s.progression.money = 9870000; s.progression.xp = 1900;
+    s.crew.unlock('dimas');
+    for (const m of MISSIONS.slice(0, 4)) s.missions.completed.add(m.id);
+    s.start({});
+    const v = s.vehicles.spawn('rajawali', 351, -345, 0, { color: 0xf0c000 });
+    v.ai = { kind: 'crew-car' }; v.ownedByPlayer = true;
+    v.vel.set(0, 0, 30);
+    s.player.body.pos.set(v.pos.x - 2, 0, v.pos.z);
+    s.player.tryEnterExit(s);
+    s.side.startRace(); s.side.cp = 6; s.side.time = 41.7; s.side.showCheckpoint();
+    s.dialogue.clear();
+    for (const [x, z, k] of [[349, -250, 'banteng'], [360, -180, 'angkot'], [347, -150, 'lestari']]) {
+      const t = s.vehicles.spawn(k, x, z, Math.PI); t.ai = { kind: 'parked' }; t.controls.handbrake = true;
+    }
+    s.peds.populate(340, -250, 12);
+    s.radio.index = 1; s.radio.on = true; s.radio.songIndex = 2;
+    const yaw = 0.4, pitch = 0.08;
+    simulate(s, 1.6, () => {
+      s.input.simulateHold('KeyW', true);
+      s.cameraRig.idleMouse = 0; s.cameraRig.yaw = yaw; s.cameraRig.pitch = pitch;
+    });
+    s.input.simulateHold('KeyW', false);
+    s.dialogue.say('dimas', 'Lewat bawah derek! Polisi pelabuhan tidak akan sempat!');
+    s.dialogue.update(0.01);
+    await finish(s, gfx);
+  },
+
   async drive(session, gfx) {
     const s = session;
     s.progression.money = 9870000; s.progression.xp = 1900;

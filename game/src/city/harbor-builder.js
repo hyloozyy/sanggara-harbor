@@ -90,7 +90,10 @@ export function buildHarbor(collision) {
   for (let z = -360; z < 320; z += 12) box(batch, assets.cloth(0x2a2a2a), x1 - 0.8, 0.4, z, 0.5, 0.8, 0.5);
   box(batch, assets.emissive(0xd8b020, 0.4), x1 - 2.5, 0.05, -22, 0.3, 0.02, 690);
 
-  for (const z of [-290, -190, -90]) gantryCrane(batch, x1 - 6, z);
+  for (const z of [-290, -190, -90]) {
+    gantryCrane(batch, x1 - 6, z);
+    for (const lz of [-7, 7]) collision.addCenteredBox(x1 - 15, z + lz, 1.4, 1.4, 36, 'crane');
+  }
   containerShip(batch, x1 + 22, -320, -60);
 
   // Container stacks in the yard, leaving a driving lane by the quay edge and gaps for cross aisles.

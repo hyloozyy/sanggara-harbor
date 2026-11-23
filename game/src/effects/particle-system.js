@@ -121,7 +121,7 @@ export class ParticleSystem {
   }
 
   blood(x, y, z, dx, dz) {
-    for (let i = 0; i < 8; i++) this.soft.add(particle({ x, y, z, vx: dx * rng.range(1, 4) + rng.range(-1, 1), vy: rng.range(0, 2.5), vz: dz * rng.range(1, 4) + rng.range(-1, 1), life: rng.range(0.3, 0.7), size0: 0.25, size1: 0.12, color0: [0.45, 0.02, 0.02], gravity: 9, floor: 0.05 }));
+    for (let i = 0; i < 8; i++) this.soft.add(particle({ x, y, z, vx: dx * rng.range(1, 4) + rng.range(-1, 1), vy: rng.range(0, 2.5), vz: dz * rng.range(1, 4) + rng.range(-1, 1), life: rng.range(0.3, 0.7), size0: 0.13, size1: 0.07, color0: [0.45, 0.02, 0.02], gravity: 9, floor: 0.05 }));
   }
 
   tyreSmoke(x, z, amount = 1) {

@@ -9,6 +9,7 @@ import { buildStreetProps } from './street-props.js';
 import { buildCoast } from './coast-builder.js';
 import { buildHarbor } from './harbor-builder.js';
 import { buildAlunAlun } from './landmarks.js';
+import { buildStreetLife } from './street-life-props.js';
 
 export const ALUN_ALUN_BLOCK = '2,6';
 
@@ -37,6 +38,7 @@ export function buildCity(onProgress = () => {}) {
   onProgress(0.65, 'Lampu jalan dan pohon kelapa');
   const props = buildStreetProps(collision);
   root.add(props.group);
+  root.add(buildStreetLife(collision));
   onProgress(0.75, 'Pelabuhan');
   root.add(buildHarbor(collision));
   onProgress(0.85, 'Pantai dan bukit');
