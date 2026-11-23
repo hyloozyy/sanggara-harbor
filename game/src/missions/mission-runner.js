@@ -101,6 +101,15 @@ export class MissionRunner {
         this.spawned.push(v);
         st.target = v;
         st.arrow = g.markers.addArrow(v, MARKER_COLORS.enemy);
+        // A scooter of Pak Harun's is left right by Raka for the pursuit.
+        if (!g.player.vehicle) {
+          const p = g.player.pos;
+          const loan = g.vehicles.spawn('bebek', p.x + 1.8, p.z + 1.2, Math.PI, { color: 0x2050c0 });
+          loan.ai = { kind: 'activity' }; loan.ownedByPlayer = true; loan.controls.handbrake = true;
+          st.loan = g.markers.addArrow(loan, MARKER_COLORS.vehicle);
+          st.loanVehicle = loan;
+          g.dialogue.say('harun', 'Pakai motorku, Raka! Cepat!');
+        }
         break;
       }
       case 'collect':
@@ -140,6 +149,7 @@ export class MissionRunner {
     if (!st) return;
     if (st.marker) g.markers.remove(st.marker);
     if (st.arrow) g.markers.remove(st.arrow);
+    if (st.loan) g.markers.remove(st.loan);
     if (st.pickup) { g.scene.remove(st.pickup.group); g.markers.pickups.splice(g.markers.pickups.indexOf(st.pickup), 1); }
   }
 
@@ -245,9 +255,12 @@ export class MissionRunner {
   updateChase(dt, st) {
     const g = this.game, v = st.target, p = g.player;
     const rider = v.driverCharacter;
-    if (v.wrecked || (rider && !rider.alive)) { if (v.driverModel) g.vehicles.removeDriverModel(v); v.controls.throttle = 0; return true; }
+    // A hard knock throws Bayu off his scooter.
+    if (v.health < v.spec.health * 0.6 && !st.thrown) { st.thrown = true; g.dialogue.say('bayu', 'Aduh! Ampun, ampun! Aku cuma disuruh!'); }
+    if (v.wrecked || st.thrown || (rider && !rider.alive)) { if (v.driverModel) g.vehicles.removeDriverModel(v); v.controls.throttle = 0; return true; }
     const d = Math.hypot(v.pos.x - p.pos.x, v.pos.z - p.pos.z);
-    if (d > 260) { this.fail('Bayu lolos'); return false; }
+    if (st.loan && p.vehicle) { g.markers.remove(st.loan); st.loan = null; }
+    if (d > 340) { this.fail('Bayu lolos'); return false; }
     if (d < 5 && Math.abs(v.speed) < 3 && st.timer > 3) {
       g.vehicles.removeDriverModel(v);
       return true;
@@ -263,7 +276,9 @@ export class MissionRunner {
     }
     const along = (v.pos.x - L.ax) * L.dx + (v.pos.z - L.az) * L.dz;
     const { steer, err } = steerToward(v, L.ax + L.dx * (Math.max(0, along) + 9), L.az + L.dz * (Math.max(0, along) + 9));
-    const want = (st.timer < 1.5 ? 0 : 25) * (1 - Math.min(0.6, Math.abs(err)));
+    // Bayu keeps just ahead: he slows when far in front and opens up when Raka closes in.
+    const pace = d > 120 ? 13 : d < 30 ? 22 : 18;
+    const want = (st.timer < 2.5 ? 0 : pace) * (1 - Math.min(0.6, Math.abs(err)));
     v.controls.throttle = clamp((want - v.speed) / 3, -1, 1);
     v.controls.steer = steer;
     v.controls.handbrake = false;
