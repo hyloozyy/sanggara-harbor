@@ -24,6 +24,7 @@ export function writeSave(game, label = '') {
     missions: game.missions.serialize(),
     crew: game.crew.serialize(),
     side: game.side.serialize(),
+    world: game.worldEvents.serialize(),
     arsenal: p.arsenal.serialize(),
     player: { x: p.pos.x, z: p.pos.z, health: p.body.health, armour: p.body.armour },
   };
@@ -36,6 +37,7 @@ export function applySave(game, data) {
   game.missions.restore(data.missions);
   game.crew.restore(data.crew || {});
   game.side.restore(data.side);
+  game.worldEvents.restore(data.world);
   game.player.arsenal.restore(data.arsenal);
   const b = game.player.body;
   b.pos.set(data.player.x, 0, data.player.z);

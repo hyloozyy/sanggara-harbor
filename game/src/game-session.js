@@ -19,6 +19,7 @@ import { MissionRunner } from './missions/mission-runner.js';
 import { SideActivities } from './missions/side-activities.js';
 import { CrewAbilities } from './missions/crew-abilities.js';
 import { DialogueQueue } from './missions/dialogue-queue.js';
+import { WorldEvents } from './missions/world-events.js';
 import { Hud } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
 import { assets } from './assets/asset-library.js';
@@ -64,6 +65,7 @@ export class GameSession {
     this.missions = new MissionRunner(this);
     this.side = new SideActivities(this);
     this.crew = new CrewAbilities(this);
+    this.worldEvents = new WorldEvents(this);
     this.time = 0;
     this.wastedTimer = 0;
     this.crimeCooldown = {};
@@ -89,6 +91,7 @@ export class GameSession {
     this.traffic.populate(p.x, p.z, this.traffic.target);
     this.peds.populate(p.x, p.z, this.peds.target);
     this.side.placeFixedMarkers();
+    this.worldEvents.placeShells();
     this.freeRoam = freeRoam;
     this.missions.refreshStartMarker();
     this.hud.show(true);
@@ -100,6 +103,7 @@ export class GameSession {
     for (const o of this.police.officers) list.push(o.body);
     for (const e of this.missions.enemies) list.push(e.body);
     for (const e of this.leftoverCombatants) list.push(e.body);
+    for (const e of this.worldEvents.gang) list.push(e.body);
     return list;
   }
 
@@ -330,6 +334,7 @@ export class GameSession {
     this.police.update(dt, player, camDir);
     this.missions.update(dt);
     this.side.update(dt);
+    this.worldEvents.update(dt);
     for (const c of [...this.leftoverCombatants]) {
       c.update(dt, this, null);
       if (Math.hypot(c.body.pos.x - player.pos.x, c.body.pos.z - player.pos.z) > 140) { this.scene.remove(c.body.mesh); this.leftoverCombatants.splice(this.leftoverCombatants.indexOf(c), 1); }
@@ -435,7 +440,7 @@ export class GameSession {
       { ...PLACES.paintShop, color: '#8080ff', name: 'Bengkel Cat' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Toko Besi' },
       { ...PLACES.safehouse, color: '#60ff80', name: 'Simpan' }, { ...HOSPITAL, color: '#ffffff', name: 'RS' },
     ];
-    const enemies = this.missions.enemies.filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
+    const enemies = [...this.missions.enemies, ...this.worldEvents.gang].filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
     return {
       px: p.pos.x, pz: p.pos.z, yaw: this.cameraRig.yaw, heading: p.vehicle ? p.vehicle.heading : p.body.heading,
       speed: p.vehicle ? Math.abs(p.vehicle.speed) : 0,

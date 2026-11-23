@@ -65,6 +65,7 @@ export class WorldMarkers {
     if (type === 'cash') mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.28), assets.emissive(0x58d068, 1.5));
     else if (type === 'health') mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), assets.emissive(0xff4040, 1.5));
     else if (type === 'armour') mesh = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.6, 0.2), assets.emissive(0x4080ff, 1.5));
+    else if (type === 'shell') { mesh = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.55, 1.2), assets.emissive(0xffc040, 2.2)); }
     else if (type === 'ledger') mesh = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.1, 0.55), assets.emissive(0x8a4a1a, 1.2));
     else { mesh = new THREE.Group(); const w = buildWeaponMesh(type); if (w) { w.scale.setScalar(2.2); w.rotation.set(0, 0, Math.PI / 2); mesh.add(w); } }
     const halo = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.04, 6, 24).rotateX(Math.PI / 2), ringMaterial(type === 'cash' ? 0x60ff80 : type === 'health' ? 0xff6060 : type === 'armour' ? 0x60a0ff : 0xffd060));

@@ -8,6 +8,20 @@ import { groundHeightAt } from '../city/city-layout.js';
 import { events } from '../core/event-bus.js';
 
 let nextId = 1;
+let blobGeo = null, blobMat = null;
+function contactShadowGeometry() { return blobGeo || (blobGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)); }
+function contactShadowMaterial() {
+  if (!blobMat) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(32, 32, 4, 32, 32, 32);
+    g.addColorStop(0, 'rgba(0,0,0,0.75)'); g.addColorStop(0.6, 'rgba(0,0,0,0.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+    blobMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
+  }
+  return blobMat;
+}
 const burnt = () => assets.material('metal-dark');
 
 export class Vehicle {
@@ -21,6 +35,12 @@ export class Vehicle {
     this.brakeMeshes = built.brakeMeshes;
     this.headMeshes = built.headMeshes;
     this.mesh.userData.vehicle = this;
+    // Soft contact shadow that grounds the car even where the sun's shadow falls elsewhere.
+    const blob = new THREE.Mesh(contactShadowGeometry(), contactShadowMaterial());
+    blob.scale.set(spec.width * 1.35, 1, spec.length * 1.15);
+    blob.position.y = 0.03;
+    blob.renderOrder = 1;
+    this.mesh.add(blob);
     this.pos = new THREE.Vector3(x, 0, z);
     this.vel = new THREE.Vector3();
     this.heading = heading;
