@@ -107,7 +107,7 @@ export function wireGameEvents(game) {
       self.hud.notify(`${'★'.repeat(level)}  ${reason || 'Polisi mencarimu'}`, 'police');
       const chatter = ['Unit patroli, tersangka laki-laki, jaket merah marun.', 'Semua unit merapat, tersangka bersenjata!', 'Elang-1 mengudara, lampu sorot menyala.', 'Pasang penghadang di jalan utama!', 'Unit Taktis diberangkatkan. Ulangi, Unit Taktis!'];
       if (level >= 1) self.dialogue.say('radio', chatter[level - 1]);
-    } else if (level === 0) {
+    } else if (level === 0 && reason !== 'busted' && reason !== 'hospital') {
       self.hud.notify(reason === 'paint' ? 'Polisi kehilangan jejak (cat baru)' : 'Kamu lolos dari kejaran polisi', 'xp');
       if (reason === 'escaped') self.progression.addXp(20 * prev, 'Lolos dari polisi');
     }
