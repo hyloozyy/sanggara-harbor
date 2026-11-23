@@ -1,5 +1,10 @@
 // Keyboard and mouse state with pointer lock; systems read it once per frame.
 
+// Pointer lock can be refused (or return a rejected promise); dragging still looks around then.
+export function lockPointer(el) {
+  try { const r = el.requestPointerLock && el.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch { /* not available */ }
+}
+
 export class Input {
   constructor(canvas) {
     this.canvas = canvas;
@@ -27,7 +32,7 @@ export class Input {
       this.mouseDY += e.movementY;
     });
     canvas.addEventListener('mousedown', (e) => {
-      if (this.enabled && !this.locked && canvas.requestPointerLock) canvas.requestPointerLock();
+      if (this.enabled && !this.locked) lockPointer(canvas);
       this.buttons.add(e.button);
       this.clicked.add(e.button);
     });

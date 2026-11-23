@@ -4,7 +4,7 @@ import { GameSession } from './game-session.js';
 import { MenuScreens } from './ui/menu-screens.js';
 import { hasSave, readSave, applySave, loadSettings, saveSettings } from './save/save-system.js';
 import { GameRenderer } from './render/game-renderer.js';
-import { Input } from './core/input.js';
+import { Input, lockPointer } from './core/input.js';
 import { AudioEngine } from './audio/audio-engine.js';
 import { Radio } from './audio/radio-stations.js';
 import { registerProceduralTextures } from './assets/texture-catalog.js';
@@ -49,9 +49,9 @@ const menus = new MenuScreens({
     setTimeout(() => session.hud.notify('Lingkaran kuning = misi · M peta · Esc jeda & simpan'), 4500);
     session.cameraRig.override = null;
     input.enabled = true;
-    canvas.requestPointerLock?.();
+    lockPointer(canvas);
   },
-  onResume() { menus.hidePause(); state = 'playing'; input.enabled = true; canvas.requestPointerLock?.(); },
+  onResume() { menus.hidePause(); state = 'playing'; input.enabled = true; lockPointer(canvas); },
   onPauseAction(id) {
     if (id === 'save') session.saveGame('Manual');
     else if (id === 'load') { applySave(session, readSave()); session.missions.refreshStartMarker(); menus.hidePause(); state = 'playing'; }
