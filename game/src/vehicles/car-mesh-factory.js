@@ -164,9 +164,16 @@ export function buildVehicleMesh(spec, color) {
   const roof = quadShape([[x0 + rr - 0.04, roofY - 0.07], [x1 - rf + 0.04, roofY - 0.07], [x1 - rf, roofY], [x0 + rr, roofY]]);
   body.add(mesh(assets.geometry(`roof:${spec.body}:${L}:${W}`, () => extrudeAcross(roof, W * 0.88, 0.03)), paint));
   const ph = roofY - belt;
-  const pillar = (x, angle) => { const m = box(paint, W * 0.87, ph * 1.05, 0.09, 0, belt + ph / 2, x); m.rotation.x = angle; body.add(m); };
-  pillar(x1 - rf / 2, Math.atan2(rf, ph));
-  pillar(x0 + rr / 2, -Math.atan2(rr, ph));
+  // Window pillars: a thin post on each side, leaning with the glass.
+  const pillar = (x, angle) => {
+    for (const sx of [-1, 1]) {
+      const m = box(paint, 0.07, Math.hypot(ph, Math.tan(angle) * ph) * 1.02, 0.1, sx * W * 0.425, belt + ph / 2, x);
+      m.rotation.x = angle;
+      body.add(m);
+    }
+  };
+  pillar(x1 - rf / 2, -Math.atan2(rf, ph));
+  pillar(x0 + rr / 2, Math.atan2(rr, ph));
   const midCount = spec.body === 'minibus' || spec.body === 'van' ? 3 : spec.body === 'pickup' ? 0 : 1;
   for (let i = 1; i <= midCount; i++) pillar(x0 + rr + ((x1 - rf) - (x0 + rr)) * (i / (midCount + 1)), 0);
 

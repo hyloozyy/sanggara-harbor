@@ -176,8 +176,36 @@ export class Vehicle {
     }
   }
 
+  // Push the bodywork in around a world-space impact point (crash deformation).
+  dent(wx, wz, severity) {
+    const local = this.body.worldToLocal(new THREE.Vector3(wx, this.y + 0.6, wz));
+    const len = Math.hypot(local.x, local.z) || 1;
+    const nx = -local.x / len, nz = -local.z / len;        // push toward the middle of the car
+    const radius = 0.9, depth = Math.min(0.16, 0.03 + severity * 0.008);
+    const maxY = this.spec.height * 0.72;                  // panels below the windows only
+    this.body.traverse((o) => {
+      if (!o.isMesh || !o.material || !o.material.userData.paint) return;
+      const pos = o.geometry.attributes.position;
+      let moved = false;
+      for (let i = 0; i < pos.count; i++) {
+        const y = pos.getY(i);
+        if (y > maxY) continue;
+        const dx = pos.getX(i) - local.x, dz = pos.getZ(i) - local.z;
+        const d = Math.hypot(dx, (y - local.y) * 0.8, dz);
+        if (d > radius) continue;
+        const k = (1 - d / radius) ** 2 * depth;
+        pos.setX(i, pos.getX(i) + nx * k);
+        pos.setZ(i, pos.getZ(i) + nz * k);
+        pos.setY(i, y - k * 0.25);
+        moved = true;
+      }
+      if (moved) { pos.needsUpdate = true; o.geometry.computeVertexNormals(); }
+    });
+  }
+
   damage(amount, cause = 'hit', at = null) {
     if (this.wrecked) return;
+    if (cause === 'crash' && at && at.impact > 7) this.dent(at.x, at.z, at.impact);
     this.health -= amount;
     this.lastImpact = amount;
     events.emit('vehicle-damaged', { vehicle: this, amount, cause, at });

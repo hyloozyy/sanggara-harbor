@@ -98,7 +98,7 @@ export class VehicleManager {
         if (impact > 4) {
           const dmg = impact * impact * 0.45;
           A.damage(dmg * (mb / tot) * 2, 'crash', { x: A.pos.x + best.nx * A.radius * 0.5, z: A.pos.z + best.nz * A.radius * 0.5, impact });
-          B.damage(dmg * (ma / tot) * 2, 'crash', null);
+          B.damage(dmg * (ma / tot) * 2, 'crash', { x: B.pos.x - best.nx * B.radius * 0.5, z: B.pos.z - best.nz * B.radius * 0.5, impact });
           events.emit('vehicle-collision', { a: A, b: B, impact, x: (A.pos.x + B.pos.x) / 2, z: (A.pos.z + B.pos.z) / 2 });
         }
       }
