@@ -153,6 +153,7 @@ const SCENES = {
   async harbor(session, gfx) {
     const s = session;
     s.progression.money = 9870000; s.progression.xp = 1900;
+    s.player.arsenal.give('pistol', 48); s.player.arsenal.give('smg', 90); s.player.arsenal.select('pistol');
     s.crew.unlock('dimas');
     for (const m of MISSIONS.slice(0, 4)) s.missions.completed.add(m.id);
     s.start({});

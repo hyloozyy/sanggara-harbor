@@ -6,7 +6,7 @@ import { MeshBatcher } from '../assets/mesh-batcher.js';
 import { buildVehicleMesh } from '../vehicles/car-mesh-factory.js';
 import { VEHICLE_MODELS } from '../vehicles/vehicle-catalog.js';
 import { createRng } from '../core/rng.js';
-import { BLOCKS, CURB_HEIGHT, SIDEWALK } from './city-layout.js';
+import { BLOCKS, CURB_HEIGHT, SIDEWALK, GRID, BLOCK_PITCH, ROAD_HALF, districtAt } from './city-layout.js';
 
 const rng = createRng(3131);
 const LIVELY = new Set(['kota-lama', 'pasar-ikan', 'pantai-senja']);
@@ -34,6 +34,43 @@ function buildCart(color) {
   const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.08, 10).rotateZ(Math.PI / 2), assets.material('rubber'));
   wheel.position.set(0.85, 0.3, 0); g.add(wheel);
   return g;
+}
+
+// Strings of little pennants hung across the old streets, sagging between the facades.
+function addBunting(batch) {
+  const flagGeo = new THREE.BufferGeometry();
+  flagGeo.setAttribute('position', new THREE.Float32BufferAttribute([-0.16, 0, 0, 0.16, 0, 0, 0, -0.42, 0], 3));
+  flagGeo.setAttribute('normal', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 0, 0, 1], 3));
+  flagGeo.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 0.5, 0], 2));
+  const mats = [0xd8261e, 0xf4f0e8, 0xf0b81c, 0x1e6fd8, 0x2aa05a].map((c) => {
+    const m = assets.cloth(c).clone(); m.side = THREE.DoubleSide; return m;
+  });
+  const cord = new THREE.CylinderGeometry(0.012, 0.012, 1, 3).rotateZ(Math.PI / 2);
+  const span = (ROAD_HALF + SIDEWALK) * 2;
+  for (const g of GRID) {
+    for (let k = 0; k < GRID.length - 1; k++) {
+      for (const along of [GRID[k] + 22, GRID[k] + 52]) {
+        for (const ns of [true, false]) {
+          const cx = ns ? g : along, cz = ns ? along : g;
+          if (!LIVELY.has(districtAt(cx, cz)) || rng.chance(0.4)) continue;
+          // String runs across the road: along x for a north-south street, along z otherwise.
+          const rot = ns ? 0 : Math.PI / 2;
+          const n = 26, y0 = 7.2;
+          for (let i = 0; i < n; i++) {
+            const t = i / (n - 1) - 0.5;
+            const sag = (1 - (t * 2) ** 2) * 1.1;
+            const off = t * span;
+            const x = cx + (ns ? off : 0), z = cz + (ns ? 0 : off);
+            const m = new THREE.Matrix4().compose(new THREE.Vector3(x, y0 - sag, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot), new THREE.Vector3(1, 1, 1));
+            batch.add(flagGeo, mats[(i + k) % 2 === 0 && rng.chance(0.7) ? i % 2 : 2 + (i % 3)], m);
+          }
+          const m = new THREE.Matrix4().compose(new THREE.Vector3(cx, y0 - 0.55, cz), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot), new THREE.Vector3(span, 1, 1));
+          batch.add(cord, assets.material('metal-dark'), m);
+        }
+      }
+    }
+  }
+  void BLOCK_PITCH;
 }
 
 export function buildStreetLife(collision) {
@@ -74,5 +111,6 @@ export function buildStreetLife(collision) {
       }
     }
   }
+  addBunting(batch);
   return batch.build({ name: 'street-life', castShadow: true });
 }
