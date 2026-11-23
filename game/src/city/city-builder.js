@@ -8,10 +8,11 @@ import { buildBuildings } from './building-generator.js';
 import { buildStreetProps } from './street-props.js';
 import { buildCoast } from './coast-builder.js';
 import { buildHarbor } from './harbor-builder.js';
-import { buildAlunAlun } from './landmarks.js';
+import { buildAlunAlun, buildMenaraSanggara } from './landmarks.js';
 import { buildStreetLife } from './street-life-props.js';
 
 export const ALUN_ALUN_BLOCK = '2,6';
+export const MENARA_BLOCK = '4,2';
 
 function groundStyle(block) {
   if (`${block.i},${block.j}` === ALUN_ALUN_BLOCK) return 'grass';
@@ -31,7 +32,8 @@ export function buildCity(onProgress = () => {}) {
   onProgress(0.1, 'Jalan dan trotoar');
   root.add(buildRoads(groundStyle));
   onProgress(0.3, 'Gedung dan toko');
-  root.add(buildBuildings(BLOCKS, collision, new Set([ALUN_ALUN_BLOCK])));
+  root.add(buildBuildings(BLOCKS, collision, new Set([ALUN_ALUN_BLOCK, MENARA_BLOCK])));
+  root.add(buildMenaraSanggara(BLOCKS.find((b) => `${b.i},${b.j}` === MENARA_BLOCK), collision));
   onProgress(0.55, 'Alun-alun');
   const square = BLOCKS.find((b) => `${b.i},${b.j}` === ALUN_ALUN_BLOCK);
   root.add(buildAlunAlun(square, collision));

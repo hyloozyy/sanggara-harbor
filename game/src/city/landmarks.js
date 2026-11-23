@@ -73,3 +73,34 @@ export function buildAlunAlun(block, collision) {
   const group = batch.build({ name: 'alun-alun' });
   return group;
 }
+
+// Menara Sanggara: the tallest tower in the city, stepping back in three tiers to a lit crown and
+// a spire with an aircraft beacon — the skyline's signature.
+export function buildMenaraSanggara(block, collision) {
+  const batch = new MeshBatcher();
+  const { cx, cz } = block;
+  const glass = assets.facadeMaterial('glass', 0);
+  const y0 = CURB_HEIGHT;
+  // Podium with shopfront glow.
+  put(batch, BOX, assets.material('concrete'), cx, y0 + 6, cz, 58, 12, 58);
+  batch.add(facadeBoxGeometry(56, 12, 56, 3.4, 4, 0.1, 0.25), assets.facadeMaterial('office', 1), new THREE.Matrix4().makeTranslation(cx, y0, cz));
+  const tiers = [[34, 90], [27, 60], [19, 40]];
+  let y = y0 + 12;
+  tiers.forEach(([w, h], i) => {
+    batch.add(facadeBoxGeometry(w, h, w, 3.4, 3.8, i * 0.3, 0), glass, new THREE.Matrix4().makeTranslation(cx, y, cz));
+    put(batch, BOX, assets.material('metal-dark'), cx, y + h, cz, w + 1.2, 1.2, w + 1.2);
+    const band = assets.emissive(i === 2 ? 0x6fe3ff : 0xffc070, 6);
+    for (const [ox, oz, sx, sz] of [[0, w / 2 + 0.7, w + 1.4, 0.2], [0, -w / 2 - 0.7, w + 1.4, 0.2], [w / 2 + 0.7, 0, 0.2, w + 1.4], [-w / 2 - 0.7, 0, 0.2, w + 1.4]]) {
+      put(batch, BOX, band, cx + ox, y + h + 0.2, cz + oz, sx, 0.35, sz);
+    }
+    y += h + 1.2;
+  });
+  // Crown lantern and spire.
+  put(batch, CYL, assets.emissive(0x9ff0ff, 4), cx, y + 5, cz, 12, 10, 12);
+  put(batch, CYL, assets.material('metal-dark'), cx, y + 10.5, cz, 13, 1, 13);
+  put(batch, CYL, assets.material('chrome'), cx, y + 30, cz, 0.9, 40, 0.9);
+  put(batch, new THREE.SphereGeometry(0.5, 8, 6), assets.emissive(0xff2a1a, 14), cx, y + 50.5, cz, 1.2, 1.2, 1.2);
+  collision.addCenteredBox(cx, cz, 58, 58, 12);
+  collision.addCenteredBox(cx, cz, 34, 34, y);
+  return batch.build({ name: 'menara-sanggara' });
+}
