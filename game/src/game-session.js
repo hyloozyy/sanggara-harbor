@@ -191,7 +191,7 @@ export class GameSession {
     });
     events.on('explosion', ({ x, y, z, power }) => {
       this.particles.explosion(x, y, z, power);
-      this.lights.flash(x, y + 2, z, 0xff8a3a, 400, 0.9, 60);
+      this.lights.flash(x, y + 2, z, 0xff8a3a, 160, 0.9, 50);
       this.audio.explosion(this.camDist(x, z));
       const d = this.camDist(x, z);
       this.cameraRig.addShake(Math.max(0, 1.1 - d / 60));

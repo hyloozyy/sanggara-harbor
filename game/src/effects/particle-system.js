@@ -95,11 +95,11 @@ export class ParticleSystem {
   explosion(x, y, z, power = 1) {
     for (let i = 0; i < 70 * power; i++) {
       const a = rng.range(0, Math.PI * 2), e = rng.range(-0.2, 1), s = rng.range(4, 16) * power;
-      this.glow.add(particle({ x, y, z, vx: Math.cos(a) * s * Math.cos(e), vy: Math.sin(e) * s + 3, vz: Math.sin(a) * s * Math.cos(e), life: rng.range(0.4, 1.1), size0: rng.range(2.5, 4.5) * power, size1: 0.8, color0: [9, 4.5, 1.2], color1: [3, 0.6, 0.1], drag: 2.2, gravity: -1 }));
+      this.glow.add(particle({ x, y, z, vx: Math.cos(a) * s * Math.cos(e), vy: Math.sin(e) * s + 3, vz: Math.sin(a) * s * Math.cos(e), life: rng.range(0.5, 1.2), size0: rng.range(1.6, 3.2) * power, size1: 0.6, color0: [3.2, 1.2, 0.25], color1: [1.2, 0.18, 0.02], alpha: 0.55, drag: 2.2, gravity: -1 }));
     }
     for (let i = 0; i < 45 * power; i++) {
       const a = rng.range(0, Math.PI * 2), s = rng.range(1, 6);
-      this.soft.add(particle({ x: x + rng.range(-1, 1), y: y + rng.range(0, 2), z: z + rng.range(-1, 1), vx: Math.cos(a) * s, vy: rng.range(2, 7), vz: Math.sin(a) * s, life: rng.range(2.5, 5), size0: 3, size1: rng.range(9, 15) * power, color0: [0.25, 0.2, 0.18], color1: [0.5, 0.42, 0.4], alpha: 0.75, drag: 1.2, gravity: -0.6 }));
+      this.soft.add(particle({ x: x + rng.range(-1, 1), y: y + rng.range(0, 2), z: z + rng.range(-1, 1), vx: Math.cos(a) * s, vy: rng.range(2, 7), vz: Math.sin(a) * s, life: rng.range(2.5, 5), size0: 3, size1: rng.range(9, 15) * power, color0: [0.12, 0.1, 0.09], color1: [0.32, 0.28, 0.27], alpha: 0.8, drag: 1.2, gravity: -0.6 }));
     }
     this.sparks(x, y, z, 50 * power, 18);
   }

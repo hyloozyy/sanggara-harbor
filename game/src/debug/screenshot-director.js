@@ -121,6 +121,12 @@ const SCENES = {
       b.health = Math.max(b.health, 150);
     });
     enemies[2].body.hit(500, b.pos, { knockback: 6, attacker: b });
+    // The gunmen's black sedan takes one burst too many.
+    const gangCar = s.vehicles.spawn('lestari', 21, 157.4, -Math.PI / 2 + 0.5, { color: 0x15161a });
+    gangCar.ai = { kind: 'parked' }; gangCar.controls.handbrake = true;
+    gangCar.explode();
+    gangCar.burnTimer = 0;
+    simulate(s, 0.4, () => { s.input.buttons.add(2); s.cameraRig.yaw = yaw; s.cameraRig.pitch = 0.08; });
     // Final frame: trigger held, a fresh burst in flight.
     s.cameraRig.yaw = yaw; s.cameraRig.pitch = 0.08;
     s.player.arsenal.cooldown = 0; s.player.arsenal.mag.smg = 30;

@@ -140,6 +140,13 @@ export function buildStreetProps(collision) {
   const lamp = lampGeometries();
   group.add(instanced(lamp.pole, assets.material('lamp-pole'), lamps));
   group.add(instanced(lamp.glow, assets.material('lamp-glow'), lamps, { castShadow: false }));
+  // Warm pools of sodium light on the pavement under each lamp head (additive decals).
+  const poolGeo = new THREE.PlaneGeometry(11, 11).rotateX(-Math.PI / 2).translate(2.0, 0.05, 0);
+  const poolMat = new THREE.MeshBasicMaterial({ map: assets.texture('glow'), color: 0xffa860, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, fog: true });
+  const pools = instanced(poolGeo, poolMat, lamps, { castShadow: false });
+  pools.receiveShadow = false;
+  pools.renderOrder = 2;
+  group.add(pools);
   const palm = palmGeometries();
   group.add(instanced(palm.trunk, assets.material('palm-trunk'), palms));
   group.add(instanced(palm.fronds, assets.material('palm-leaves'), palms));
