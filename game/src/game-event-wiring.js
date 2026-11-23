@@ -23,6 +23,7 @@ export function wireGameEvents(game) {
     if (character === P()) { self.hud.damageFlash(amount); self.cameraRig.addShake(0.25); }
     if (attacker === P() && character !== P()) {
       self.hud.hitMarker();
+      if (character.faction === 'civilian' && character.alive && rng.chance(0.3)) self.dialogue.say('warga', rng.pick(['Aduh! Kenapa saya?!', 'Ampun, Bang!', 'Tolong! Ada orang gila!']));
       if (character.faction === 'police') self.crime('cop-assault', character.pos.x, character.pos.z);
       else if (character.faction === 'civilian') {
         self.peds.scare(character.pos.x, character.pos.z, 25, 1, true);
@@ -52,7 +53,10 @@ export function wireGameEvents(game) {
     if (vehicle.isPolice) self.crime('car-theft-seen', x, z);
     else if (carjack) {
       self.peds.scare(x, z, 20, 1, false);
+      self.dialogue.say('warga', rng.pick(['Tolong! Maling! Mobilku dibawa kabur!', 'Woi! Itu mobil saya!', 'Ada pembajakan! Panggil polisi!']));
       if (self.policeNear(x, z, 70)) self.crime('carjack', x, z);
+      // Someone on the pavement phones it in a moment later.
+      else if (rng.chance(0.45)) setTimeout(() => { if (self.wanted.level === 0) self.crime('carjack', x, z, false); }, 3000);
     }
     if (!self.radio.on && !self.radio.silent) self.radio.setOn(true);
     self.hud.notify(`${vehicle.spec.name}${carjack ? ' — dibajak!' : ''}`);

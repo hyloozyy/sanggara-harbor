@@ -13,5 +13,6 @@ export const CAST = {
   bayu: { name: 'Bayu Hiu', full: 'Bayu "Hiu"', role: 'Tukang tagih Hiu Merah', color: '#ff7a7a',
     look: { skin: 0x7a4c2e, hair: 0x0c0c0c, shirt: 0xb0201a, pants: 0x1a1a1a, shoes: 0x1a1a1a } },
   wulan: { name: 'Kompol Wulan', full: 'Komisaris Wulan Sasmita', role: 'Polisi Sanggara', color: '#7fb2ff' },
+  warga: { name: 'Warga', full: 'Warga Sanggara', role: '', color: '#e8e2d4' },
   radio: { name: 'Radio Polisi', full: 'Radio Polisi Sanggara', role: '', color: '#9fd0ff' },
 };
