@@ -442,6 +442,20 @@ const SCENES = {
     await finish(s, gfx);
   },
 
+  async policetest(session, gfx) {
+    const s = session;
+    const log = (...a) => console.log('[police]', ...a);
+    s.start({ freeRoam: true });
+    s.player.body.pos.set(86.5, 0.16, 40);
+    s.wanted.setLevel(3, 'test');
+    for (let t = 0; t < 40; t += 4) {
+      simulate(s, 4);
+      const cars = s.police.units.map((u) => u.vehicle ? Math.round(Math.hypot(u.vehicle.pos.x - s.player.pos.x, u.vehicle.pos.z - s.player.pos.z)) + ':' + u.state : u.kind);
+      log('t', t + 4, 'wanted', s.wanted.level, 'unseen', s.wanted.unseen.toFixed(1), 'hp', Math.round(s.player.body.health), 'armour', Math.round(s.player.body.armour), 'officers', s.police.officers.filter((o) => o.alive).length, 'units', cars.join(' '), 'wasted', s.wastedTimer.toFixed(1), 'busted', !!s.busted);
+    }
+    await finish(s, gfx);
+  },
+
   async test(session, gfx) {
     session.start({});
     session.missions.start(session.missions.nextMission);

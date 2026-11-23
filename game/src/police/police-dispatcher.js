@@ -110,7 +110,7 @@ export class PoliceDispatcher {
 
   spawnOfficer(x, z, weapon = 'pistol') {
     const o = new Combatant(this.game.scene, { ...POLICE_LOOK, skin: rng.pick([0xa8744e, 0x8d5b3a, 0xc68e64]) }, x, z, {
-      faction: 'police', weapon, health: 90, accuracy: 0.45 + this.game.wanted.level * 0.06, armour: weapon === 'smg' ? 50 : 0,
+      faction: 'police', weapon, health: 90, accuracy: 0.28 + this.game.wanted.level * 0.05, armour: weapon === 'smg' ? 50 : 0,
     });
     this.officers.push(o);
     return o;
@@ -209,10 +209,10 @@ export class PoliceDispatcher {
       // Direct pursuit, leading the target.
       const pv = player.vehicle ? player.vehicle.vel : { x: 0, z: 0 };
       tx = px + pv.x * 0.6; tz = pz + pv.z * 0.6;
-      want = player.vehicle ? clamp(Math.abs(player.vehicle.speed) + 8, 12, v.spec.maxSpeed) : clamp(d * 0.8, 0, 16);
+      want = player.vehicle ? clamp(Math.abs(player.vehicle.speed) + 8, 12, v.spec.maxSpeed) : clamp((d - 11) * 0.7, 0, 14);
       u.state = player.vehicle ? 'mengejar' : 'mendekat';
       // On foot nearby: stop and send officers out.
-      if (!player.vehicle && d < 22 && !u.officers.length && Math.abs(v.speed) < 6) {
+      if (!player.vehicle && d < 24 && !u.officers.length && Math.abs(v.speed) < 6) {
         const rx = Math.cos(v.heading), rz = -Math.sin(v.heading);
         for (const s of [-1, 1]) u.officers.push(this.spawnOfficer(v.pos.x + rx * s * 2, v.pos.z + rz * s * 2, u.kind === 'van' ? 'smg' : 'pistol'));
         this.game.vehicles.removeDriverModel(v);

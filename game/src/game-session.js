@@ -155,6 +155,7 @@ export class GameSession {
     if (this.bustT > 1.6) {
       this.busted = true;
       this.wastedTimer = 4;
+      this.wanted.clear('busted'); // officers lower their weapons
       this.audio.missionJingle(false);
       if (this.missions.active) this.missions.fail('Raka ditangkap polisi');
       for (const id of ['pistol', 'smg', 'shotgun']) this.player.arsenal.ammo[id] = Math.floor((this.player.arsenal.ammo[id] || 0) / 2);

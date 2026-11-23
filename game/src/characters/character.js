@@ -66,6 +66,7 @@ export class Character {
   // Damage with armour absorbing first; returns true if this hit killed.
   hit(amount, from = null, { knockback = 0, cause = 'bullet', attacker = null } = {}) {
     if (!this.alive) return false;
+    if (this.faction === 'player') amount *= this.damageScale ?? 0.5; // the hero is tougher than everyone else
     if (this.armour > 0) {
       const absorbed = Math.min(this.armour, amount * 0.7);
       this.armour -= absorbed;
