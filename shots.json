@@ -1,6 +1,6 @@
 [
   { "name": "1-cover.jpg", "query": "?shot=cover&seed=7" },
   { "name": "2-combat.jpg", "query": "?shot=combat&seed=7" },
-  { "name": "3-harbor.jpg", "query": "?shot=harbor&seed=7" },
+  { "name": "3-beach.jpg", "query": "?shot=beach&seed=7" },
   { "name": "4-menu.jpg", "query": "?shot=menu&seed=7" }
 ]

@@ -150,6 +150,38 @@ const SCENES = {
 
   // Street race up the harbour road: cranes, the container ship and the skyline at sunset.
   // Racing down the container quay under the gantry cranes, the sun low over the strait.
+  // Cruising Jalan Pantai Senja into the sunset on a scooter: palms, beach, hotels, the sea.
+  async beach(session, gfx) {
+    const s = session;
+    s.progression.money = 9870000; s.progression.xp = 1900;
+    s.player.arsenal.give('pistol', 48); s.player.arsenal.select('pistol');
+    s.crew.unlock('dimas');
+    for (const m of MISSIONS.slice(0, 4)) s.missions.completed.add(m.id);
+    s.start({});
+    const v = s.vehicles.spawn('rajawali', 60, 322.6, -Math.PI / 2, { color: 0xd02010 });
+    v.ai = { kind: 'crew-car' }; v.ownedByPlayer = true;
+    v.vel.set(-26, 0, 0);
+    s.player.body.pos.set(v.pos.x, 0, v.pos.z - 2);
+    s.player.tryEnterExit(s);
+    s.side.startRace(); s.side.cp = 0; s.side.time = 4.2; s.side.showCheckpoint();
+    s.dialogue.clear();
+    s.traffic.populate(0, 310, 22);
+    s.peds.target = 50;
+    for (let k = 0; k < 300 && s.peds.list.length < 50; k++) s.peds.spawn(0, 300, 6, 70);
+    s.radio.index = 0; s.radio.on = true; s.radio.songIndex = 3;
+    const yaw = -Math.PI / 2 + 0.32, pitch = 0.08;
+    simulate(s, 1.5, () => {
+      s.input.simulateHold('KeyW', true);
+      s.cameraRig.idleMouse = 0; s.cameraRig.yaw = yaw; s.cameraRig.pitch = pitch;
+    });
+    s.input.simulateHold('KeyW', false);
+    for (let k = 0; k < 300 && s.peds.list.length < 50; k++) s.peds.spawn(v.pos.x - 25, v.pos.z, 6, 45);
+    for (let i = 0; i < 10; i++) s.peds.update(DT, s.player, s.vehicles);
+    s.dialogue.say('dimas', 'Senja di Pantai Senja. Gas sampai gerbang pertama, Rak!');
+    s.dialogue.update(0.01);
+    await finish(s, gfx);
+  },
+
   async harbor(session, gfx) {
     const s = session;
     s.progression.money = 9870000; s.progression.xp = 1900;
