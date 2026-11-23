@@ -4,15 +4,15 @@ import * as THREE from 'three';
 import { assets } from '../assets/asset-library.js';
 
 const G = {
-  get torso() { return assets.geometry('h-torso', () => new THREE.CapsuleGeometry(0.17, 0.32, 4, 10).scale(1.12, 1, 0.72)); },
+  get torso() { return assets.geometry('h-torso', () => new THREE.CapsuleGeometry(0.185, 0.3, 4, 10).scale(1.18, 1, 0.74)); },
   get hips() { return assets.geometry('h-hips', () => new THREE.CapsuleGeometry(0.15, 0.08, 4, 10).scale(1.15, 1, 0.75)); },
-  get head() { return assets.geometry('h-head', () => new THREE.SphereGeometry(0.115, 14, 10).scale(0.92, 1.08, 1)); },
+  get head() { return assets.geometry('h-head', () => new THREE.SphereGeometry(0.12, 14, 10).scale(0.92, 1.08, 1)); },
   get hair() { return assets.geometry('h-hair', () => new THREE.SphereGeometry(0.124, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55).scale(0.95, 1.05, 1.05)); },
-  get upperArm() { return assets.geometry('h-uarm', () => new THREE.CapsuleGeometry(0.055, 0.2, 3, 8).translate(0, -0.14, 0)); },
+  get upperArm() { return assets.geometry('h-uarm', () => new THREE.CapsuleGeometry(0.064, 0.19, 3, 8).translate(0, -0.14, 0)); },
   get foreArm() { return assets.geometry('h-farm', () => new THREE.CapsuleGeometry(0.048, 0.2, 3, 8).translate(0, -0.13, 0)); },
   get hand() { return assets.geometry('h-hand', () => new THREE.SphereGeometry(0.05, 8, 6)); },
-  get thigh() { return assets.geometry('h-thigh', () => new THREE.CapsuleGeometry(0.075, 0.3, 3, 8).translate(0, -0.21, 0)); },
-  get shin() { return assets.geometry('h-shin', () => new THREE.CapsuleGeometry(0.06, 0.32, 3, 8).translate(0, -0.21, 0)); },
+  get thigh() { return assets.geometry('h-thigh', () => new THREE.CapsuleGeometry(0.088, 0.29, 3, 8).translate(0, -0.21, 0)); },
+  get shin() { return assets.geometry('h-shin', () => new THREE.CapsuleGeometry(0.068, 0.31, 3, 8).translate(0, -0.21, 0)); },
   get shoe() { return assets.geometry('h-shoe', () => new THREE.BoxGeometry(0.1, 0.07, 0.24).translate(0, -0.03, 0.05)); },
   get cap() { return assets.geometry('h-cap', () => new THREE.CylinderGeometry(0.12, 0.125, 0.1, 12).translate(0, 0.07, 0)); },
   get eye() { return assets.geometry('h-eye', () => new THREE.SphereGeometry(0.016, 6, 4)); },
@@ -96,8 +96,8 @@ export class HumanoidModel {
       if (look.brim !== false) { const brim = new THREE.Mesh(G.brim, assets.cloth(look.cap)); brim.position.y = 0.17; this.neck.add(brim); }
     }
 
-    this.armL = limb(this.spine, G.upperArm, shirt, 0.235, 0.48, 0);
-    this.armR = limb(this.spine, G.upperArm, shirt, -0.235, 0.48, 0);
+    this.armL = limb(this.spine, G.upperArm, shirt, 0.255, 0.47, 0);
+    this.armR = limb(this.spine, G.upperArm, shirt, -0.255, 0.47, 0);
     this.foreL = limb(this.armL, G.foreArm, look.longSleeves ? shirt : skin, 0, -0.29, 0);
     this.foreR = limb(this.armR, G.foreArm, look.longSleeves ? shirt : skin, 0, -0.29, 0);
     const handL = new THREE.Mesh(G.hand, skin); handL.position.y = -0.27; this.foreL.add(handL);

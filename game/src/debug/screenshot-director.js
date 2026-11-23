@@ -321,6 +321,48 @@ const SCENES = {
     await finish(s, gfx);
   },
 
+  // A line-up of townspeople (for checking the character models).
+  async people(session, gfx) {
+    const s = session;
+    s.hud.show(false);
+    for (let i = 0; i < 8; i++) {
+      const p = s.peds.spawn(-40, 87, 0, 400);
+      if (!p) continue;
+      p.pos.set(-46 + i * 1.3, 0.16, 87.5); p.ai.mode = 'idle'; p.anim = i % 3 ? 'idle' : 'walk'; p.heading = 0.3;
+      p.updateVisual(0.5); p.updateVisual(0.5);
+    }
+    s.player.body.pos.set(-36, 0.16, 87.5); s.player.body.heading = -0.4; s.player.body.updateVisual(0.1);
+    s.cameraRig.override = { x: -41, y: 1.9, z: 93.5, tx: -41, ty: 1.0, tz: 87.5, fov: 50 };
+    s.cameraRig.update(DT, s.player, s.input);
+    s.gfx.lighting.follow(-41, 87);
+    await finish(s, gfx);
+  },
+
+  // Random play for two simulated minutes; logs anything that goes NaN or throws.
+  async soak(session, gfx) {
+    const s = session;
+    const log = (...a) => console.log('[soak]', ...a);
+    s.start({});
+    for (const id of ['pistol', 'smg', 'shotgun']) s.player.arsenal.give(id, 500);
+    const keys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'Space'];
+    let errors = 0;
+    for (let sec = 0; sec < 120; sec++) {
+      for (const k of keys) s.input.simulateHold(k, rng.chance(k === 'KeyW' ? 0.7 : 0.25));
+      s.input.buttons.clear();
+      if (rng.chance(0.4)) { s.input.buttons.add(0); s.input.buttons.add(2); }
+      if (rng.chance(0.15)) s.input.pressed.add('KeyF');
+      if (rng.chance(0.1)) s.input.pressed.add(rng.pick(['Digit1', 'Digit2', 'Digit3', 'Digit4', 'KeyR', 'KeyZ', 'KeyX']));
+      s.cameraRig.yaw += rng.range(-0.8, 0.8);
+      try { simulate(s, 1, () => { s.input.mouseDX = rng.range(-20, 20); }); } catch (e) { errors++; log('ERROR', e.message, e.stack.split('\n')[1]); }
+      const p = s.player.pos;
+      const bad = [p.x, p.z, ...s.vehicles.list.flatMap((v) => [v.pos.x, v.pos.z, v.heading])].some((n) => !Number.isFinite(n));
+      if (bad) { log('NaN at second', sec); break; }
+      if (sec % 20 === 0) log('t', sec, 'pos', p.x.toFixed(0), p.z.toFixed(0), 'veh', !!s.player.vehicle, 'wanted', s.wanted.level, 'hp', Math.round(s.player.body.health), 'peds', s.peds.list.length, 'cars', s.vehicles.list.length, 'mission', s.missions.active && s.missions.active.mission.id);
+    }
+    log('soak finished; errors', errors, 'money', s.progression.money, 'kills', s.progression.stats.kills);
+    await finish(s, gfx);
+  },
+
   async test(session, gfx) {
     session.start({});
     session.missions.start(session.missions.nextMission);
