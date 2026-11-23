@@ -1,6 +1,6 @@
 // Building facade atlases: 8 bays x 8 floors per texture with colour, lit-window emissive
 // and a packed roughness(G)/metalness(B) map, in several architectural styles.
-import { makeCanvas, toTexture } from './canvas-tools.js';
+import { makeCanvas, toTexture, heightToNormalCanvas } from './canvas-tools.js';
 import { createRng } from '../core/rng.js';
 
 const BAYS = 8, FLOORS = 8, SIZE = 512, CELL = SIZE / BAYS;
@@ -151,5 +151,7 @@ export function facadeTextures(style, paletteIndex, seed = 1, litChance = 0.24) 
     map: toTexture(c),
     emissiveMap: toTexture(e),
     ormMap: toTexture(o, { srgb: false }),
+    // Window openings sit lower than the wall (from the roughness channel), giving the facade relief.
+    normalMap: toTexture(heightToNormalCanvas(o, 3, 1), { srgb: false }),
   };
 }

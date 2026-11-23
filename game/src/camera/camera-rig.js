@@ -46,7 +46,7 @@ export class CameraRig {
         this.pitch = damp(this.pitch, 0.2, 2, dt);
       }
       const big = v.spec.length > 4.8 ? 1.6 : v.spec.twoWheel ? -2.5 : 0;
-      dist = 8.2 + big + speed * 0.07;
+      dist = 6.6 + big + speed * 0.05;
       height = 2.0;
       lookH = 1.4;
       fov = 64 + Math.min(14, speed * 0.28);

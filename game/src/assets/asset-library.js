@@ -51,7 +51,7 @@ export const assets = {
       const t = facadeTextures(style, p, 7 + p);
       return new THREE.MeshStandardMaterial({
         map: t.map, emissiveMap: t.emissiveMap, emissive: new THREE.Color(1.0, 0.82, 0.6), emissiveIntensity: 1.05,
-        roughnessMap: t.ormMap, metalnessMap: t.ormMap, roughness: 1, metalness: style === 'glass' ? 0.9 : 0.6,
+        roughnessMap: t.ormMap, metalnessMap: t.ormMap, normalMap: t.normalMap, normalScale: new THREE.Vector2(1.2, 1.2), roughness: 1, metalness: style === 'glass' ? 0.9 : 0.6,
         envMapIntensity: 1.0,
       });
     });

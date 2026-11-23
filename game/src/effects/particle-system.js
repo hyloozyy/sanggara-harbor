@@ -112,7 +112,7 @@ export class ParticleSystem {
   }
 
   muzzle(x, y, z, dx, dz) {
-    for (let i = 0; i < 5; i++) this.glow.add(particle({ x: x + dx * i * 0.12, y, z: z + dz * i * 0.12, life: 0.06, size0: 0.9 - i * 0.12, size1: 0.2, color0: [10, 7, 3] }));
+    for (let i = 0; i < 4; i++) this.glow.add(particle({ x: x + dx * i * 0.1, y, z: z + dz * i * 0.1, life: 0.06, size0: 0.32 - i * 0.05, size1: 0.1, color0: [6, 4, 1.6] }));
     this.soft.add(particle({ x, y, z, vx: dx * 1.5, vy: 0.6, vz: dz * 1.5, life: 0.8, size0: 0.3, size1: 1.4, color0: [0.6, 0.58, 0.55], alpha: 0.35 }));
   }
 

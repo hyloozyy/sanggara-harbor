@@ -45,7 +45,7 @@ export class MenuScreens {
     items[i].classList.add('focus');
   }
 
-  showTitle({ canContinue, saveLabel }) {
+  showTitle({ canContinue, saveLabel, completed = [] }) {
     this.current = 'title';
     $('title-screen').classList.remove('hidden');
     buttons($('title-menu'), [
@@ -62,6 +62,11 @@ export class MenuScreens {
       <h2>Kota pelabuhan yang tidak pernah tidur</h2>
       <div>${STORY_ARC}</div>
       <div class="quote">"Terang lampunya, gelap urusannya." — Dimas</div>
+      <ul class="chapters">${MISSIONS.map((m) => {
+        const done = completed.includes(m.id);
+        const next = !done && MISSIONS.find((x) => !completed.includes(x.id)) === m;
+        return `<li class="${done ? 'done' : next ? 'next' : ''}"><b>${m.chapter}</b>${m.title}${done ? ' ✔' : next ? ' ◄' : ''}</li>`;
+      }).join('')}</ul>
       <div class="cast">${['dimas', 'lastri', 'harun', 'rusdi'].map((k) => `<div><b>${CAST[k].full}</b>${CAST[k].role}</div>`).join('')}</div>
       <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} misi cerita · balap liar · antar martabak · 4 stasiun radio · 6 distrik</div>`;
   }

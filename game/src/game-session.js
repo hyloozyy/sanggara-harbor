@@ -29,6 +29,7 @@ import { rng } from './core/rng.js';
 import { events } from './core/event-bus.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'RS Sanggara Sehat' };
+const POLICE_STATION = { x: 86.5, z: 120, name: 'Polsek Kota Lama' };
 
 export class GameSession {
   constructor(gfx, input, audio, radio, onProgress = () => {}) {
@@ -246,13 +247,30 @@ export class GameSession {
     if (this.player.vehicle) this.player.exitVehicle(this, true);
   }
 
-  respawn() {
+  // Standing still on foot next to an officer while wanted ends in an arrest.
+  checkBusted(dt) {
+    const b = this.player.body;
+    if (this.wastedTimer > 0 || !b.alive || this.player.vehicle || this.wanted.level === 0) { this.bustT = 0; return; }
+    const cop = this.police.officers.some((o) => o.alive && Math.hypot(o.body.pos.x - b.pos.x, o.body.pos.z - b.pos.z) < 2.2);
+    const still = Math.hypot(b.vel.x, b.vel.z) < 1.2 || b.knock > 0;
+    this.bustT = cop && still ? (this.bustT || 0) + dt : 0;
+    if (this.bustT > 1.6) {
+      this.busted = true;
+      this.wastedTimer = 4;
+      this.audio.missionJingle(false);
+      if (this.missions.active) this.missions.fail('Raka ditangkap polisi');
+      for (const id of ['pistol', 'smg', 'shotgun']) this.player.arsenal.ammo[id] = Math.floor((this.player.arsenal.ammo[id] || 0) / 2);
+    }
+  }
+
+  respawn(place = HOSPITAL) {
     const b = this.player.body;
     b.alive = true; b.health = b.maxHealth; b.state = 'idle'; b.knock = 0; b.fallT = 0;
-    b.pos.set(HOSPITAL.x, 0.16, HOSPITAL.z);
+    b.pos.set(place.x, 0.16, place.z);
     b.mesh.rotation.set(0, 0, 0);
     const fee = Math.min(this.progression.money, Math.max(100000, Math.round(this.progression.money * 0.08 / 1000) * 1000));
-    this.progression.addMoney(-fee, `${HOSPITAL.name}`);
+    this.progression.addMoney(-fee, this.busted ? `Denda ${place.name}` : place.name);
+    this.busted = false;
     this.wanted.minLevel = 0;
     this.wanted.clear('hospital');
     this.police.clearAll();
@@ -287,9 +305,11 @@ export class GameSession {
 
     if (this.wastedTimer > 0) {
       this.wastedTimer -= dt;
-      if (this.wastedTimer <= 0) this.respawn();
+      if (this.wastedTimer <= 0) this.respawn(this.busted ? POLICE_STATION : HOSPITAL);
     }
-    player.update(dt, input, this);
+    this.checkBusted(dt);
+    if (this.busted) { player.body.anim = 'cower'; player.body.aiming = false; player.body.move(dt, this.world, 0, 0); player.body.updateVisual(dt); }
+    else player.update(dt, input, this);
     this.crew.update(dt, input);
     this.traffic.update(dt, player, camDir);
     this.vehicles.update(dt);
@@ -360,7 +380,7 @@ export class GameSession {
       if (near) hint = `<kbd>F</kbd>${near.driverModel ? 'Bajak' : 'Masuk'} ${near.spec.name}`;
     } else if (v) hint = null;
     let activity = null;
-    if (this.side.mode === 'race') activity = `<b>BALAP LIAR SENJA</b><br>Gerbang ${this.side.cp + 1}/12 · ${this.side.time.toFixed(1)} dtk`;
+    if (this.side.mode === 'race') activity = `<b>BALAP LIAR SENJA</b><br>Gerbang ${this.side.cp + 1}/${this.side.routeLength} · rekor ${this.side.record} dtk · ${this.side.time.toFixed(1)} dtk`;
     if (this.side.mode === 'delivery') activity = `<b>ANTAR MARTABAK</b><br>Antaran ${this.side.delivered + 1}/3 · sisa ${Math.ceil(this.side.time)} dtk`;
     const sp = v ? Math.abs(v.speed) * 3.6 : 0;
     return {
@@ -380,7 +400,7 @@ export class GameSession {
       health: b.health / b.maxHealth, armour: b.armour / 100,
       aiming: b.aiming && !v, aimTarget: false,
       hint, activity,
-      wasted: this.wastedTimer > 0 ? 'TUMBANG' : null,
+      wasted: this.wastedTimer > 0 ? (this.busted ? 'TERTANGKAP' : 'TUMBANG') : null,
     };
   }
 

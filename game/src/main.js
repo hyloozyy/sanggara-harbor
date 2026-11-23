@@ -126,7 +126,7 @@ async function boot() {
   }
   state = 'title';
   const save = readSave();
-  menus.showTitle({ canContinue: !!save, saveLabel: save ? `${save.label || 'Simpanan'} · ${new Date(save.savedAt).toLocaleString('id-ID')}` : '' });
+  menus.showTitle({ canContinue: !!save, saveLabel: save ? `${save.label || 'Simpanan'} · ${new Date(save.savedAt).toLocaleString('id-ID')}` : '', completed: save?.missions?.completed || [] });
   session.traffic.populate(-40, 160, 18);
   input.enabled = false;
   requestAnimationFrame(frame);

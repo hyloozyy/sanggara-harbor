@@ -16,7 +16,7 @@ export const MISSIONS = [
     stages: [
       { type: 'talk', text: 'Temui Dimas', lines: [['dimas', 'Raka! Enam tahun di kapal, akhirnya pulang juga, bro.'], ['raka', 'Kota ini kelihatan lebih terang dari yang kuingat.'], ['dimas', 'Terang lampunya, gelap urusannya. Ayo, Bu Lastri nunggu.']] },
       { type: 'enter-vehicle', text: 'Masuk ke Kancil Mini milik Dimas', vehicle: { model: 'kancil', x: -2.6, z: -26, heading: Math.PI, color: 0xe0b020 } },
-      { type: 'drive-to', text: 'Antar Dimas ke Warung Bu Lastri', target: P.lastriWarung, radius: 6, lines: [['dimas', 'Lewat Jalan Raya Sanggara, belok kiri di Jalan Cempaka.'], ['dimas', 'Ingat, di sini nyetirnya di kiri. Jangan kebiasaan kapal!']] },
+      { type: 'drive-to', text: 'Antar Dimas ke Warung Bu Lastri', target: P.lastriWarung, radius: 6, lines: [['dimas', 'Lewat Jalan Raya Sanggara, belok kiri di Jalan Bandar.'], ['dimas', 'Ingat, di sini nyetirnya di kiri. Jangan kebiasaan kapal!']] },
       { type: 'talk', text: 'Dengar kabar dari Bu Lastri', lines: [['lastri', 'Raka... Pamanmu sedang susah, Nak. Hiu Merah minta setoran tiap minggu.'], ['lastri', 'Yang menagih namanya Bayu. Datanglah ke Pasar Ikan kalau kau masih punya nyali.'], ['raka', 'Nyali masih ada, Bu. Kesabaran yang sudah habis.']] },
     ],
   },
@@ -51,7 +51,7 @@ export const MISSIONS = [
     briefing: 'Hiu Merah tahu siapa yang mencuri angkot mereka. Malam ini mereka datang ke Kota Lama untuk membalas.',
     reward: { money: 4000000, xp: 500 },
     stages: [
-      { type: 'talk', text: 'Dengarkan Bu Lastri', lines: [['lastri', 'Raka, dengar itu? Mobil-mobil hitam berhenti di ujung Jalan Cempaka.'], ['raka', 'Masuk ke dalam, Bu. Kunci pintunya.']] },
+      { type: 'talk', text: 'Dengarkan Bu Lastri', lines: [['lastri', 'Raka, dengar itu? Mobil-mobil hitam berhenti di ujung Jalan Bandar.'], ['raka', 'Masuk ke dalam, Bu. Kunci pintunya.']] },
       { type: 'eliminate', text: 'Lindungi warung dari penembak Hiu Merah', enemies: [{ dx: -22, dz: -4, weapon: 'pistol' }, { dx: -30, dz: -6.5, weapon: 'smg' }, { dx: 18, dz: -5, weapon: 'pistol' }, { dx: 26, dz: -7, weapon: 'pistol' }, { dx: -40, dz: -4, weapon: 'shotgun' }], lines: [['bayu', 'Itu dia! Hajar warungnya sekalian!'], ['lastri', 'Jangan sampai kaca warungku pecah, Raka!']] },
       { type: 'talk', text: 'Periksa keadaan Bu Lastri', lines: [['lastri', 'Kau menyelamatkan warung ini... dan separuh Kota Lama.'], ['lastri', 'Rusdi menyimpan buku besarnya di vila Bukit Hijau. Itu kuncinya.']] },
     ],

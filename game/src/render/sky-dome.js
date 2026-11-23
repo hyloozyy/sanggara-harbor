@@ -33,7 +33,7 @@ const SKY_FRAG = /* glsl */`
     float sd = max(dot(d, sunDir), 0.0);
     col += sunColor * pow(sd, 6.0) * 0.55;
     col += sunColor * pow(sd, 64.0) * 1.4;
-    col += sunColor * smoothstep(0.9993, 0.9997, sd) * 30.0;
+    col += sunColor * smoothstep(0.9993, 0.9997, sd) * 18.0;
     // Clouds on a virtual plane.
     if (h > 0.01) {
       vec2 uv = d.xz / (h + 0.08) * 1.6 + vec2(time * 0.004, time * 0.0015);

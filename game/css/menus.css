@@ -14,10 +14,15 @@
 .menu button:hover, .menu button.focus { background: linear-gradient(90deg, rgba(255,122,61,0.85), rgba(255,122,61,0.1)); border-left-color: var(--gold); }
 .menu button:disabled { opacity: 0.35; cursor: default; }
 .menu button small { display: block; font-size: 11px; letter-spacing: 1px; opacity: 0.75; }
-.briefing { position: absolute; right: 5vw; bottom: 12vh; width: 420px; background: rgba(8,8,16,0.72); border-top: 3px solid var(--gold); padding: 16px 20px; font-size: 14px; line-height: 1.5; }
+.briefing { position: absolute; right: 4vw; bottom: 9vh; width: 440px; background: rgba(8,8,16,0.72); border-top: 3px solid var(--gold); padding: 16px 20px; font-size: 14px; line-height: 1.5; }
 .briefing:empty { display: none; }
 .briefing h3 { margin: 0 0 2px; font-size: 12px; letter-spacing: 3px; color: var(--gold); }
-.briefing h2 { margin: 0 0 8px; font-size: 24px; }
+#title-briefing h2 { margin: 0 0 8px; font-size: 22px; letter-spacing: 0; font-style: normal; color: #fff; }
+.briefing .chapters { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px; columns: 2; column-gap: 14px; }
+.briefing .chapters li { break-inside: avoid; padding: 1px 0; color: rgba(255,255,255,0.78); }
+.briefing .chapters li b { color: var(--gold); margin-right: 4px; }
+.briefing .chapters li.done { color: #8ff0a4; }
+.briefing .chapters li.next { color: #fff; font-weight: bold; }
 .briefing .cast { display: flex; gap: 10px; margin-top: 10px; }
 .briefing .cast div { flex: 1; background: rgba(255,255,255,0.06); padding: 6px; font-size: 11px; }
 .briefing .cast b { display: block; color: var(--teal); font-size: 12px; }

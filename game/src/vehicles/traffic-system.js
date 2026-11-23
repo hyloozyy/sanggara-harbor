@@ -15,6 +15,23 @@ export class TrafficSystem {
     this.signals = signals;
     this.target = 22;
     this.spawnTimer = 0;
+    this.parkedTarget = 12;
+  }
+
+  // Parked cars along the kerb: unlocked, stealable, and towed away once far behind.
+  spawnParked(px, pz) {
+    const i = rng.int(0, N - 1), j = rng.int(0, N - 1);
+    const to = rng.pick(neighbours(i, j));
+    const L = laneLine([i, j], to);
+    const t = rng.range(0.3, 0.7);
+    const x = L.ax + (L.bx - L.ax) * t + L.dz * 2.1, z = L.az + (L.bz - L.az) * t - L.dx * 2.1;
+    const d = Math.hypot(x - px, z - pz);
+    if (d < 40 || d > 160 || this.vehicles.nearest(x, z, 7)) return null;
+    const key = rng.pick(['lestari', 'kancil', 'banteng', 'kancil', 'lestari', 'rajawali', 'bebek']);
+    const v = this.vehicles.spawn(key, x, z, Math.atan2(L.dx, L.dz));
+    v.ai = { kind: 'parked' };
+    v.controls.handbrake = true;
+    return v;
   }
 
   // Put a civilian car on a lane edge, `t` of the way along it.
@@ -30,6 +47,7 @@ export class TrafficSystem {
 
   populate(px, pz, count) {
     for (let k = 0; k < count * 4 && this.count() < count; k++) this.trySpawn(px, pz, 30, 230);
+    for (let k = 0; k < 60 && this.vehicles.list.filter((v) => v.ai?.kind === 'parked').length < this.parkedTarget; k++) this.spawnParked(px, pz);
   }
 
   count() { return this.vehicles.list.filter((v) => v.ai && v.ai.kind === 'traffic').length; }
@@ -53,10 +71,15 @@ export class TrafficSystem {
     const px = player.pos.x, pz = player.pos.z;
     // Recycle far traffic and top up near the player.
     for (const v of [...this.vehicles.list]) {
-      if (!v.ai || v.ai.kind !== 'traffic' || v.driver === 'player') continue;
+      if (!v.ai || v.driver === 'player') continue;
       const d = Math.hypot(v.pos.x - px, v.pos.z - pz);
-      if (d > 280 || (v.wrecked && d > 120)) this.vehicles.remove(v);
+      if (v.ai.kind === 'traffic' && (d > 280 || (v.wrecked && d > 120))) this.vehicles.remove(v);
+      // Abandoned cars (stolen, crew, activity, wrecks) are towed away once far behind.
+      else if (['stolen', 'traffic-parked', 'crew-car', 'activity'].includes(v.ai.kind) && d > 320) this.vehicles.remove(v);
     }
+    const parked = this.vehicles.list.filter((v) => v.ai && v.ai.kind === 'parked');
+    for (const v of parked) if (Math.hypot(v.pos.x - px, v.pos.z - pz) > 220) this.vehicles.remove(v);
+    if (parked.length < this.parkedTarget) this.spawnParked(px, pz);
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && this.count() < this.target) { this.spawnTimer = 0.4; this.trySpawn(px, pz, 70, 220, camDir); }
 

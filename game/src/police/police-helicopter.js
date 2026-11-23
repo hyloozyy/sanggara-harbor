@@ -77,11 +77,11 @@ export class PoliceHelicopter {
     scene.add(this.root);
 
     // Searchlight: a real spotlight plus a visible additive beam cone.
-    this.spot = new THREE.SpotLight(0xfff2d8, 900, 140, 0.2, 0.45, 1.2);
+    this.spot = new THREE.SpotLight(0xfff2d8, 260, 120, 0.16, 0.5, 1.4);
     this.spot.castShadow = false;
     scene.add(this.spot, this.spot.target);
-    const coneGeo = new THREE.ConeGeometry(7, 1, 24, 1, true).translate(0, -0.5, 0);
-    this.beam = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.11, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    const coneGeo = new THREE.ConeGeometry(5, 1, 24, 1, true).translate(0, -0.5, 0);
+    this.beam = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     this.beam.frustumCulled = false;
     scene.add(this.beam);
     this.aim = new THREE.Vector3(x, 0, z);

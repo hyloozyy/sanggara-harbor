@@ -21,7 +21,8 @@ export class Input {
     addEventListener('keyup', (e) => this.keys.delete(e.code));
     addEventListener('blur', () => { this.keys.clear(); this.buttons.clear(); });
     addEventListener('mousemove', (e) => {
-      if (!this.locked) return;
+      // Without pointer lock (e.g. it was refused), dragging with a button held still looks around.
+      if (!this.locked && this.buttons.size === 0) return;
       this.mouseDX += e.movementX;
       this.mouseDY += e.movementY;
     });

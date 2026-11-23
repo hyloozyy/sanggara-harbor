@@ -35,7 +35,7 @@ export class PoliceDispatcher {
   setHeliVisible(on) {
     const h = this.heli;
     h.root.visible = on; h.beam.visible = on;
-    h.spot.intensity = on ? 900 : 0;
+    h.spot.intensity = on ? 260 : 0;
   }
 
   get policeCars() { return this.units.filter((u) => u.vehicle).map((u) => u.vehicle); }

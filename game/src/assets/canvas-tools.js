@@ -57,13 +57,13 @@ export function speckle(ctx, w, h, count, colors, rng, sizeMin = 1, sizeMax = 2)
 }
 
 // Builds a tangent-space normal map from a canvas whose red channel is height.
-export function heightToNormalCanvas(source, strength = 2) {
+export function heightToNormalCanvas(source, strength = 2, channel = 0) {
   const w = source.width, h = source.height;
   const src = source.getContext('2d').getImageData(0, 0, w, h).data;
   const out = makeCanvas(w, h);
   const octx = out.getContext('2d');
   const img = octx.createImageData(w, h);
-  const H = (x, y) => src[(((y + h) % h) * w + ((x + w) % w)) * 4] / 255;
+  const H = (x, y) => src[(((y + h) % h) * w + ((x + w) % w)) * 4 + channel] / 255;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const dx = (H(x + 1, y) - H(x - 1, y)) * strength;

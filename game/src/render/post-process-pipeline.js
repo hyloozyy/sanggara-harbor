@@ -100,7 +100,7 @@ export class PostProcessPipeline {
   constructor(renderer, { samples = 4, mips = 5 } = {}) {
     this.renderer = renderer;
     this.enabled = true;
-    this.bloomStrength = 0.85;
+    this.bloomStrength = 0.6;
     this.samples = samples;
     this.mipCount = mips;
     this.quad = new THREE.Mesh(new THREE.BufferGeometry(), null);
@@ -114,13 +114,13 @@ export class PostProcessPipeline {
       vertexShader: FULLSCREEN_VERT, fragmentShader: frag, uniforms,
       depthTest: false, depthWrite: false, toneMapped: false, ...extra,
     });
-    this.brightMat = mat(BRIGHT_FRAG, { tInput: { value: null }, threshold: { value: 1.0 }, knee: { value: 0.5 } });
+    this.brightMat = mat(BRIGHT_FRAG, { tInput: { value: null }, threshold: { value: 1.25 }, knee: { value: 0.5 } });
     this.downMat = mat(DOWN_FRAG, { tInput: { value: null }, texel: { value: new THREE.Vector2() } });
     this.upMat = mat(UP_FRAG, { tInput: { value: null }, texel: { value: new THREE.Vector2() }, weight: { value: 1 } },
       { blending: THREE.AdditiveBlending, transparent: true });
     this.compositeMat = mat(COMPOSITE_FRAG, {
       tScene: { value: null }, tBloom: { value: null }, bloomStrength: { value: this.bloomStrength },
-      exposure: { value: 1.0 }, vignette: { value: 1.25 }, time: { value: 0 }, saturation: { value: 1.12 },
+      exposure: { value: 1.12 }, vignette: { value: 1.25 }, time: { value: 0 }, saturation: { value: 1.12 },
       shadowTint: { value: new THREE.Vector3(0.82, 0.9, 1.25) }, damageVignette: { value: 0 },
     });
     this.sceneTarget = null;

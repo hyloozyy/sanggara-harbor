@@ -9,9 +9,10 @@ import { events } from '../core/event-bus.js';
 import { WEAPONS } from '../combat/weapon-catalog.js';
 
 const RACE_ROUTE = [
-  [-40, 317], [40, 317], [120, 317], [157, 300], [157, 240], [157, 165], [100, 157], [0, 157], [-77, 165], [-77, 240], [-100, 317], [-120, 317],
+  [-40, 317.4], [80, 317.4], [200, 317.4], [317.4, 290], [317.4, 190], [317.4, 80], [317.4, -30], [300, -77.4],
+  [200, -77.4], [90, -77.4], [2.6, -40], [2.6, 90], [2.6, 220], [-60, 322.6],
 ];
-const RECORD = 95; // seconds to beat ("rekor Kobra Senja")
+const RECORD = 78; // seconds to beat ("rekor Kobra Senja")
 const DELIVERY_SPOTS = [[-40, 87.5], [114, 166.6], [-114, 245.6], [86, -86.5], [166.5, 114], [-86.5, 34], [246, 86.5], [-166.6, 200]];
 
 export class SideActivities {
@@ -23,6 +24,9 @@ export class SideActivities {
     this.raceBest = null;
     this.cool = {};
   }
+
+  get routeLength() { return RACE_ROUTE.length; }
+  get record() { return RECORD; }
 
   placeFixedMarkers() {
     const g = this.game;

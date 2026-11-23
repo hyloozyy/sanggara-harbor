@@ -19,7 +19,9 @@ function paintMap() {
     const d = DISTRICTS[b.district];
     ctx.fillStyle = '#6a6d74';
     ctx.fillRect(toMap(b.slab.minX), toMap(b.slab.minZ), (b.slab.maxX - b.slab.minX) * PX, (b.slab.maxZ - b.slab.minZ) * PX);
-    ctx.fillStyle = d.color + '70';
+    ctx.fillStyle = '#30343c';
+    ctx.fillRect(toMap(b.lot.minX), toMap(b.lot.minZ), (b.lot.maxX - b.lot.minX) * PX, (b.lot.maxZ - b.lot.minZ) * PX);
+    ctx.fillStyle = d.color + '38';
     ctx.fillRect(toMap(b.lot.minX), toMap(b.lot.minZ), (b.lot.maxX - b.lot.minX) * PX, (b.lot.maxZ - b.lot.minZ) * PX);
   }
   ctx.fillStyle = '#d8dce2';
