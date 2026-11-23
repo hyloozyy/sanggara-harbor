@@ -39,7 +39,7 @@ No network requests at runtime, no build step: serve `game/` with any static ser
   and explosions.
 - **Traffic & people**: left-hand-drive traffic AI on the road graph obeying signals, keeping
   distance and overtaking stalled cars, parked cars, scooters; articulated pedestrians (some in
-  headscarves) who that walk the sidewalks, phone, cower,
+  headscarves) who walk the sidewalks, phone, cower,
   flee, get hit and call the police.
 - **Police**: 1-5 stars from witnessed crimes; patrol cars that route and ram, officers who get out
   and shoot, roadblocks, the Elang-1 helicopter with a searchlight, tactical vans; search zone on
