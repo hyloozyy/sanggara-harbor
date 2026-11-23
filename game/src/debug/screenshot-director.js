@@ -65,7 +65,7 @@ const SCENES = {
     s.traffic.populate(0, 0, 24);
     s.peds.populate(0, 20, 34);
     s.radio.index = 3; s.radio.on = true;
-    const yaw = Math.PI - 0.22, pitch = 0.36;
+    const yaw = Math.PI - (Number(new URLSearchParams(location.search).get('yaw')) || 0.12), pitch = Number(new URLSearchParams(location.search).get('pitch')) || 0.3;
     simulate(s, 2.2, () => {
       s.input.simulateHold('KeyW', true);
       s.cameraRig.idleMouse = 0; s.cameraRig.yaw = yaw; s.cameraRig.pitch = pitch;
