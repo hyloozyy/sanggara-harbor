@@ -208,6 +208,10 @@ export class GameSession {
     this.checkBusted(dt);
     if (this.busted) { player.body.anim = 'cower'; player.body.aiming = false; player.body.move(dt, this.world, 0, 0); player.body.updateVisual(dt); }
     else player.update(dt, input, this);
+    if (!player.vehicle && player.alive) {
+      const { hitSpeed, hitBy } = this.vehicles.pushOut(player.body);
+      if (hitSpeed > 5 && player.body.knock <= 0) player.body.hit(hitSpeed * hitSpeed * 0.35, { x: hitBy.pos.x, z: hitBy.pos.z }, { knockback: Math.min(12, hitSpeed * 0.7), cause: 'vehicle' });
+    }
     this.crew.update(dt, input);
     this.traffic.update(dt, player, camDir);
     this.vehicles.update(dt);

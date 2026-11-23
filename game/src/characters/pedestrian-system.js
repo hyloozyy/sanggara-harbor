@@ -125,6 +125,7 @@ export class PedestrianSystem {
         }
       }
       p.move(dt, this.world, wx, wz);
+      if (p.alive) vehicles.pushOut(p);
       p.updateVisual(dt);
     }
   }

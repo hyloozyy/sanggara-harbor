@@ -54,6 +54,26 @@ export class VehicleManager {
     return best;
   }
 
+  // Keep a person out of car bodies; returns the speed of the fastest car that hit them.
+  pushOut(ch) {
+    let hitSpeed = 0, hitBy = null;
+    for (const v of this.list) {
+      if (ch.vehicle === v) continue;
+      const dx0 = ch.pos.x - v.pos.x, dz0 = ch.pos.z - v.pos.z;
+      if (dx0 * dx0 + dz0 * dz0 > (v.radius + 1) ** 2) continue;
+      for (const c of v.footprint()) {
+        const dx = ch.pos.x - c.x, dz = ch.pos.z - c.z, rr = c.r + ch.radius * 0.8;
+        const d2 = dx * dx + dz * dz;
+        if (d2 >= rr * rr) continue;
+        const d = Math.sqrt(d2) || 0.01;
+        ch.pos.x += dx / d * (rr - d); ch.pos.z += dz / d * (rr - d);
+        const sp = Math.hypot(v.vel.x, v.vel.z);
+        if (sp > hitSpeed) { hitSpeed = sp; hitBy = v; }
+      }
+    }
+    return { hitSpeed, hitBy };
+  }
+
   update(dt) {
     for (const v of this.list) {
       v.update(dt, this.world);
