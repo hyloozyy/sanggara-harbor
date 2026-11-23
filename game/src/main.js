@@ -45,6 +45,8 @@ const menus = new MenuScreens({
     session.start({ freeRoam: mode === 'free' });
     if (mode === 'new') session.missions.start(session.missions.nextMission);
     state = 'playing';
+    session.hud.notify('WASD jalan · Mouse lihat · F masuk/curi mobil · Klik kiri tembak, kanan bidik');
+    setTimeout(() => session.hud.notify('Lingkaran kuning = misi · M peta · Esc jeda & simpan'), 4500);
     session.cameraRig.override = null;
     input.enabled = true;
     canvas.requestPointerLock?.();
