@@ -1,9 +1,10 @@
 // The one registry every system asks for textures, materials and geometries, so each procedural
 // asset is generated once and reused everywhere (and tinted variants are cached by key).
 import * as THREE from 'three';
-import * as surfaces from './surface-textures.js';
-import { facadeTextures, FACADE_PALETTES } from './facade-textures.js';
-import { shopfrontTextures, billboardTextures, neonSignTexture } from './signage-textures.js';
+
+// Texture generators register themselves here (see texture-catalog.js), keeping this registry
+// free of the painting code.
+const factories = {};
 
 const textureCache = new Map();
 const materialCache = new Map();
@@ -17,38 +18,22 @@ function cached(map, key, make) {
 }
 
 export const assets = {
+  registerTextures(map) { Object.assign(factories, map); },
   setEnvironment(env) { environmentMap = env; },
   get environment() { return environmentMap; },
 
   texture(name) {
     return cached(textureCache, name, () => {
-      switch (name) {
-        case 'road': return surfaces.roadTextures();
-        case 'asphalt': return surfaces.asphaltTextures();
-        case 'crosswalk': return surfaces.crosswalkTexture();
-        case 'pavers': return surfaces.paverTextures();
-        case 'concrete': return surfaces.concreteTexture();
-        case 'concrete-dark': return surfaces.concreteTexture(42, [120, 118, 114]);
-        case 'sand': return surfaces.sandTexture();
-        case 'grass': return surfaces.grassTexture();
-        case 'corrugated': return surfaces.corrugatedTextures();
-        case 'clay-tiles': return surfaces.clayTileTexture();
-        case 'roof': return surfaces.roofTexture();
-        case 'wood': return surfaces.woodPlankTexture();
-        case 'water-normal': return surfaces.waterNormalTexture();
-        case 'shopfronts': return shopfrontTextures();
-        case 'billboards': return billboardTextures();
-        case 'glow': return surfaces.radialSpriteTexture();
-        default: throw new Error('unknown texture ' + name);
-      }
+      if (!factories[name]) throw new Error('unknown texture ' + name);
+      return factories[name]();
     });
   },
 
   facadeMaterial(style, paletteIndex) {
-    const count = FACADE_PALETTES[style].length;
+    const count = factories.facadePaletteCount(style);
     const p = paletteIndex % count;
     return cached(materialCache, `facade:${style}:${p}`, () => {
-      const t = facadeTextures(style, p, 7 + p);
+      const t = factories.facade(style, p, 7 + p);
       return new THREE.MeshStandardMaterial({
         map: t.map, emissiveMap: t.emissiveMap, emissive: new THREE.Color(1.0, 0.82, 0.6), emissiveIntensity: 1.05,
         roughnessMap: t.ormMap, metalnessMap: t.ormMap, normalMap: t.normalMap, normalScale: new THREE.Vector2(1.2, 1.2), roughness: 1, metalness: style === 'glass' ? 0.9 : 0.6,
@@ -59,7 +44,7 @@ export const assets = {
 
   neonMaterial(text, color) {
     return cached(materialCache, `neon:${text}:${color}`, () => {
-      const t = neonSignTexture(text, color);
+      const t = factories.neon(text, color);
       return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 3.2, roughness: 0.5 });
     });
   },

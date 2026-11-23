@@ -1,35 +1,34 @@
 // One play session: builds the world and every system, wires their events together (crimes,
 // sounds, rewards, deaths), runs the per-frame update and feeds the HUD and minimap.
 import * as THREE from 'three';
-import { buildCity } from './city/city-builder.js';
+import { MissionRunner } from './missions/mission-runner.js';
+import { PoliceDispatcher } from './police/police-dispatcher.js';
+import { WantedSystem } from './police/wanted-system.js';
+import { PlayerController } from './characters/player-controller.js';
 import { VehicleManager } from './vehicles/vehicle-manager.js';
 import { TrafficSystem } from './vehicles/traffic-system.js';
 import { PedestrianSystem } from './characters/pedestrian-system.js';
-import { PlayerController } from './characters/player-controller.js';
-import { Character } from './characters/character.js';
-import { CameraRig } from './camera/camera-rig.js';
 import { WeaponSystem } from './combat/weapon-system.js';
-import { ParticleSystem } from './effects/particle-system.js';
-import { LightFlashes } from './effects/light-flashes.js';
-import { WantedSystem } from './police/wanted-system.js';
-import { PoliceDispatcher } from './police/police-dispatcher.js';
-import { WorldMarkers } from './world/world-markers.js';
-import { Progression } from './world/progression.js';
-import { MissionRunner } from './missions/mission-runner.js';
 import { SideActivities } from './missions/side-activities.js';
+import { AngkotJob } from './missions/angkot-job.js';
+import { WorldEvents } from './missions/world-events.js';
 import { CrewAbilities } from './missions/crew-abilities.js';
 import { DialogueQueue } from './missions/dialogue-queue.js';
-import { WorldEvents } from './missions/world-events.js';
-import { AngkotJob } from './missions/angkot-job.js';
+import { Progression } from './world/progression.js';
 import { Hud } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
+import { CameraRig } from './camera/camera-rig.js';
+import { Character } from './characters/character.js';
+import { ParticleSystem } from './effects/particle-system.js';
+import { LightFlashes } from './effects/light-flashes.js';
+import { WorldMarkers } from './world/world-markers.js';
+import { buildCity } from './city/city-builder.js';
 import { assets } from './assets/asset-library.js';
 import { writeSave } from './save/save-system.js';
-import { WEAPONS } from './combat/weapon-catalog.js';
 import { PLACES } from './city/city-layout.js';
-import { formatRupiah } from './core/math-utils.js';
 import { rng } from './core/rng.js';
-import { events } from './core/event-bus.js';
+import { wireGameEvents } from './game-event-wiring.js';
+import { buildHudState, buildMinimapState } from './ui/hud-state.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'RS Sanggara Sehat' };
 const POLICE_STATION = { x: 86.5, z: 120, name: 'Polsek Kota Lama' };
@@ -127,131 +126,7 @@ export class GameSession {
 
   camDist(x, z) { const c = this.gfx.camera.position; return Math.hypot(c.x - x, c.z - z); }
 
-  wireEvents() {
-    const P = () => this.player.body;
-    events.on('shot-fired', ({ shooter, weapon, x, z }) => {
-      this.audio.gunshot(weapon, this.camDist(x, z));
-      if (shooter === P()) {
-        this.peds.scare(x, z, 45, 2, true);
-        this.traffic.panicAround(x, z, 40);
-        if (!this.missions.active || this.wanted.level > 0 || this.policeNear(x, z, 60)) this.crime('shots-fired', x, z, this.policeNear(x, z, 80));
-      } else this.peds.scare(x, z, 30, 1, false);
-    });
-    events.on('witness-report', ({ x, z }) => { if (this.wanted.level === 0) this.crime('shots-fired', x, z, false); });
-    events.on('character-hit', ({ character, amount, attacker }) => {
-      if (character === P()) { this.hud.damageFlash(amount); this.cameraRig.addShake(0.25); }
-      if (attacker === P() && character !== P()) {
-        this.hud.hitMarker();
-        if (character.faction === 'police') this.crime('cop-assault', character.pos.x, character.pos.z);
-        else if (character.faction === 'civilian') {
-          this.peds.scare(character.pos.x, character.pos.z, 25, 1, true);
-          if (this.policeNear(character.pos.x, character.pos.z, 50)) this.crime('assault', character.pos.x, character.pos.z);
-        }
-      }
-    });
-    events.on('character-died', ({ character, attacker, cause }) => {
-      if (character === P()) { this.onWasted(); return; }
-      const byPlayer = attacker === P() || (cause === 'vehicle' && attacker === this.player);
-      if (byPlayer) {
-        this.progression.stats.kills++;
-        if (character.faction === 'police') { this.crime('cop-killed', character.pos.x, character.pos.z); this.progression.addXp(15, 'Polisi'); }
-        else if (character.faction === 'gang') this.progression.addXp(25, 'Anggota Hiu Merah');
-        else this.crime(cause === 'vehicle' ? 'hit-and-run' : 'murder', character.pos.x, character.pos.z, this.policeNear(character.pos.x, character.pos.z, 60) || rng.chance(0.5));
-      }
-      if (character.faction !== 'player') {
-        const amount = character.faction === 'gang' ? rng.int(8, 25) * 10000 : rng.int(2, 9) * 10000;
-        if (rng.chance(character.faction === 'gang' ? 1 : 0.6)) this.markers.addPickup('cash', character.pos.x + 0.5, character.pos.z + 0.3, amount);
-        if (character.faction === 'police' && rng.chance(0.4)) this.markers.addPickup('pistol', character.pos.x - 0.5, character.pos.z, 24);
-        if (character.faction === 'gang' && rng.chance(0.25)) this.markers.addPickup('armour', character.pos.x - 0.6, character.pos.z - 0.4, 25);
-      }
-    });
-    events.on('vehicle-entered', ({ vehicle, stolen, carjack }) => {
-      if (stolen) this.progression.stats.carsStolen++;
-      const x = vehicle.pos.x, z = vehicle.pos.z;
-      if (vehicle.isPolice) this.crime('car-theft-seen', x, z);
-      else if (carjack) {
-        this.peds.scare(x, z, 20, 1, false);
-        if (this.policeNear(x, z, 70)) this.crime('carjack', x, z);
-      }
-      if (!this.radio.on && !this.radio.silent) this.radio.setOn(true);
-      this.hud.notify(`${vehicle.spec.name}${carjack ? ' — dibajak!' : ''}`);
-    });
-    events.on('vehicle-exited', () => this.radio.setOn(false));
-    events.on('vehicle-collision', ({ a, b, impact, x, z }) => {
-      if (this.camDist(x, z) < 80) this.audio.crash(impact);
-      this.particles.sparks(x, 0.8, z, Math.min(30, impact * 2), 7);
-      const pv = this.player.vehicle;
-      if (pv && (a === pv || b === pv)) {
-        this.cameraRig.addShake(Math.min(0.8, impact * 0.04));
-        const other = a === pv ? b : a;
-        if (other.isPolice && impact > 6) this.crime('police-car-damage', x, z);
-      }
-    });
-    events.on('vehicle-damaged', ({ vehicle, cause, at }) => {
-      if (cause === 'crash' && at && at.impact > 6) {
-        this.particles.sparks(at.x, 0.7, at.z, Math.min(25, at.impact * 1.5), 6);
-        if (this.camDist(at.x, at.z) < 80) this.audio.crash(at.impact);
-        if (vehicle === this.player.vehicle) this.cameraRig.addShake(Math.min(0.7, at.impact * 0.04));
-      }
-    });
-    events.on('vehicle-shot', ({ vehicle, shooter }) => {
-      if (shooter === P() && vehicle.isPolice) this.crime('police-car-damage', vehicle.pos.x, vehicle.pos.z);
-      if (vehicle.ai && vehicle.ai.kind === 'traffic') vehicle.ai.panic = 8;
-    });
-    events.on('explosion', ({ x, y, z, power }) => {
-      this.particles.explosion(x, y, z, power);
-      this.lights.flash(x, y + 2, z, 0xff8a3a, 160, 0.9, 50);
-      this.audio.explosion(this.camDist(x, z));
-      const d = this.camDist(x, z);
-      this.cameraRig.addShake(Math.max(0, 1.1 - d / 60));
-      for (const ch of this.allCharacters()) {
-        const cd = Math.hypot(ch.pos.x - x, ch.pos.z - z);
-        if (cd < 9 && ch.alive && !ch.vehicle) ch.hit((9 - cd) * 22, { x, z }, { knockback: 12, cause: 'explosion' });
-      }
-      for (const v of this.vehicles.list) {
-        const vd = Math.hypot(v.pos.x - x, v.pos.z - z);
-        if (vd > 0.5 && vd < 8 && !v.wrecked) { v.damage((8 - vd) * 60, 'explosion'); v.vel.x += (v.pos.x - x) / vd * 6; v.vel.z += (v.pos.z - z) / vd * 6; }
-      }
-      this.peds.scare(x, z, 60, 2, false);
-      if (Math.hypot(this.player.pos.x - x, this.player.pos.z - z) < 40 && this.policeNear(x, z, 120)) this.crime('explosion', x, z);
-    });
-    events.on('wanted-changed', ({ level, prev, reason }) => {
-      this.audio.wantedSting(level > prev);
-      this.progression.stats.maxWanted = Math.max(this.progression.stats.maxWanted, level);
-      if (level > prev) {
-        this.hud.notify(`${'★'.repeat(level)}  ${reason || 'Polisi mencarimu'}`, 'police');
-        const chatter = ['Unit patroli, tersangka laki-laki, jaket merah marun.', 'Semua unit merapat, tersangka bersenjata!', 'Elang-1 mengudara, lampu sorot menyala.', 'Pasang penghadang di jalan utama!', 'Unit Taktis diberangkatkan. Ulangi, Unit Taktis!'];
-        if (level >= 1) this.dialogue.say('radio', chatter[level - 1]);
-      } else if (level === 0) {
-        this.hud.notify(reason === 'paint' ? 'Polisi kehilangan jejak (cat baru)' : 'Kamu lolos dari kejaran polisi', 'xp');
-        if (reason === 'escaped') this.progression.addXp(20 * prev, 'Lolos dari polisi');
-      }
-    });
-    events.on('mission-complete', () => { this.audio.missionJingle(true); this.saveGame('Autosave'); });
-    events.on('mission-failed', () => this.audio.missionJingle(false));
-    events.on('pickup', (p) => {
-      this.audio.pickup();
-      const b = this.player.body;
-      if (p.type === 'cash') this.progression.addMoney(p.amount || 50000, 'Uang tercecer');
-      else if (p.type === 'health') b.health = Math.min(b.maxHealth, b.health + 60);
-      else if (p.type === 'armour') b.armour = Math.min(100, b.armour + (p.amount || 50));
-      else if (WEAPONS[p.type]) { this.player.arsenal.give(p.type, p.amount || WEAPONS[p.type].mag * 2); this.hud.notify(`${WEAPONS[p.type].name} +${p.amount || WEAPONS[p.type].mag * 2} peluru`); }
-      else if (p.type === 'ledger') this.hud.notify('Buku besar Juragan Rusdi diambil');
-    });
-    events.on('money-changed', ({ amount, reason }) => { if (Math.abs(amount) >= 50000) this.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
-    events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) this.hud.notify(`+${amount} RESPEK · ${reason}`, 'xp'); });
-    events.on('rank-up', ({ rank }) => { this.hud.activityResult(true, 'NAIK PERINGKAT', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); this.audio.missionJingle(true); });
-    events.on('dialogue-line', (l) => this.audio.voiceBlip(l.speaker.length));
-    events.on('punch', () => this.audio.whoosh());
-    events.on('punch-hit', () => { this.audio.punch(); this.cameraRig.addShake(0.15); });
-    events.on('reload', () => this.audio.reload());
-    events.on('checkpoint', () => this.audio.checkpoint());
-    events.on('horn', () => this.audio.horn());
-    events.on('notify', ({ text, kind }) => this.hud.notify(text, kind));
-    events.on('crew-unlocked', ({ crew }) => this.hud.notify(`Kru baru: ${crew.name} — [${crew.label}] ${crew.ability}`, 'xp'));
-    events.on('weapon-unlocked', ({ id }) => this.hud.notify(`Senjata baru: ${WEAPONS[id].name} [${WEAPONS[id].slot}]`, 'xp'));
-    events.on('weapon-switch', () => this.audio.uiBlip());
-  }
+  wireEvents() { wireGameEvents(this); }
 
   // A carjacked driver is pulled out and runs.
   ejectDriver(v, player) {
@@ -395,68 +270,8 @@ export class GameSession {
     this.radio.update(dt);
   }
 
-  // Everything the HUD shows this frame.
-  hudState() {
-    const p = this.player, b = p.body, a = p.arsenal;
-    const v = p.vehicle;
-    let hint = null;
-    if (!v && b.alive) {
-      const near = this.vehicles.nearest(b.pos.x, b.pos.z, 4.2, (c) => !c.wrecked);
-      if (near) hint = `<kbd>F</kbd>${near.driverModel ? 'Bajak' : 'Masuk'} ${near.spec.name}`;
-    } else if (v) hint = null;
-    const next = this.missions.nextMission;
-    if (!this.missions.active && next && Math.hypot(b.pos.x - next.start.x, b.pos.z - next.start.z) < 10) {
-      hint = `<kbd>${next.chapter}</kbd>${next.title} — masuk ke lingkaran kuning`;
-    }
-    let aimTarget = false;
-    if (b.aiming && !v) {
-      const { origin, dir } = this.cameraRig.aimRay();
-      const hit = this.weapons.trace(b, origin, dir.x, dir.y, dir.z, 90);
-      aimTarget = !!(hit.character && hit.character.faction !== 'civilian');
-    }
-    let activity = null;
-    if (this.side.mode === 'race') activity = `<b>BALAP LIAR SENJA</b><br>Gerbang ${this.side.cp + 1}/${this.side.routeLength} · rekor ${this.side.record} dtk · ${this.side.time.toFixed(1)} dtk`;
-    if (this.side.mode === 'delivery') activity = `<b>ANTAR MARTABAK</b><br>Antaran ${this.side.delivered + 1}/3 · sisa ${Math.ceil(this.side.time)} dtk`;
-    if (!activity) activity = this.angkotJob.hudLine();
-    const sp = v ? Math.abs(v.speed) * 3.6 : 0;
-    return {
-      wanted: this.wanted.level, wantedBlink: this.wanted.blinking,
-      money: this.progression.money, rank: this.progression.rank.name, xp: this.progression.xp, rankProgress: this.progression.rankProgress,
-      weapon: a.current, mag: a.mag[a.current] ?? 0, reserve: a.ammo[a.current] ?? 0, reloading: a.reloading > 0, owned: [...a.owned],
-      crew: this.crew.hudState(),
-      mission: this.missions.panelState(),
-      police: this.wanted.level > 0 ? this.police.hudList(p) : [],
-      px: b.pos.x, pz: b.pos.z,
-      dialogue: this.dialogue.line,
-      vehicle: v ? {
-        name: v.spec.name, kmh: sp, maxKmh: v.spec.maxSpeed * 3.6, condition: v.health / v.spec.health, drifting: v.drifting,
-        gear: v.speed < -0.5 ? 'R' : sp < 2 ? 'N' : String(Math.min(5, 1 + Math.floor(sp / (v.spec.maxSpeed * 3.6 / 5)))),
-      } : null,
-      radio: v && this.radio.on && !this.radio.silent ? { name: this.radio.station.name, song: this.radio.songTitle, dj: this.radio.station.dj } : null,
-      health: b.health / b.maxHealth, armour: b.armour / 100,
-      aiming: b.aiming && !v, aimTarget,
-      hint, activity,
-      wasted: this.wastedTimer > 0 ? (this.busted ? 'TERTANGKAP' : 'TUMBANG') : null,
-    };
-  }
-
-  minimapState() {
-    const p = this.player;
-    const acts = [
-      { ...PLACES.raceStart, color: '#40ffc0', name: 'Balap' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Antar' },
-      { ...PLACES.paintShop, color: '#8080ff', name: 'Bengkel Cat' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Toko Besi' },
-      { ...PLACES.safehouse, color: '#60ff80', name: 'Simpan' }, { ...HOSPITAL, color: '#ffffff', name: 'RS' },
-    ];
-    const enemies = [...this.missions.enemies, ...this.worldEvents.gang].filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
-    return {
-      px: p.pos.x, pz: p.pos.z, yaw: this.cameraRig.yaw, heading: p.vehicle ? p.vehicle.heading : p.body.heading,
-      speed: p.vehicle ? Math.abs(p.vehicle.speed) : 0,
-      police: this.police.policeCars.filter((v) => !v.wrecked).map((v) => ({ x: v.pos.x, z: v.pos.z })).concat(this.police.officers.filter((o) => o.alive).map((o) => ({ x: o.body.pos.x, z: o.body.pos.z }))),
-      heli: this.police.heliActive ? { x: this.police.heli.pos.x, z: this.police.heli.pos.z } : null,
-      enemies, activities: acts,
-      objective: this.missions.objectivePoint(this.angkotJob.objective()) || (this.side.markers[0] ? { x: this.side.markers[0].x, z: this.side.markers[0].z, kind: 'objective' } : null),
-      searchZone: this.wanted.level > 0 && this.wanted.unseen > 2 ? { x: this.wanted.lastKnown.x, z: this.wanted.lastKnown.z, r: this.wanted.searchRadius } : null,
-    };
-  }
+  // Everything the HUD and the minimap show this frame.
+  hudState() { return buildHudState(this, HOSPITAL); }
+  minimapState() { return buildMinimapState(this, HOSPITAL); }
 }
 

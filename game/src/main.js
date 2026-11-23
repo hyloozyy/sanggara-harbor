@@ -1,13 +1,16 @@
 // Boot: renderer, input and audio, the loading screen, the title flyover behind the menu, then the
 // game loop with pause, settings, map and save/load. ?shot=... stages a screenshot scene.
+import { GameSession } from './game-session.js';
+import { MenuScreens } from './ui/menu-screens.js';
+import { hasSave, readSave, applySave, loadSettings, saveSettings } from './save/save-system.js';
 import { GameRenderer } from './render/game-renderer.js';
 import { Input } from './core/input.js';
 import { AudioEngine } from './audio/audio-engine.js';
 import { Radio } from './audio/radio-stations.js';
-import { GameSession } from './game-session.js';
-import { MenuScreens } from './ui/menu-screens.js';
-import { hasSave, readSave, applySave, loadSettings, saveSettings } from './save/save-system.js';
+import { registerProceduralTextures } from './assets/texture-catalog.js';
 import { stageScreenshot } from './debug/screenshot-director.js';
+
+registerProceduralTextures();
 
 const params = new URLSearchParams(location.search);
 const shot = params.get('shot');
