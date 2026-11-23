@@ -51,9 +51,9 @@ export function buildMinimapState(game, HOSPITAL) {
 const self = game;
   const p = self.player;
   const acts = [
-    { ...PLACES.raceStart, color: '#40ffc0', name: 'Balap' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Antar' },
-    { ...PLACES.paintShop, color: '#8080ff', name: 'Bengkel Cat' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Toko Besi' },
-    { ...PLACES.safehouse, color: '#60ff80', name: 'Simpan' }, { ...HOSPITAL, color: '#ffffff', name: 'RS' },
+    { ...PLACES.raceStart, color: '#40ffc0', name: 'Balap', icon: 'B' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Antar', icon: 'A' },
+    { ...PLACES.paintShop, color: '#8080ff', name: 'Bengkel Cat', icon: 'C' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Toko Besi', icon: 'T' },
+    { ...PLACES.safehouse, color: '#60ff80', name: 'Simpan', icon: 'S' }, { ...HOSPITAL, color: '#ffffff', name: 'RS', icon: '+' },
   ];
   const enemies = [...self.missions.enemies, ...self.worldEvents.gang].filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
   return {

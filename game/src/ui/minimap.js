@@ -80,7 +80,17 @@ export class Minimap {
       else ctx.arc(toMap(x), toMap(z), r * s, 0, Math.PI * 2);
       ctx.fill(); ctx.stroke();
     };
-    for (const a of state.activities || []) blip(a.x, a.z, a.color, 5, 'square');
+    for (const a of state.activities || []) {
+      blip(a.x, a.z, a.color, 6, 'square');
+      if (a.icon) {
+        ctx.save();
+        ctx.translate(toMap(a.x), toMap(a.z));
+        ctx.rotate(-(Math.PI + yaw));
+        ctx.fillStyle = '#000'; ctx.font = `bold ${10 * s}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(a.icon, 0, 0.5 * s);
+        ctx.restore();
+      }
+    }
     for (const v of state.police || []) blip(v.x, v.z, Math.sin(this.time * 10) > 0 ? '#ff3a3a' : '#3a7aff', 5);
     for (const e of state.enemies || []) blip(e.x, e.z, '#ff4040', 4);
     if (state.heli) { blip(state.heli.x, state.heli.z, '#9fd0ff', 7); }
