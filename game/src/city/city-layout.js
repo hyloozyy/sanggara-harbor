@@ -85,17 +85,17 @@ export function isWater(x, z) {
 
 // Points of interest used by missions, the map legend and the safehouse.
 export const PLACES = {
-  safehouse: { x: -28, z: 128, name: 'Kos Raka (Simpan)' },
-  lastriWarung: { x: 52, z: 210, name: 'Warung Bu Lastri' },
-  fishMarket: { x: 232, z: 172, name: 'Pasar Ikan Pak Harun' },
-  hiuGarage: { x: -248, z: -52, name: 'Garasi Hiu Merah' },
-  hillVilla: { x: 36, z: -290, name: 'Vila Juragan Rusdi' },
+  safehouse: { x: -40, z: 87.5, name: 'Kos Raka (Simpan)' },
+  lastriWarung: { x: 34, z: 166.8, name: 'Warung Bu Lastri' },
+  fishMarket: { x: 233, z: 196, name: 'Pasar Ikan Pak Harun' },
+  hiuGarage: { x: -233, z: -40, name: 'Garasi Hiu Merah' },
+  hillVilla: { x: 40, z: -313, name: 'Vila Juragan Rusdi' },
   containerYard: { x: 352, z: -120, name: 'Lapangan Peti Kemas' },
   finalPier: { x: 352, z: 300, name: 'Dermaga Kapal Pesiar' },
-  beachHouse: { x: -205, z: 352, name: 'Rumah Pantai' },
-  paintShop: { x: -120, z: -40, name: 'Bengkel Cat Pak Darto' },
-  gunShop: { x: 120, z: 40, name: 'Toko Besi Om Beni' },
-  raceStart: { x: -160, z: 320, name: 'Balap Liar Senja' },
-  deliveryDepot: { x: 200, z: 40, name: 'Martabak Bulan (Antar)' },
-  station: { x: -2, z: -6, name: 'Stasiun Sanggara' },
+  beachHouse: { x: -205, z: 345, name: 'Rumah Pantai' },
+  paintShop: { x: -152.5, z: -40, name: 'Bengkel Cat Pak Darto' },
+  gunShop: { x: 120, z: -7.2, name: 'Toko Besi Om Beni' },
+  raceStart: { x: -120, z: 317.4, name: 'Balap Liar Senja' },
+  deliveryDepot: { x: 200, z: 87.2, name: 'Martabak Bulan (Antar)' },
+  station: { x: 7.5, z: -7.5, name: 'Stasiun Sanggara' },
 };
