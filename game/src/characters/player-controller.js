@@ -95,7 +95,10 @@ export class PlayerController {
     if (v.isPolice && input.hit('KeyG')) v.sirenOn = !v.sirenOn;
     this.body.pos.set(v.pos.x, v.y, v.pos.z);
     this.body.heading = v.heading;
-    if (v.wrecked && v.burnTimer > 0.5) this.exitVehicle(game, true);
+    if (v.wrecked && v.burnTimer > 0.5) {
+      this.exitVehicle(game, true);
+      this.body.hit(70, { x: v.pos.x, z: v.pos.z }, { knockback: 8, cause: 'explosion' });
+    }
   }
 
   tryEnterExit(game) {

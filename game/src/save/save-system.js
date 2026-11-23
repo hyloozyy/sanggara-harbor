@@ -33,6 +33,10 @@ export function writeSave(game, label = '') {
 
 export function applySave(game, data) {
   if (!data) return false;
+  // Loading mid-game: step out of any car, drop the current job and the police.
+  if (game.player.vehicle) game.player.exitVehicle(game);
+  if (game.missions.active) game.missions.cleanupMission();
+  if (game.started) { game.wanted.clear('load'); game.police.clearAll(); }
   game.progression.restore(data.progression);
   game.missions.restore(data.missions);
   game.crew.restore(data.crew || {});

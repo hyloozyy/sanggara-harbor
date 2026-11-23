@@ -95,6 +95,7 @@ export class GameSession {
     this.worldEvents.placeShells();
     this.worldEvents.placeSupplies();
     this.freeRoam = freeRoam;
+    this.started = true;
     // Free roam starts a few steps from the first mission's marker instead of inside it.
     if (freeRoam && Math.hypot(p.x - PLACES.station.x, p.z - PLACES.station.z) < 4) p.set(7.5, 0.16, -20);
     this.missions.refreshStartMarker();
