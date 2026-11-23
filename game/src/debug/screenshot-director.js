@@ -73,17 +73,21 @@ const SCENES = {
     s.input.simulateHold('KeyW', false);
     // Frame the pursuers: one alongside, two fanned out behind.
     const units = s.police.units.filter((u) => u.kind === 'car');
-    [[3.4, 5.5, 0.06], [-0.4, 14, -0.1], [3.6, 25, 0.12]].forEach(([dx, dz, rot], i) => {
+    [[3.4, 3.2, 0.06], [-0.4, 14, -0.1], [3.6, 25, 0.12]].forEach(([dx, dz, rot], i) => {
       const pv = units[i] && units[i].vehicle;
       if (!pv) return;
       pv.pos.set(v.pos.x + dx, 0, v.pos.z + dz); pv.heading = v.heading + rot; pv.syncMesh();
     });
+    // A fourth patrol car that lost the chase burns against a lamp post.
+    const wreck = s.vehicles.spawn('patroli', v.pos.x + 8.6, v.pos.z - 17, Math.PI * 0.62);
+    wreck.ai = { kind: 'parked-police' }; wreck.sirenOn = true; wreck.health = wreck.spec.health * 0.12;
+    for (let i = 0; i < 40; i++) { s.updateVehicleEffects(DT); s.particles.update(DT); }
     const h = s.police.heli;
     const fx = Math.sin(v.heading), fz = Math.cos(v.heading);
-    h.pos.set(v.pos.x + fx * 52 - 10, 12, v.pos.z + fz * 52); h.heading = v.heading + Math.PI + 0.5; h.vel.set(0, 0, 0);
+    h.pos.set(v.pos.x + fx * 44 + 4, 15, v.pos.z + fz * 44); h.heading = v.heading + Math.PI + 0.5; h.vel.set(0, 0, 0);
     h.aim.set(v.pos.x, 0, v.pos.z);
     h.update(0.001, { x: v.pos.x, z: v.pos.z }, s.wanted.lastKnown, true);
-    h.pos.set(v.pos.x + fx * 52 - 10, 12, v.pos.z + fz * 52); h.root.position.copy(h.pos);
+    h.pos.set(v.pos.x + fx * 44 + 4, 15, v.pos.z + fz * 44); h.root.position.copy(h.pos);
     s.dialogue.say('dimas', 'Polisi di mana-mana! Lewat pantai, Rak!');
     s.dialogue.update(0.01);
     s.cameraRig.update(DT, s.player, s.input);
@@ -220,6 +224,21 @@ const SCENES = {
     log('save ok', !!localStorage.getItem('pelabuhan-sanggara-save-v1'));
     s.respawn();
     log('done; vehicles', s.vehicles.list.length, 'particles', s.particles.glow.items.length + s.particles.soft.items.length, 'calls', gfx.renderer.info.render.calls);
+    await finish(s, gfx);
+  },
+
+  async drivetest(session, gfx) {
+    const s = session;
+    const log = (...a) => console.log('[drive]', ...a);
+    s.start({});
+    const car = s.vehicles.spawn('kancil', -120, 317.4, Math.PI / 2);
+    s.player.body.pos.set(-120, 0, 319.5); s.player.tryEnterExit(s);
+    log('entered', s.player.vehicle && s.player.vehicle.id, car.id, 'side mode', s.side.mode, 'active', !!s.missions.active);
+    for (let k = 0; k < 8; k++) {
+      simulate(s, 1, () => s.input.simulateHold('KeyW', true));
+      const v = s.player.vehicle;
+      log('t', k + 1, 'speed', v && v.speed.toFixed(1), 'pos', s.player.pos.x.toFixed(1), s.player.pos.z.toFixed(1), 'race', s.side.mode, s.side.cp);
+    }
     await finish(s, gfx);
   },
 

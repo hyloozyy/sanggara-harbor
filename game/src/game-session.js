@@ -1,5 +1,6 @@
 // One play session: builds the world and every system, wires their events together (crimes,
 // sounds, rewards, deaths), runs the per-frame update and feeds the HUD and minimap.
+import * as THREE from 'three';
 import { buildCity } from './city/city-builder.js';
 import { VehicleManager } from './vehicles/vehicle-manager.js';
 import { TrafficSystem } from './vehicles/traffic-system.js';
@@ -68,7 +69,19 @@ export class GameSession {
     this.crimeCooldown = {};
     this.lastPos = this.player.pos.clone();
     this.wheelOpen = false;
+    this.headlight = new THREE.SpotLight(0xfff0d0, 0, 60, 0.5, 0.6, 1.3);
+    this.scene.add(this.headlight, this.headlight.target);
     this.wireEvents();
+  }
+
+  // The player's car throws a real light beam down the road at dusk.
+  updateHeadlight() {
+    const v = this.player.vehicle, h = this.headlight;
+    if (!v || v.wrecked || !v.headMeshes.length) { h.intensity = 0; return; }
+    const fx = Math.sin(v.heading), fz = Math.cos(v.heading);
+    h.position.set(v.pos.x + fx * v.spec.length * 0.5, v.y + 0.75, v.pos.z + fz * v.spec.length * 0.5);
+    h.target.position.set(v.pos.x + fx * 22, 0, v.pos.z + fz * 22);
+    h.intensity = 160 * (v.headMeshes.length / 2);
   }
 
   start({ freeRoam = false } = {}) {
@@ -329,6 +342,7 @@ export class GameSession {
     this.lights.updateSirens(this.police.policeCars, this.gfx.camera.position, this.time);
     this.sea.update(this.time);
     this.cameraRig.update(dt, player, input);
+    this.updateHeadlight();
     this.gfx.lighting.follow(player.pos.x, player.pos.z);
     this.updateAudio(dt);
     this.progression.stats.distance += this.lastPos.distanceTo(player.pos) < 20 ? this.lastPos.distanceTo(player.pos) : 0;
