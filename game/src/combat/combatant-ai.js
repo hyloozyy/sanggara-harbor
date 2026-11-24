@@ -25,7 +25,7 @@ export class Combatant {
     this.burst = 0;
     this.thinkTimer = rng.range(0, 1);
     this.strafeDir = rng.chance(0.5) ? 1 : -1;
-    this.preferred = weapon === 'fists' ? 1.3 : weapon === 'shotgun' ? 7 : weapon === 'smg' ? 13 : 16;
+    this.preferred = WEAPONS[weapon].melee ? 1.4 : weapon === 'shotgun' ? 7 : weapon === 'smg' ? 13 : weapon === 'rifle' ? 22 : 16;
     this.reaction = rng.range(0.6, 1.4);
     this.holdPosition = null;
     scene.add(this.body.mesh);

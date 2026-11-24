@@ -95,7 +95,7 @@ export class Hud {
     if (this.cache.icon !== s.weapon) { this.cache.icon = s.weapon; paintWeaponIcon(this.iconCanvas, s.weapon); }
     this.setText('weapon-name', w.name);
     this.setText('weapon-ammo', w.melee ? '—' : s.reloading ? 'ISI…' : `${s.mag} / ${s.reserve}`);
-    this.setHtml('weapon-slots', WEAPON_ORDER.map((id, i) => `<div class="${id === s.weapon ? 'active' : ''} ${s.owned.includes(id) ? '' : 'locked'}">${i + 1} ${WEAPONS[id].short}</div>`).join(''));
+    this.setHtml('weapon-slots', WEAPON_ORDER.map((id, i) => s.owned.includes(id) ? `<div class="${id === s.weapon ? 'active' : ''}">${i + 1} ${WEAPONS[id].short}</div>` : '').join(''));
     this.setHtml('crew-abilities', s.crew.map((c) => `<div class="crew ${c.cooldown > 0 ? 'cooldown' : ''}"><b>[${c.label}] ${c.name}</b>${c.cooldown > 0 ? Math.ceil(c.cooldown) + ' s' : c.ability}</div>`).join(''));
 
     // Mission panel.
@@ -171,8 +171,8 @@ export class Hud {
     this.toggle('weapon-wheel', on);
     if (!on) return;
     const html = WEAPON_ORDER.map((id, i) => {
-      const a = -Math.PI / 2 + i * Math.PI / 2;
-      const x = 180 + Math.cos(a) * 125, y = 180 + Math.sin(a) * 125;
+      const a = -Math.PI / 2 + i * Math.PI * 2 / WEAPON_ORDER.length;
+      const x = 180 + Math.cos(a) * 140, y = 180 + Math.sin(a) * 140;
       return `<div class="slot ${id === current ? 'active' : ''}" style="left:${x}px;top:${y}px;opacity:${owned.includes(id) ? 1 : 0.3}">${i + 1}<br>${WEAPONS[id].name}</div>`;
     }).join('');
     this.setHtml('weapon-wheel', html);

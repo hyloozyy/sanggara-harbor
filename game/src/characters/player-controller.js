@@ -4,6 +4,7 @@ import { generateLook } from './character-generator.js';
 import { Character } from './character.js';
 import { Arsenal } from '../combat/weapon-system.js';
 import { buildWeaponMesh } from '../combat/weapon-meshes.js';
+import { WEAPON_ORDER } from '../combat/weapon-catalog.js';
 import { WEAPONS } from '../combat/weapon-catalog.js';
 import { clamp } from '../core/math-utils.js';
 import { events } from '../core/event-bus.js';
@@ -46,11 +47,19 @@ export class PlayerController {
 
   update(dt, input, game) {
     const b = this.body;
+    const wasReloading = this.arsenal.reloading > 0;
     this.arsenal.update(dt);
+    // Reload animation: magazine out (dropped to the ground), a fresh one in.
+    const fx = game.weaponFx, item = b.model.heldItem;
+    if (this.arsenal.reloading > 0 && item) {
+      const t = 1 - this.arsenal.reloading / (this.arsenal.reloadTime || 1.2);
+      if (!this.magDropped && t > 0.28 && this.arsenal.current !== 'revolver' && this.arsenal.current !== 'shotgun') { this.magDropped = true; fx?.dropMag(item); }
+      fx?.animateReload(item, t, this.arsenal.current);
+    } else if (wasReloading || this.magDropped) { this.magDropped = false; fx?.resetReload(item); }
     if (!b.alive) { b.updateVisual(dt); return; }
 
     // Weapon selection.
-    for (const [code, id] of [['Digit1', 'fists'], ['Digit2', 'pistol'], ['Digit3', 'smg'], ['Digit4', 'shotgun']]) {
+    for (const [code, id] of WEAPON_ORDER.map((id, i) => [`Digit${i + 1}`, id])) {
       if (input.hit(code) && this.arsenal.select(id)) events.emit('weapon-switch', { id });
     }
     if (input.wheel && !b.vehicle) { this.arsenal.cycle(input.wheel > 0 ? 1 : -1); events.emit('weapon-switch', { id: this.arsenal.current }); }

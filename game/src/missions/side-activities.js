@@ -170,12 +170,12 @@ export class SideActivities {
     this.cool.guns = 12;
     const discount = g.progression.rankIndex >= 3 ? 0.8 : 1;
     // Buy the next weapon the player does not own yet, else refill ammo.
-    const next = ['pistol', 'smg', 'shotgun'].find((id) => !a.owned.has(id));
+    const next = ['pistol', 'bat', 'machete', 'revolver', 'smg', 'shotgun', 'rifle', 'sniper'].find((id) => !a.owned.has(id));
     if (next) {
       const price = WEAPONS[next].price * discount;
       if (g.progression.money >= price) {
         g.progression.addMoney(-price, 'Gun Shop');
-        a.give(next, WEAPONS[next].mag * 4);
+        a.give(next, WEAPONS[next].melee ? 0 : WEAPONS[next].mag * 4);
         events.emit('notify', { text: `Om Beni's Gun Shop: bought ${WEAPONS[next].name} (−${formatRupiah(price)})` });
         events.emit('weapon-unlocked', { id: next });
         return;
@@ -185,7 +185,7 @@ export class SideActivities {
     const ammoPrice = 400000 * discount;
     if (a.owned.size > 1 && g.progression.money >= ammoPrice) {
       g.progression.addMoney(-ammoPrice, 'Peluru');
-      for (const id of a.owned) if (id !== 'fists') a.ammo[id] += WEAPONS[id].mag * 3;
+      for (const id of a.owned) if (!WEAPONS[id].melee) a.ammo[id] += WEAPONS[id].mag * 3;
       g.player.body.armour = Math.max(g.player.body.armour, g.progression.rankIndex >= 2 ? 100 : 50);
       events.emit('notify', { text: `Ammo and vest refilled (−${formatRupiah(ammoPrice)})` });
     }

@@ -27,7 +27,7 @@ export const MISSIONS = [
     reward: { money: 1500000, xp: 300 }, giveWeapon: ['pistol', 48],
     stages: [
       { type: 'goto', text: 'Go to Pasar Ikan', target: P.fishMarket, radius: 8, lines: [['lastri', 'Be careful. They are not playing games.']] },
-      { type: 'eliminate', text: 'Beat up the Hiu Merah collectors', enemies: [{ dx: 0, dz: -8, weapon: 'fists' }, { dx: 3, dz: 6, weapon: 'fists' }, { dx: -1, dz: 14, weapon: 'fists' }], lines: [['bayu', 'Who is this? A hero who showed up late?'], ['raka', "Pak Harun's nephew. You picked the wrong stall."]] },
+      { type: 'eliminate', text: 'Beat up the Hiu Merah collectors', enemies: [{ dx: 0, dz: -8, weapon: 'bat' }, { dx: 3, dz: 6, weapon: 'fists' }, { dx: -1, dz: 14, weapon: 'machete' }], lines: [['bayu', 'Who is this? A hero who showed up late?'], ['raka', "Pak Harun's nephew. You picked the wrong stall."]] },
       { type: 'chase', text: 'Chase Bayu as he flees on a scooter', vehicle: { model: 'bebek', dx: 4.4, dz: 22, color: 0xc82020 }, who: 'bayu', lines: [['bayu', 'Tell your uncle Juragan Rusdi never forgets!'], ['harun', 'Raka! Do not let him get away!']] },
       { type: 'talk', text: 'Talk to Pak Harun', lines: [['harun', 'You grew up hard, Raka. Your father would be proud... or worried.'], ['harun', 'Keep this pistol. This is not the town it used to be.']] },
     ],
@@ -63,7 +63,7 @@ export const MISSIONS = [
     reward: { money: 6000000, xp: 600 }, giveWeapon: ['smg', 120],
     stages: [
       { type: 'drive-to', text: "Go to Juragan Rusdi's villa in Bukit Hijau", target: P.hillVilla, radius: 9, lines: [['lastri', 'Rusdi is out on his boat. Only his men guard the villa.']] },
-      { type: 'eliminate', text: 'Take out the villa guards', enemies: [{ dx: 0, dz: 8, weapon: 'pistol' }, { dx: -4, dz: 33, weapon: 'pistol' }, { dx: 4, dz: 35, weapon: 'pistol' }, { dx: 0, dz: 55, weapon: 'smg' }, { dx: -28, dz: 33, weapon: 'pistol' }], lines: [['raka', 'Five guards. Busy evening.']] },
+      { type: 'eliminate', text: 'Take out the villa guards', enemies: [{ dx: 0, dz: 8, weapon: 'pistol' }, { dx: -4, dz: 33, weapon: 'pistol' }, { dx: 4, dz: 35, weapon: 'pistol' }, { dx: 0, dz: 55, weapon: 'rifle' }, { dx: -28, dz: 33, weapon: 'revolver' }], lines: [['raka', 'Five guards. Busy evening.']] },
       { type: 'collect', text: "Grab Rusdi's ledger", at: { dx: 0, dz: 33 }, lines: [['raka', 'Names, dates, container numbers. Container 27...']] },
       { type: 'lose-wanted', text: 'Escape from Bukit Hijau', wanted: 3, lines: [['radio', 'Shots fired in Bukit Hijau! Send the Elang-1 helicopter!']] },
     ],
@@ -75,7 +75,7 @@ export const MISSIONS = [
     reward: { money: 12000000, xp: 900 }, giveWeapon: ['shotgun', 36],
     stages: [
       { type: 'goto', text: 'Enter the container yard', target: P.containerYard, radius: 12, lines: [['harun', 'Those cranes used to be ours. Now everyone pays Rusdi.']] },
-      { type: 'eliminate', text: 'Take down the Container 27 guards', enemies: [{ dx: 4, dz: -22, weapon: 'smg' }, { dx: 10, dz: 8, weapon: 'pistol' }, { dx: -2, dz: 24, weapon: 'smg' }, { dx: 8, dz: -40, weapon: 'pistol' }, { dx: 14, dz: -6, weapon: 'shotgun' }, { dx: -4, dz: -8, weapon: 'pistol' }], lines: [['bayu', 'Finish him! The boss pays double!']] },
+      { type: 'eliminate', text: 'Take down the Container 27 guards', enemies: [{ dx: 4, dz: -22, weapon: 'smg' }, { dx: 10, dz: 8, weapon: 'pistol' }, { dx: -2, dz: 24, weapon: 'rifle' }, { dx: 8, dz: -40, weapon: 'pistol' }, { dx: 14, dz: -6, weapon: 'shotgun' }, { dx: -4, dz: -8, weapon: 'pistol' }], lines: [['bayu', 'Finish him! The boss pays double!']] },
       { type: 'enter-vehicle', text: 'Take the pickup with the evidence', vehicle: { model: 'banteng', x: P.containerYard.x + 8, z: P.containerYard.z + 34, heading: Math.PI, color: 0x8a2a1a }, wanted: 4, lines: [['radio', 'Theft at the harbour! Roadblocks on every exit!']] },
       { type: 'drive-to', text: 'Bring the evidence to the Beach House', target: P.beachHouse, radius: 9, requireMissionVehicle: true, lines: [['dimas', 'Cops everywhere! Take the beach road, Rak!']] },
       { type: 'lose-wanted', text: 'Lose the police', lines: [['wulan', 'Raka Wiratama. I know who you are. I also know who Rusdi is.']] },
@@ -88,7 +88,7 @@ export const MISSIONS = [
     reward: { money: 25000000, xp: 1500 },
     stages: [
       { type: 'drive-to', text: 'Go to the yacht pier', target: P.finalPier, radius: 12, lines: [['dimas', 'I will wait in the car. If you do not come back... I will keep waiting.']] },
-      { type: 'eliminate', text: 'Defeat Juragan Rusdi and his men', boss: 'rusdi', enemies: [{ dx: -6, dz: -16, weapon: 'smg' }, { dx: 8, dz: -10, weapon: 'pistol' }, { dx: -4, dz: 6, weapon: 'shotgun' }, { dx: 10, dz: 12, weapon: 'smg' }, { dx: 0, dz: 22, weapon: 'shotgun', boss: true }], lines: [['rusdi', "A fisherman's boy dares to board my yacht?"], ['raka', 'Your yacht is moored in my town, Rusdi.']] },
+      { type: 'eliminate', text: 'Defeat Juragan Rusdi and his men', boss: 'rusdi', enemies: [{ dx: -6, dz: -16, weapon: 'smg' }, { dx: 8, dz: -10, weapon: 'pistol' }, { dx: -4, dz: 6, weapon: 'shotgun' }, { dx: 10, dz: 12, weapon: 'rifle' }, { dx: 0, dz: 22, weapon: 'revolver', boss: true }], lines: [['rusdi', "A fisherman's boy dares to board my yacht?"], ['raka', 'Your yacht is moored in my town, Rusdi.']] },
       { type: 'survive', text: 'Hold out until the police arrive', seconds: 25, wanted: 4, lines: [['wulan', 'All units to the pier. Rusdi belongs to the court, not to anyone else.']] },
       { type: 'lose-wanted', text: 'Vanish into the dusk', lines: [['wulan', 'Go, Raka. Tonight I did not see you.']] },
       { type: 'talk', text: 'Epilogue', lines: [['harun', 'The fish market is busy again, Raka. No more protection money.'], ['dimas', 'So... the harbour is ours now?'], ['raka', 'The harbour belongs to its people. We just keep watch over the dusk.']] },

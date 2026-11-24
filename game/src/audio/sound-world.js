@@ -199,6 +199,11 @@ export class SoundWorld {
     return 'asphalt';
   }
 
+  tinkle(x, z) { if (!this.ctx || this.dist(x, z) > 25) return; const dest = this.panner(x, 0.1, z, { ref: 1.5, life: 1 }); for (let i = 0; i < 3; i++) this.a.tone(5200 + Math.random() * 2400, 0.06, { type: 'sine', gain: 0.03, when: i * (0.05 + Math.random() * 0.05), dest }); }
+  clatter(x, z) { if (!this.ctx || this.dist(x, z) > 25) return; const dest = this.panner(x, 0.1, z, { ref: 2, life: 1 }); this.a.noise(0.08, { filter: 'bandpass', freq: 1800, q: 2, gain: 0.2, decay: 0.08, dest }); this.a.tone(700, 0.1, { type: 'square', gain: 0.03, when: 0.05, dest }); }
+  reload(kind) { if (!this.ctx) return; const A = this.a; A.noise(0.05, { filter: 'highpass', freq: 3000, gain: 0.25, decay: 0.05 }); if (kind === 'shotgun') { for (let i = 0; i < 4; i++) A.noise(0.07, { filter: 'bandpass', freq: 1300, q: 2, gain: 0.25, decay: 0.07, when: 0.3 + i * 0.4 }); return; } if (kind === 'revolver') { A.tone(2600, 0.05, { type: 'square', gain: 0.04 }); for (let i = 0; i < 6; i++) A.tone(3800, 0.03, { type: 'triangle', gain: 0.04, when: 0.4 + i * 0.12 }); A.noise(0.06, { filter: 'highpass', freq: 2000, gain: 0.3, decay: 0.06, when: 1.8 }); return; } A.noise(0.07, { filter: 'bandpass', freq: 900, q: 1.5, gain: 0.3, decay: 0.07, when: 0.5 }); A.noise(0.06, { filter: 'highpass', freq: 2500, gain: 0.3, decay: 0.06, when: 0.9 }); A.tone(1400, 0.04, { type: 'square', gain: 0.05, when: 0.95 }); }
+  swing(x, y, z) { if (!this.ctx) return; const dest = this.panner(x, y, z, { ref: 3, life: 1 }); this.a.noise(0.22, { filter: 'bandpass', freq: 900, q: 1.5, gain: 0.2, attack: 0.08, decay: 0.22, dest }); }
+
   money() { if (!this.ctx) return; [1320, 1760, 2640].forEach((f, i) => this.a.tone(f, 0.22, { type: 'square', gain: 0.05, when: i * 0.05 })); this.a.noise(0.15, { filter: 'highpass', freq: 5000, gain: 0.08, decay: 0.15, when: 0.1 }); }
   uiClick() { if (!this.ctx) return; this.a.tone(900, 0.04, { type: 'square', gain: 0.04 }); this.a.tone(1350, 0.05, { type: 'triangle', gain: 0.04, when: 0.03 }); }
   missionStart() { if (!this.ctx) return; [392, 523, 659].forEach((f, i) => this.a.tone(f, 0.6, { type: 'sawtooth', gain: 0.07, attack: 0.02, when: i * 0.12, dest: this.a.music })); this.a.tone(98, 1.4, { type: 'sine', gain: 0.25, dest: this.a.music }); }

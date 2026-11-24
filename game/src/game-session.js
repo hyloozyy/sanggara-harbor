@@ -17,6 +17,7 @@ import { DialogueQueue } from './missions/dialogue-queue.js';
 import { Conversations } from './missions/conversations.js';
 import { VoiceDirector } from './audio/voice-actor.js';
 import { SoundWorld } from './audio/sound-world.js';
+import { WeaponFx } from './combat/weapon-fx.js';
 import { CAST } from './missions/story-cast.js';
 import { Progression } from './world/progression.js';
 import { Hud } from './ui/hud.js';
@@ -37,6 +38,7 @@ import { WeatherSystem } from './world/weather-system.js';
 import { ROAD } from './vehicles/vehicle.js';
 import { buildHudState, buildMinimapState } from './ui/hud-state.js';
 import { roadRoute, routeLength } from './world/gps-route.js';
+import { GUNS, WEAPON_ORDER } from './combat/weapon-catalog.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'Sanggara Sehat Hospital' };
 const POLICE_STATION = { x: 86.5, z: 120, name: 'Kota Lama Police Station' };
@@ -71,6 +73,7 @@ export class GameSession {
     this.voices = new VoiceDirector(audio);
     this.sound = new SoundWorld(audio);
     audio.uiClick = () => this.sound.uiClick();
+    this.weaponFx = new WeaponFx(this.scene, this.sound);
     this.dialogue.voices = this.voices;
     this.dialogue.findSpeaker = (key) => this.findSpeaker(key);
     this.hud = new Hud();
@@ -179,7 +182,7 @@ export class GameSession {
       this.wanted.clear('busted'); // officers lower their weapons
       this.audio.missionJingle(false);
       if (this.missions.active) this.missions.fail('Raka was arrested');
-      for (const id of ['pistol', 'smg', 'shotgun']) this.player.arsenal.ammo[id] = Math.floor((this.player.arsenal.ammo[id] || 0) / 2);
+      for (const id of GUNS) this.player.arsenal.ammo[id] = Math.floor((this.player.arsenal.ammo[id] || 0) / 2);
     }
   }
 
@@ -238,8 +241,9 @@ export class GameSession {
     if (tab) {
       this.wheelAngle = (this.wheelAngle || 0);
       if (Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 2) this.wheelAngle = Math.atan2(input.mouseDY, input.mouseDX);
-      const slot = ((Math.round((this.wheelAngle + Math.PI / 2) / (Math.PI / 2)) % 4) + 4) % 4;
-      const id = ['fists', 'pistol', 'smg', 'shotgun'][slot];
+      const n = WEAPON_ORDER.length, step = Math.PI * 2 / n;
+      const slot = ((Math.round((this.wheelAngle + Math.PI / 2) / step) % n) + n) % n;
+      const id = WEAPON_ORDER[slot];
       if (Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 2) player.arsenal.select(id);
       input.mouseDX = 0; input.mouseDY = 0;
     }
@@ -277,6 +281,7 @@ export class GameSession {
     this.dialogue.update(dt);
     this.updateVehicleEffects(dt);
     this.particles.update(dt);
+    this.weaponFx.update(dt);
     this.lights.update(dt);
     this.lights.updateSirens(this.police.policeCars, this.gfx.camera.position, this.time);
     this.sea.update(this.time);

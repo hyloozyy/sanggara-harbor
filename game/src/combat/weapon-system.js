@@ -1,6 +1,6 @@
 // Firing for everyone: per-shooter arsenals (ammo, magazines, reloads, cooldowns), hitscan bullets
 // and shotgun pellets against people, cars and walls, melee punches, and the effects they cause.
-import { WEAPONS } from './weapon-catalog.js';
+import { WEAPONS, WEAPON_ORDER, GUNS } from './weapon-catalog.js';
 import { raySphere } from '../core/math-utils.js';
 import { rng } from '../core/rng.js';
 import { events } from '../core/event-bus.js';
@@ -8,8 +8,8 @@ import { events } from '../core/event-bus.js';
 export class Arsenal {
   constructor(owned = ['fists'], ammo = {}) {
     this.owned = new Set(owned);
-    this.ammo = { pistol: 0, smg: 0, shotgun: 0, ...ammo };     // reserve
-    this.mag = { pistol: 0, smg: 0, shotgun: 0 };
+    this.ammo = { ...Object.fromEntries(GUNS.map((id) => [id, 0])), ...ammo };     // reserve
+    this.mag = Object.fromEntries(GUNS.map((id) => [id, 0]));
     this.current = 'fists';
     this.cooldown = 0;
     this.reloading = 0;
@@ -37,7 +37,7 @@ export class Arsenal {
   }
 
   cycle(step) {
-    const order = ['fists', 'pistol', 'smg', 'shotgun'].filter((id) => this.owned.has(id));
+    const order = WEAPON_ORDER.filter((id) => this.owned.has(id));
     const i = order.indexOf(this.current);
     this.select(order[(i + step + order.length) % order.length]);
   }
@@ -61,7 +61,7 @@ export class Arsenal {
   startReload() {
     const w = this.weapon;
     if (w.melee || this.reloading > 0 || this.mag[w.id] >= w.mag || this.ammo[w.id] <= 0) return false;
-    this.reloading = w.id === 'shotgun' ? 1.6 : 1.2;
+    this.reloading = this.reloadTime = w.reload || 1.2;
     events.emit('reload', { weapon: w.id });
     return true;
   }
@@ -73,7 +73,7 @@ export class Arsenal {
   }
 
   serialize() { return { owned: [...this.owned], ammo: { ...this.ammo }, mag: { ...this.mag }, current: this.current }; }
-  restore(d) { this.owned = new Set(d.owned); Object.assign(this.ammo, d.ammo); Object.assign(this.mag, d.mag); this.current = d.current; }
+  restore(d) { this.owned = new Set(d.owned); Object.assign(this.ammo, d.ammo); Object.assign(this.mag, d.mag); this.current = WEAPONS[d.current] ? d.current : 'fists'; }
 }
 
 export class WeaponSystem {

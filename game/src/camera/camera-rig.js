@@ -30,8 +30,9 @@ export class CameraRig {
   update(dt, player, input) {
     if (this.override) { this.applyOverride(); return; }
     const mdx = input.mouseDX, mdy = input.mouseDY;
-    this.yaw -= mdx * this.sensitivity;
-    this.pitch = clamp(this.pitch + mdy * this.sensitivity * (this.invertY ? -1 : 1), -0.6, 1.1);
+    const sens = this.sensitivity * Math.min(1, this.fov / 62); // finer aim through a scope
+    this.yaw -= mdx * sens;
+    this.pitch = clamp(this.pitch + mdy * sens * (this.invertY ? -1 : 1), -0.6, 1.1);
     this.idleMouse = Math.abs(mdx) + Math.abs(mdy) > 0 ? 0 : this.idleMouse + dt;
 
     const v = player.vehicle;
@@ -57,7 +58,9 @@ export class CameraRig {
       shoulder = player.aiming ? 1.0 : 0.35;
       height = 1.62;
       lookH = 1.55;
-      fov = player.aiming ? 50 : 62;
+      const zoom = player.aiming ? (player.arsenal?.weapon?.zoom || 1) : 1;
+      fov = player.aiming ? 50 / zoom : 62;
+      if (zoom > 1) { dist = 1.6; shoulder = 0.55; }
       this.target.set(player.pos.x, player.pos.y, player.pos.z);
     }
     this.distance = damp(this.distance, dist, 6, dt);

@@ -8,6 +8,7 @@ import { Character } from '../characters/character.js';
 import { generateLook } from '../characters/character-generator.js';
 import { CAST } from '../missions/story-cast.js';
 import { VEHICLE_MODELS } from '../vehicles/vehicle-catalog.js';
+import { buildWeaponMesh } from '../combat/weapon-meshes.js';
 
 const DT = 1 / 30;
 
@@ -268,7 +269,7 @@ const SCENES = {
     for (let k = 0; k < 5; k++) { const st = s.radio.next(); s.radio.update(0.3); log('radio', st && st.name); }
     s.audio.explosion(10); s.audio.gunshot('shotgun', 5); s.audio.horn(); s.audio.missionJingle(true); s.audio.voiceBlip(3);
     s.start({});
-    for (const id of ['pistol', 'smg', 'shotgun']) s.player.arsenal.give(id, 300);
+    for (const id of ['pistol', 'smg', 'shotgun', 'revolver', 'rifle', 'sniper', 'bat', 'machete']) s.player.arsenal.give(id, 300);
     s.crew.unlock('dimas'); s.crew.unlock('lastri');
     // Walk every mission through every stage.
     for (const m of MISSIONS) {
@@ -338,6 +339,26 @@ const SCENES = {
       const v = s.player.vehicle;
       log('t', k + 1, 'speed', v && v.speed.toFixed(1), 'pos', s.player.pos.x.toFixed(1), s.player.pos.z.toFixed(1), 'race', s.side.mode, s.side.cp);
     }
+    await finish(s, gfx);
+  },
+
+  // Every weapon model laid out large (for checking the models): ?shot=weapons.
+  async weapons(session, gfx) {
+    const s = session;
+    s.hud.show(false);
+    const ids = ['pistol', 'revolver', 'smg', 'rifle', 'shotgun', 'sniper', 'bat', 'machete'];
+    const X0 = -40, Z0 = 87.6, Y = 1.4;
+    for (const p of [...s.peds.list]) s.peds.remove(p);
+    ids.forEach((id, i) => {
+      const m = buildWeaponMesh(id);
+      m.rotation.set(0, Math.PI / 2, 0);
+      m.scale.setScalar(2.4);
+      m.position.set(X0 - 1.2 + (i % 2) * 2.6, Y + 1.5 - Math.floor(i / 2) * 0.55, Z0);
+      s.scene.add(m);
+    });
+    s.cameraRig.override = { x: X0, y: Y + 0.8, z: Z0 + 3.4, tx: X0, ty: Y + 0.7, tz: Z0, fov: 50 };
+    s.cameraRig.update(DT, s.player, s.input);
+    s.gfx.lighting.follow(X0, Z0);
     await finish(s, gfx);
   },
 

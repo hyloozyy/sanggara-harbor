@@ -53,7 +53,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 #weapon-name { font-size: 14px; font-weight: bold; }
 #weapon-ammo { font-size: 18px; color: var(--gold); min-width: 64px; }
 #weapon-slots { display: flex; gap: 4px; }
-#weapon-slots div { width: 46px; font-size: 10px; text-align: center; padding: 3px 0; background: var(--ink); border-bottom: 2px solid transparent; color: rgba(255,255,255,0.6); }
+#weapon-slots div { min-width: 46px; padding-left: 3px !important; padding-right: 3px !important; font-size: 10px; text-align: center; padding: 3px 0; background: var(--ink); border-bottom: 2px solid transparent; color: rgba(255,255,255,0.6); }
 #weapon-slots div.active { border-bottom-color: var(--gold); color: #fff; }
 #weapon-slots div.locked { opacity: 0.3; }
 #crew-abilities { display: flex; gap: 6px; margin-top: 4px; }
@@ -109,8 +109,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 #radio-song { font-size: 11px; color: rgba(255,255,255,0.65); }
 
 /* ---------- overlays ---------- */
-#weapon-wheel { position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin: -180px 0 0 -180px; border-radius: 50%; background: radial-gradient(circle, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.7) 31%, rgba(0,0,0,0.7) 70%, transparent 71%); }
-#weapon-wheel .slot { position: absolute; width: 96px; margin-left: -48px; margin-top: -24px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.7); }
+#weapon-wheel { position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin: -180px 0 0 -180px; transform: scale(1.12); border-radius: 50%; background: radial-gradient(circle, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.7) 31%, rgba(0,0,0,0.7) 70%, transparent 71%); }
+#weapon-wheel .slot { position: absolute; width: 96px; margin-left: -48px; margin-top: -24px; text-align: center; font-size: 11.5px; color: rgba(255,255,255,0.7); }
 #weapon-wheel .slot.active { color: var(--gold); font-weight: bold; transform: scale(1.15); }
 #race-panel { position: absolute; top: 18px; right: 260px; font-size: 14px; border-left-color: var(--teal); }
 #mission-result { position: absolute; top: 34%; left: 0; right: 0; text-align: center; }

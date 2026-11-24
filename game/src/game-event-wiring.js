@@ -12,6 +12,7 @@ export function wireGameEvents(game) {
   const P = () => self.player.body;
   events.on('shot-fired', ({ shooter, weapon, x, z }) => {
     self.sound.gunshot(WEAPONS[weapon]?.sound || weapon, x, 1.4, z);
+    if (weapon !== 'revolver' && shooter && self.camDist(x, z) < 45) self.weaponFx.eject(shooter, weapon === 'rifle' || weapon === 'sniper' || weapon === 'shotgun');
     if (shooter === P()) {
       self.peds.scare(x, z, 45, 2, true);
       self.traffic.panicAround(x, z, 40);
@@ -68,7 +69,7 @@ export function wireGameEvents(game) {
   events.on('vehicle-entered', ({ vehicle }) => {
     if (!vehicle.spec.twoWheel && vehicle.spec.body !== 'bajaj') { self.sound.door(vehicle.pos.x, 1, vehicle.pos.z, true); setTimeout(() => self.sound.door(vehicle.pos.x, 1, vehicle.pos.z, false), 700); }
   });
-  events.on('bullet-impact', ({ x, y, z, surface }) => self.sound.impact(surface, x, y, z));
+  events.on('bullet-impact', ({ x, y, z, surface }) => { self.sound.impact(surface, x, y, z); if (surface === 'ground') self.weaponFx.mark(x, y, z); });
   events.on('character-hit', ({ character, amount, cause }) => {
     if (amount > 8 && character.alive !== false && Math.random() < 0.7) self.sound.grunt(character.pos.x, character.pos.y + 1.6, character.pos.z, { female: character.model?.look?.gender === 'f', pain: Math.min(1.3, 0.6 + amount / 60) });
     void cause;
@@ -139,9 +140,9 @@ export function wireGameEvents(game) {
     if (amount > 0) self.sound.money(); if (Math.abs(amount) >= 50000) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
   events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) self.hud.notify(`+${amount} RESPECT · ${reason}`, 'xp'); });
   events.on('rank-up', ({ rank }) => { self.hud.activityResult(true, 'RANK UP', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); self.audio.missionJingle(true); });
-  events.on('punch', () => self.audio.whoosh());
+  events.on('punch', ({ shooter }) => self.sound.swing(shooter.pos.x, shooter.pos.y + 1.3, shooter.pos.z));
   events.on('punch-hit', ({ target }) => { const p = target?.pos || P().pos; self.sound.punch(p.x, p.y + 1.3, p.z); self.cameraRig.addShake(0.15); });
-  events.on('reload', () => self.audio.reload());
+  events.on('reload', ({ weapon }) => self.sound.reload(weapon));
   events.on('checkpoint', () => self.audio.checkpoint());
   events.on('horn', ({ vehicle }) => self.sound.horn(vehicle));
   events.on('notify', ({ text, kind }) => self.hud.notify(text, kind));
