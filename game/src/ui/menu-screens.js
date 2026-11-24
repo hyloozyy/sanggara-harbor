@@ -120,7 +120,6 @@ export class MenuScreens {
       <label>Music / radio volume <input id="set-music" type="range" min="0" max="1" step="0.05" value="${s.music}"></label>
       <label>Effects volume <input id="set-sfx" type="range" min="0" max="1" step="0.05" value="${s.sfx}"></label>
       <label>Voice volume <input id="set-voice" type="range" min="0" max="1" step="0.05" value="${s.voice}"></label>
-      <label>Subtitles <input id="set-subs" type="checkbox" ${s.subtitles !== false ? 'checked' : ''}></label>
       <label>Touch controls <select id="set-touch">${[['auto', 'Auto (touch screens)'], ['on', 'Always on'], ['off', 'Off']].map(([k, l]) => `<option value="${k}" ${k === s.touch ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <button id="set-layout" style="width:auto">TOUCH CONTROLS LAYOUT…</button>
       <label>Mouse sensitivity <input id="set-sens" type="range" min="0.3" max="2.5" step="0.1" value="${s.sensitivity}"></label>
@@ -129,7 +128,7 @@ export class MenuScreens {
       <label>Time of day <select id="set-time">${[['cycle', 'Day/night cycle'], ['golden', 'Golden hour'], ['dawn', 'Dawn'], ['noon', 'Noon'], ['sunset', 'Sunset'], ['night', 'Night']].map(([k, l]) => `<option value="${k}" ${k === s.timeMode ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <button id="set-back">BACK</button>`;
     const read = () => ({
-      quality: $('set-quality').value, master: +$('set-master').value, music: +$('set-music').value, sfx: +$('set-sfx').value, voice: +$('set-voice').value, subtitles: $('set-subs').checked, touch: $('set-touch').value,
+      quality: $('set-quality').value, master: +$('set-master').value, music: +$('set-music').value, sfx: +$('set-sfx').value, voice: +$('set-voice').value, touch: $('set-touch').value,
       sensitivity: +$('set-sens').value, invertY: $('set-invert').checked, weather: $('set-weather').value, timeMode: $('set-time').value,
     });
     $('settings-form').querySelectorAll('input,select').forEach((el) => el.addEventListener('change', () => this.cb.onSettings(read())));

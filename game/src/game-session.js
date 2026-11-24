@@ -14,6 +14,9 @@ import { AngkotJob } from './missions/angkot-job.js';
 import { WorldEvents } from './missions/world-events.js';
 import { CrewAbilities } from './missions/crew-abilities.js';
 import { DialogueQueue } from './missions/dialogue-queue.js';
+import { Conversations } from './missions/conversations.js';
+import { VoiceDirector } from './audio/voice-actor.js';
+import { CAST } from './missions/story-cast.js';
 import { Progression } from './world/progression.js';
 import { Hud } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
@@ -63,6 +66,9 @@ export class GameSession {
     this.markers = new WorldMarkers(this.scene);
     this.progression = new Progression();
     this.dialogue = new DialogueQueue();
+    this.voices = new VoiceDirector(audio);
+    this.dialogue.voices = this.voices;
+    this.dialogue.findSpeaker = (key) => this.findSpeaker(key);
     this.hud = new Hud();
     this.minimap = new Minimap(document.getElementById('minimap'), document.getElementById('big-map-canvas'));
     this.leftoverCombatants = [];
@@ -73,6 +79,7 @@ export class GameSession {
     this.crew = new CrewAbilities(this);
     this.worldEvents = new WorldEvents(this);
     this.angkotJob = new AngkotJob(this);
+    this.talk = new Conversations(this);
     this.time = 0;
     this.wastedTimer = 0;
     this.crimeCooldown = {};
@@ -187,6 +194,16 @@ export class GameSession {
   }
 
   // ---------------------------------------------------------------- update
+  // The Character in the world who speaks for a cast key (for lip-sync and voice panning).
+  findSpeaker(key) {
+    if (key === 'raka') return this.player.body;
+    const name = CAST[key]?.name;
+    if (!name) return null;
+    if (this.missions.giverNpc?.name === name) return this.missions.giverNpc;
+    for (const c of this.allCharacters()) if (c.name === name) return c;
+    return null;
+  }
+
   update(dt) {
     this.time += dt;
     const input = this.input, player = this.player;
@@ -233,6 +250,9 @@ export class GameSession {
       if (Math.hypot(c.body.pos.x - player.pos.x, c.body.pos.z - player.pos.z) > 140) { this.scene.remove(c.body.mesh); c.body.dispose(); this.leftoverCombatants.splice(this.leftoverCombatants.indexOf(c), 1); }
     }
     this.markers.update(dt, player);
+    this.talk.update(dt);
+    const cam = this.gfx.camera, fw = this.cameraRig.forward;
+    this.voices.listener = { x: cam.position.x, z: cam.position.z, yaw: Math.atan2(fw.x, fw.z) };
     this.dialogue.update(dt);
     this.updateVehicleEffects(dt);
     this.particles.update(dt);

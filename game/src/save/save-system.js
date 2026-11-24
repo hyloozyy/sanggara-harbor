@@ -4,7 +4,7 @@
 const KEY = 'pelabuhan-sanggara-save-v1';
 const SETTINGS_KEY = 'pelabuhan-sanggara-settings-v1';
 
-export const DEFAULT_SETTINGS = { quality: 'high', master: 0.8, music: 0.6, sfx: 0.9, sensitivity: 1, invertY: false, weather: 'auto', timeMode: 'cycle', voice: 0.9, touch: 'auto', subtitles: true };
+export const DEFAULT_SETTINGS = { quality: 'high', master: 0.8, music: 0.6, sfx: 0.9, sensitivity: 1, invertY: false, weather: 'auto', timeMode: 'cycle', voice: 0.9, touch: 'auto' };
 
 export function hasSave() {
   try { return !!localStorage.getItem(KEY); } catch { return false; }

@@ -126,7 +126,6 @@ export function wireGameEvents(game) {
   events.on('money-changed', ({ amount, reason }) => { if (Math.abs(amount) >= 50000) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
   events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) self.hud.notify(`+${amount} RESPECT · ${reason}`, 'xp'); });
   events.on('rank-up', ({ rank }) => { self.hud.activityResult(true, 'RANK UP', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); self.audio.missionJingle(true); });
-  events.on('dialogue-line', (l) => self.audio.voiceBlip(l.speaker.length));
   events.on('punch', () => self.audio.whoosh());
   events.on('punch-hit', () => { self.audio.punch(); self.cameraRig.addShake(0.15); });
   events.on('reload', () => self.audio.reload());

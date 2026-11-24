@@ -22,7 +22,7 @@ export const DISTRICTS = {
   'kota-lama': { name: 'Kota Lama', tagline: 'Colonial old town', color: '#ffd27a' },
   'pasar-ikan': { name: 'Pasar Ikan', tagline: 'Salt air, cranes and containers', color: '#5fe0d0' },
   'pantai-senja': { name: 'Pantai Senja', tagline: 'Palm-lined beach boulevard', color: '#ff9a6a' },
-  'kawasan-industri': { name: 'Kawasan Industri', tagline: 'Gudang, cerobong, rahasia', color: '#c0a0a0' },
+  'kawasan-industri': { name: 'Kawasan Industri', tagline: 'Warehouses, chimneys and secrets', color: '#c0a0a0' },
 };
 
 export function districtAt(x, z) {

@@ -104,6 +104,7 @@ function pause() {
 }
 
 addEventListener('keydown', (e) => {
+  if (state === 'playing' && session.talk.choosing) return; // the conversation handles its own keys
   if (state === 'playing' && (e.code === 'Escape' || e.code === 'KeyP')) { e.preventDefault(); pause(); }
   else if (state === 'playing' && e.code === 'KeyM') openMap();
   else if (state === 'map' && (e.code === 'KeyM' || e.code === 'Escape')) closeMap();
@@ -143,7 +144,7 @@ function frame(now) {
   last = now;
   autoQuality(Math.min(raw, 0.5));
   if (session) input.context = session.player.vehicle ? 'vehicle' : 'foot';
-  gamepad.menuMode = state !== 'playing';
+  gamepad.menuMode = state !== 'playing' || !!session?.talk.choosing;
   gamepad.update(dt);
   touch.setActive(state === 'playing');
   touch.update();
@@ -170,6 +171,8 @@ async function boot() {
   const step = (p) => { fill.style.width = `${Math.round(p * 100)}%`; return new Promise((r) => setTimeout(r, 0)); };
   await step(0.05);
   session = new GameSession(gfx, input, audio, radio, (p) => { fill.style.width = `${Math.round(p * 100)}%`; });
+  session.onTalkAvailable = (on) => touch.setTalkAvailable(on);
+  window.__game = { session, gfx, input, touch, gamepad };
   await step(1);
   applySettings(settings);
   document.getElementById('loading-screen').classList.add('hidden');

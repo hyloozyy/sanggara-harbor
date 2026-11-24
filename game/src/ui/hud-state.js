@@ -15,6 +15,7 @@ const self = game;
   if (!self.missions.active && next && Math.hypot(b.pos.x - next.start.x, b.pos.z - next.start.z) < 10) {
     hint = `<kbd>${next.chapter}</kbd>${next.title} — step into the yellow circle`;
   }
+  if (!hint && self.talk?.candidate) hint = `<kbd>E</kbd>Talk to ${self.talk.displayName(self.talk.candidate)}`;
   let aimTarget = false;
   if (b.aiming && !v) {
     const { origin, dir } = self.cameraRig.aimRay();
