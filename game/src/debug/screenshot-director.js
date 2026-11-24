@@ -7,6 +7,7 @@ import { Combatant } from '../combat/combatant-ai.js';
 import { Character } from '../characters/character.js';
 import { generateLook } from '../characters/character-generator.js';
 import { CAST } from '../missions/story-cast.js';
+import { VEHICLE_MODELS } from '../vehicles/vehicle-catalog.js';
 
 const DT = 1 / 30;
 
@@ -344,14 +345,15 @@ const SCENES = {
   async garage(session, gfx) {
     const s = session;
     s.hud.show(false);
-    const keys = ['lestari', 'kancil', 'banteng', 'angkot', 'rajawali', 'taksi', 'patroli', 'taktis', 'bebek'];
+    const keys = Object.keys(VEHICLE_MODELS);
+    for (const v of [...s.vehicles.list]) if (Math.hypot(v.pos.x + 40, v.pos.z - 118) < 40) s.vehicles.remove(v);
     keys.forEach((k, i) => {
-      const v = s.vehicles.spawn(k, -60 + i * 6.5, 120, 0.6); v.ai = { kind: 'parked' }; v.syncMesh();
+      const row = i % 2, col = Math.floor(i / 2);
+      const v = s.vehicles.spawn(k, -62 + col * 6.2 + row * 3, 112 + row * 9, 0.6); v.ai = { kind: 'parked' }; v.syncMesh();
       v.mesh.updateMatrixWorld(true);
-      if (i % 2 === 0) v.damage(300, 'crash', { x: v.pos.x + Math.sin(0.6) * v.spec.length * 0.5, z: v.pos.z + Math.cos(0.6) * v.spec.length * 0.5, impact: 16 });
     });
     s.peds.populate(-40, 120, 10);
-    s.cameraRig.override = { x: -48, y: 3.5, z: 131, tx: -46, ty: 0.5, tz: 120, fov: 55 };
+    s.cameraRig.override = { x: -40, y: 6, z: 134, tx: -40, ty: 0.5, tz: 116, fov: 62 };
     s.cameraRig.update(DT, s.player, s.input);
     s.gfx.lighting.follow(-34, 120);
     await finish(s, gfx);
@@ -362,7 +364,7 @@ const SCENES = {
   async characters(session, gfx, ctx) {
     const s = session;
     s.hud.show(false);
-    for (const v of [...s.vehicles.list]) if (Math.hypot(v.pos.x + 41, v.pos.z - 87) < 30) s.vehicles.remove(v);
+    for (const v of [...s.vehicles.list]) if (Math.hypot(v.pos.x + 50, v.pos.z - 87) < 40) s.vehicles.remove(v);
     for (const p of [...s.peds.list]) s.peds.remove(p);
     const close = ctx?.params?.get('close') === '1';
     const people = [];
@@ -372,7 +374,7 @@ const SCENES = {
       s.scene.add(c.mesh); people.push(c);
       return c;
     };
-    const X0 = -48.5, Z0 = 87.6;
+    const X0 = -54.5, Z0 = 87.6;
     const cast = ['dimas', 'lastri', 'harun', 'rusdi', 'bayu', 'wulan'];
     const roles = ['auto', 'auto', 'market', 'auto', 'worker', 'auto', 'police', 'auto', 'gang', 'auto', 'rider', 'auto', 'tactical', 'auto'];
     // Front row: the player and the cast. Back row: generated people.
@@ -400,7 +402,7 @@ const SCENES = {
       s.player.body.updateVisual(DT, 0);
     }
     const cx = close ? X0 + 1.9 : X0 + 3.6;
-    s.cameraRig.override = close ? { x: cx, y: 1.72, z: Z0 + 2.3, tx: cx, ty: 1.55, tz: Z0, fov: 40 } : { x: cx, y: 2.0, z: Z0 + 7.6, tx: cx, ty: 1.0, tz: Z0 - 1, fov: 52 };
+    s.cameraRig.override = close ? { x: cx, y: 1.72, z: Z0 + 2.3, tx: cx, ty: 1.55, tz: Z0, fov: 40 } : { x: cx, y: 1.75, z: Z0 + 6.4, tx: cx, ty: 1.05, tz: Z0 - 1, fov: 50 };
     s.cameraRig.update(DT, s.player, s.input);
     s.gfx.lighting.follow(cx, Z0);
     await finish(s, gfx);

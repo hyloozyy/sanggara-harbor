@@ -121,6 +121,9 @@ export const assets = {
         case 'dome-green': return std({ color: 0x2e7a5a, roughness: 0.35, metalness: 0.6 });
         case 'white-plaster': return std({ color: 0xf0ebe0, roughness: 0.85 });
         case 'umbrella': return std({ color: 0xffffff, vertexColors: true, roughness: 0.7, side: THREE.DoubleSide });
+        case 'car-glass': return new THREE.MeshPhysicalMaterial({ color: 0x1a2630, roughness: 0.04, metalness: 0.1, transparent: true, opacity: 0.62, clearcoat: 1, envMapIntensity: 1.8, depthWrite: false });
+        case 'car-trim': return std({ color: 0x15171a, roughness: 0.55, metalness: 0.2 });
+        case 'indicator': return std({ color: 0x553000, emissive: 0xff8a10, emissiveIntensity: 1.2 });
         default: throw new Error('unknown material ' + name);
       }
     }

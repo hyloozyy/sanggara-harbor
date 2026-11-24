@@ -27,12 +27,12 @@ export const VEHICLE_MODELS = {
     colors: [0xd02010, 0xf0c000, 0x101010, 0x1a60e0, 0xf0f0f0, 0x20a050],
   },
   taksi: {
-    name: 'Ombak Taxi', body: 'sedan', length: 4.6, width: 1.8, height: 1.45, wheelbase: 2.7, wheelRadius: 0.33,
+    name: 'Ombak Taxi', body: 'mpv',
     maxSpeed: 44, accel: 8.5, grip: 7.5, mass: 1300, health: 1000, value: 42000000,
-    colors: [0x2a7ad8], roofSign: 'TAKSI',
+    colors: [0x2a7ad8], roofSign: 'TAXI', length: 4.55, width: 1.78, height: 1.68, wheelbase: 2.75, wheelRadius: 0.32,
   },
   patroli: {
-    name: 'Sanggara Police Patrol', body: 'sedan', length: 4.7, width: 1.85, height: 1.48, wheelbase: 2.75, wheelRadius: 0.34,
+    name: 'Sanggara Police Patrol', body: 'interceptor', length: 4.7, width: 1.85, height: 1.48, wheelbase: 2.75, wheelRadius: 0.34,
     maxSpeed: 55, accel: 11.5, grip: 8.5, mass: 1450, health: 1300, value: 0, police: true,
     colors: [0xf2f2ee],
   },
@@ -46,7 +46,45 @@ export const VEHICLE_MODELS = {
     maxSpeed: 31, accel: 10, grip: 9, mass: 110, health: 400, value: 15000000, twoWheel: true,
     colors: [0xc82020, 0x202020, 0x2050c0, 0xe8e8e8],
   },
+  sentosa: {
+    name: 'Sentosa Executive', body: 'saloon', length: 5.0, width: 1.86, height: 1.47, wheelbase: 2.95, wheelRadius: 0.34, spokes: 10,
+    maxSpeed: 52, accel: 9.5, grip: 7.8, mass: 1650, health: 1150, value: 120000000,
+    colors: [0x0e0f12, 0x3a3e44, 0xe6e4de, 0x4a1820, 0x1a2a3a],
+  },
+  garuda: {
+    name: 'Garuda SUV', body: 'suv', length: 4.8, width: 1.92, height: 1.85, wheelbase: 2.85, wheelRadius: 0.39, tyreWidth: 0.28, heavy: true,
+    maxSpeed: 44, accel: 8, grip: 6.8, mass: 2000, health: 1500, value: 95000000,
+    colors: [0x2a2a2e, 0xe8e8e0, 0x5a5e4a, 0x6a2a1a, 0x8a8e94],
+  },
+  kerbau: {
+    name: 'Kerbau Box Truck', body: 'truck', length: 6.2, width: 2.1, height: 2.6, wheelbase: 3.6, wheelRadius: 0.44, tyreWidth: 0.3, heavy: true,
+    maxSpeed: 30, accel: 4.5, grip: 5.5, mass: 4500, health: 2600, value: 60000000,
+    colors: [0xe8e4da, 0x1c4a8a, 0xc8361f],
+  },
+  macan: {
+    name: 'Macan V8', body: 'muscle', length: 4.9, width: 1.95, height: 1.32, wheelbase: 2.85, wheelRadius: 0.36, tyreWidth: 0.3, spokes: 6,
+    maxSpeed: 58, accel: 14, grip: 6.8, mass: 1600, health: 1100, value: 280000000,
+    colors: [0xe07010, 0x101010, 0x1c3a8a, 0x8a1010, 0x2a5a2a],
+  },
+  ambulans: {
+    name: 'Ambulance', body: 'ambulance', length: 5.5, width: 2.0, height: 2.5, wheelbase: 3.3, wheelRadius: 0.38, heavy: true,
+    maxSpeed: 44, accel: 8, grip: 6.8, mass: 2800, health: 1800, value: 0, ambulance: true,
+    colors: [0xf4f4f0],
+  },
+  kilat: {
+    name: 'Kilat 250R', body: 'motorbike', length: 2.05, width: 0.72, height: 1.15, wheelbase: 1.4, wheelRadius: 0.31, spokes: 3,
+    maxSpeed: 52, accel: 15, grip: 9, mass: 165, health: 450, value: 65000000, twoWheel: true,
+    colors: [0x101010, 0x1a60e0, 0xd02010, 0x20a050, 0xf0f0f0],
+  },
+  bajaj: {
+    name: 'Bajaj Roda Tiga', body: 'bajaj', length: 2.6, width: 1.3, height: 1.7, wheelbase: 1.5, wheelRadius: 0.24, spokes: 4,
+    maxSpeed: 24, accel: 6, grip: 6, mass: 350, health: 600, value: 18000000,
+    colors: [0x2a8a3a, 0x2a5ac8, 0xd02010, 0xe8a010],
+  },
 };
 
+for (const [key, spec] of Object.entries(VEHICLE_MODELS)) spec.key = key;
+
 // Weighted pick list for civilian traffic.
-export const TRAFFIC_MIX = ['lestari', 'lestari', 'kancil', 'kancil', 'banteng', 'angkot', 'angkot', 'taksi', 'bebek', 'bebek', 'rajawali'];
+export const TRAFFIC_MIX = ['lestari', 'lestari', 'kancil', 'kancil', 'banteng', 'angkot', 'angkot', 'taksi', 'bebek', 'bebek', 'rajawali',
+  'sentosa', 'garuda', 'kerbau', 'macan', 'kilat', 'bajaj', 'taksi', 'ambulans'];
