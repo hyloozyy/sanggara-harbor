@@ -1,4 +1,7 @@
-// Keyboard and mouse state with pointer lock; systems read it once per frame.
+// Keyboard and mouse state with pointer lock; systems read it once per frame. The touch
+// controller and the gamepad feed the same state: buttons arrive as synthetic key events (so
+// every system and menu reacts to them exactly as to the keyboard), sticks as analog axes, and
+// camera motion as mouse deltas.
 
 // Pointer lock can be refused (or return a rejected promise); dragging still looks around then.
 export function lockPointer(el) {
@@ -17,6 +20,9 @@ export class Input {
     this.clicked = new Set();
     this.locked = false;
     this.enabled = true;
+    this.context = 'foot';            // 'foot' or 'vehicle', set by the game each frame
+    this.pads = new Map();            // analog sources (touch, gamepad): { x, y, throttle }
+    this.virtualHeld = new Map();     // virtual control id -> code it holds
 
     addEventListener('keydown', (e) => {
       if (e.code === 'Tab' || e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
@@ -49,7 +55,48 @@ export class Input {
   mouseDown(button) { return this.enabled && this.buttons.has(button); }
   mouseHit(button) { return this.enabled && this.clicked.has(button); }
 
-  axis(neg, pos) { return (this.down(pos) ? 1 : 0) - (this.down(neg) ? 1 : 0); }
+  axis(neg, pos) {
+    const digital = (this.down(pos) ? 1 : 0) - (this.down(neg) ? 1 : 0);
+    if (!this.enabled) return 0;
+    let analog = 0;
+    for (const p of this.pads.values()) {
+      let v = 0;
+      if (neg === 'KeyA' && pos === 'KeyD') v = p.x;
+      else if (neg === 'KeyS' && pos === 'KeyW') v = this.context === 'vehicle' ? (p.throttle || 0) : p.y;
+      if (Math.abs(v) > Math.abs(analog)) analog = v;
+    }
+    return Math.max(-1, Math.min(1, digital + analog));
+  }
+
+  // Analog stick values from a source ('touch', 'pad'): x right, y forward, throttle for cars.
+  setAnalog(source, values) { this.pads.set(source, values); }
+
+  // Camera motion from a virtual stick or drag, in mouse pixels.
+  look(dx, dy) { if (this.enabled) { this.mouseDX += dx; this.mouseDY += dy; } }
+
+  // A virtual control went down/up: 'Mouse0'/'Mouse2' act as mouse buttons, 'Wheel+'/'Wheel-'
+  // as wheel steps, anything else as that key.
+  virtualDown(id, code) {
+    if (this.virtualHeld.has(id)) return;
+    this.virtualHeld.set(id, code);
+    if (code.startsWith('Mouse')) { const b = Number(code.slice(5)); this.buttons.add(b); this.clicked.add(b); }
+    else if (code.startsWith('Wheel')) this.wheel += code.endsWith('+') ? 1 : -1;
+    else dispatchEvent(new KeyboardEvent('keydown', { code, key: code }));
+  }
+
+  virtualUp(id) {
+    const code = this.virtualHeld.get(id);
+    if (code == null) return;
+    this.virtualHeld.delete(id);
+    if (code.startsWith('Mouse')) this.buttons.delete(Number(code.slice(5)));
+    else if (!code.startsWith('Wheel')) dispatchEvent(new KeyboardEvent('keyup', { code, key: code }));
+  }
+
+  // A quick tap of a key (down now, up shortly after, so hit() sees it this frame).
+  virtualTap(code) {
+    dispatchEvent(new KeyboardEvent('keydown', { code, key: code }));
+    setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { code, key: code })), 60);
+  }
 
   releaseLock() { if (document.exitPointerLock && this.locked) document.exitPointerLock(); }
 

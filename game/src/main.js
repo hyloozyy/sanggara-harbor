@@ -9,6 +9,9 @@ import { AudioEngine } from './audio/audio-engine.js';
 import { Radio } from './audio/radio-stations.js';
 import { registerProceduralTextures } from './assets/texture-catalog.js';
 import { stageScreenshot } from './debug/screenshot-director.js';
+import { ControlRouter } from './core/control-router.js';
+import { GamepadInput } from './core/gamepad.js';
+import { TouchController } from './ui/touch-controller.js';
 
 registerProceduralTextures();
 
@@ -18,6 +21,9 @@ const settings = loadSettings();
 const canvas = document.getElementById('game-canvas');
 const gfx = new GameRenderer(canvas, shot ? (params.get('quality') || 'high') : settings.quality, { keepFrames: !!shot });
 const input = new Input(canvas);
+const router = new ControlRouter(input);
+const gamepad = new GamepadInput(input, router);
+const touch = new TouchController(input, router);
 const audio = new AudioEngine();
 const radio = new Radio(audio);
 const fill = document.getElementById('loading-fill');
@@ -48,6 +54,8 @@ function applySettings(s) {
   audio.setVolume('master', settings.master);
   audio.setVolume('music', settings.music);
   audio.setVolume('sfx', settings.sfx);
+  audio.setVolume('voice', settings.voice);
+  touch.setMode(settings.touch);
   if (session) { session.cameraRig.sensitivity = 0.0024 * settings.sensitivity; session.cameraRig.invertY = settings.invertY; applyWorldSettings(); }
 }
 
@@ -64,9 +72,9 @@ const menus = new MenuScreens({
     setTimeout(() => session.hud.notify('Yellow circle = mission · M map · Esc pause & save'), 4500);
     session.cameraRig.override = null;
     input.enabled = true;
-    lockPointer(canvas);
+    if (!touch.wanted()) lockPointer(canvas);
   },
-  onResume() { menus.hidePause(); state = 'playing'; input.enabled = true; lockPointer(canvas); },
+  onResume() { menus.hidePause(); state = 'playing'; input.enabled = true; if (!touch.wanted()) lockPointer(canvas); },
   onPauseAction(id) {
     if (id === 'save') session.saveGame('Manual');
     else if (id === 'load') { applySave(session, readSave()); session.missions.refreshStartMarker(); menus.hidePause(); state = 'playing'; }
@@ -74,6 +82,7 @@ const menus = new MenuScreens({
     else if (id === 'title') location.reload();
   },
   getSettings: () => ({ ...settings }),
+  onEditLayout: (done) => touch.openEditor(done),
   onSettings: applySettings,
 });
 
@@ -133,6 +142,11 @@ function frame(now) {
   const dt = Math.min(0.05, raw);
   last = now;
   autoQuality(Math.min(raw, 0.5));
+  if (session) input.context = session.player.vehicle ? 'vehicle' : 'foot';
+  gamepad.menuMode = state !== 'playing';
+  gamepad.update(dt);
+  touch.setActive(state === 'playing');
+  touch.update();
   if (state === 'title') {
     titleCamera(dt);
     session.cameraRig.update(dt, session.player, input);

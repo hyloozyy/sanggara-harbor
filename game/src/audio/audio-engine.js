@@ -5,7 +5,7 @@
 export class AudioEngine {
   constructor() {
     this.ctx = null;
-    this.volumes = { master: 0.8, sfx: 0.9, music: 0.6 };
+    this.volumes = { master: 0.8, sfx: 0.9, music: 0.6, voice: 0.9 };
   }
 
   // Must be called from a user gesture.
@@ -21,6 +21,7 @@ export class AudioEngine {
     this.master.connect(comp).connect(ctx.destination);
     this.sfx = ctx.createGain(); this.sfx.gain.value = this.volumes.sfx; this.sfx.connect(this.master);
     this.music = ctx.createGain(); this.music.gain.value = this.volumes.music; this.music.connect(this.master);
+    this.voice = ctx.createGain(); this.voice.gain.value = this.volumes.voice; this.voice.connect(this.master);
     this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const d = this.noiseBuffer.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -33,7 +34,7 @@ export class AudioEngine {
   setVolume(kind, v) {
     this.volumes[kind] = v;
     if (!this.ctx) return;
-    ({ master: this.master, sfx: this.sfx, music: this.music })[kind].gain.value = v;
+    ({ master: this.master, sfx: this.sfx, music: this.music, voice: this.voice })[kind].gain.value = v;
   }
 
   get now() { return this.ctx.currentTime; }
