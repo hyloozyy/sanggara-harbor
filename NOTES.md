@@ -112,6 +112,9 @@ which opens the game with the `?shot=cover|combat|drive|menu` scenes of
 `game/src/debug/screenshot-director.js`; those stage a moment with the game's own systems and
 simulate it on a fixed time step. `?shot=stress` exercises every mission and system and logs;
 `?shot=garage`, `?shot=weapons` and `?shot=characters` line up every vehicle, weapon and person.
+`tools/touchtest.mjs` plays the game on a phone-sized touch viewport with real touch events (CDP)
+and checks every on-screen control: stick, camera drag, jump/sprint, punch, D-pad weapons, aim and
+shoot, reload, enter/drive/leave a car, map, pause menu, layout editor (drag, reset, save) and TALK.
 
 ## Hand-in
 `mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts` writes `out/` with the dossier.
