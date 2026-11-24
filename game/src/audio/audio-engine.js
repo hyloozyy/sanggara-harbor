@@ -29,6 +29,30 @@ export class AudioEngine {
     this.buildSiren();
     this.buildRotor();
     this.buildAmbience();
+    this.installUnlock();
+  }
+
+  // Browsers suspend or interrupt the context (screen lock, tab switch, iOS 'interrupted',
+  // a first gesture that did not count). Pausing the world only fades gains and never
+  // suspends, so it is always safe to resume here.
+  installUnlock() {
+    const ctx = this.ctx;
+    const resume = () => {
+      if (ctx.state === 'running' || ctx.state === 'closed') return;
+      ctx.resume().catch(() => {});
+      // iOS: a silent buffer played inside the gesture finishes unlocking output.
+      const src = ctx.createBufferSource();
+      src.buffer = ctx.createBuffer(1, 1, 22050);
+      src.connect(ctx.destination);
+      src.start(0);
+    };
+    const opts = { capture: true, passive: true };
+    for (const ev of ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'keydown']) {
+      window.addEventListener(ev, resume, opts);
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) resume(); });
+    window.addEventListener('focus', resume);
+    ctx.addEventListener('statechange', () => { if (!document.hidden) resume(); });
   }
 
   setVolume(kind, v) {
