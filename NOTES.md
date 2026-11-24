@@ -25,7 +25,8 @@ face buttons, L/R shoulders, Select/Start, a contextual TALK button and a camera
 multi-touch), with a layout editor in Settings (drag, pinch or slider to resize, per-control and
 global opacity, hide/show, reset; saved in localStorage). Gamepads (standard mapping) use the same
 layout: sticks move and look, triggers aim/shoot on foot and are analog gas/brake in a car, and
-the D-pad/stick drive the menus and the map cursor. Pause → Controls shows all three side by side.
+the D-pad/stick drive the menus and the map cursor; in Settings up/down picks a row and left/right
+changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pause → Controls shows all three side by side.
 
 ## Features
 - **City**: 64 blocks over six districts — Pusat Niaga (glass towers), Kota Lama (colonial rows,
