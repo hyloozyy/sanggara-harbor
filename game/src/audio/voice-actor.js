@@ -81,7 +81,15 @@ export class VoiceDirector {
     return group[hash(profile.seed) % group.length];
   }
 
-  get busy() { return !!this.current && (this.current.mode === 'speech' ? this.current.speaking : this.audio.ctx && this.audio.ctx.currentTime < this.current.end); }
+  get busy() {
+    const cur = this.current;
+    if (!cur) return false;
+    if (cur.mode === 'speech') return cur.speaking;
+    if (!this.running) return performance.now() / 1000 < cur.wallEnd;
+    return this.audio.ctx.currentTime < cur.end;
+  }
+
+  get running() { return !!this.audio.ctx && this.audio.ctx.state === 'running'; }
 
   pause(on) {
     if (!this.synth) return;
@@ -124,7 +132,7 @@ export class VoiceDirector {
     const a = this.audio, c = a.ctx;
     const syl = syllabify(text, profile.rate);
     const total = syl.reduce((s, x) => s + x.dur + x.gap, 0);
-    if (!c) { this.current = { mode: 'babble', character, schedule: [], t0: performance.now() / 1000, end: Infinity, wall: true, total }; return total; }
+    if (!c) { this.current = { mode: 'babble', character, schedule: [], wallStart: performance.now() / 1000, wallEnd: performance.now() / 1000 + total, rate: profile.rate }; return total; }
     const t0 = c.currentTime + 0.03;
     const out = c.createGain();
     out.gain.value = 0.55;
@@ -175,7 +183,7 @@ export class VoiceDirector {
       t += s.dur + s.gap;
     });
     osc.start(t0); vib.start(t0); osc.stop(t + 0.1); vib.stop(t + 0.1);
-    this.current = { mode: 'babble', character, schedule, end: t, nodes: [osc, vib] };
+    this.current = { mode: 'babble', character, schedule, end: t, nodes: [osc, vib], wallStart: performance.now() / 1000, wallEnd: performance.now() / 1000 + (t - t0), rate: profile.rate };
     return t - t0;
   }
 
@@ -191,7 +199,11 @@ export class VoiceDirector {
         const pulse = Math.max(0, 1 - (now - cur.pulse) / 220);
         level = 0.25 + 0.55 * Math.abs(Math.sin(ph)) * (0.6 + 0.4 * Math.sin(ph * 0.37 + 1)) + pulse * 0.3;
       }
-    } else if (this.audio.ctx) {
+    } else if (!this.running) {
+      // No running audio clock (muted tab, no gesture yet): keep the jaw moving in a syllable rhythm.
+      const now = performance.now() / 1000;
+      if (now < cur.wallEnd) { const ph = (now - cur.wallStart) * 4.6 * (cur.rate || 1) * Math.PI; level = 0.2 + 0.6 * Math.abs(Math.sin(ph)) * (0.6 + 0.4 * Math.sin(ph * 0.37 + 1)); }
+    } else {
       const now = this.audio.ctx.currentTime;
       for (const [a, b, open] of cur.schedule) if (now >= a && now <= b) { level = open * Math.sin(((now - a) / (b - a)) * Math.PI); break; }
     }

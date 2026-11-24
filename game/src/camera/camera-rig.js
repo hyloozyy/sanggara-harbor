@@ -29,6 +29,8 @@ export class CameraRig {
 
   update(dt, player, input) {
     if (this.override) { this.applyOverride(); return; }
+    if (this.talkFocus) { this.updateTalk(dt); return; }
+    if (this.talkBlend > 0) this.talkBlend = Math.max(0, this.talkBlend - dt * 2);
     const mdx = input.mouseDX, mdy = input.mouseDY;
     const sens = this.sensitivity * Math.min(1, this.fov / 62); // finer aim through a scope
     this.yaw -= mdx * sens;
@@ -90,6 +92,25 @@ export class CameraRig {
     this.camera.position.set(camX, camY, camZ);
     this.lookPoint.set(pivotX + fx * 10 * cp, pivotY - sp * 4 + (lookH - height), pivotZ + fz * 10 * cp);
     this.camera.lookAt(this.lookPoint);
+    if (Math.abs(this.camera.fov - this.fov) > 0.05) { this.camera.fov = this.fov; this.camera.updateProjectionMatrix(); }
+  }
+
+  // Conversation framing: over Raka's shoulder onto the other person's face, eased in.
+  updateTalk(dt) {
+    const { a, b } = this.talkFocus; // a = Raka, b = the person he talks to
+    const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz) || 1;
+    const ux = dx / d, uz = dz / d, rx = uz, rz = -ux;
+    const headY = Math.max(a.headY, b.headY) - 0.05;
+    const want = new THREE.Vector3(a.pos.x - ux * 1.45 + rx * 0.85, headY + 0.1, a.pos.z - uz * 1.45 + rz * 0.85);
+    const look = new THREE.Vector3(b.pos.x + rx * 0.35, b.headY - 0.12, b.pos.z + rz * 0.35);
+    this.talkBlend = Math.min(1, (this.talkBlend || 0) + dt * 1.6);
+    const k = 1 - Math.exp(-dt * 6);
+    this.camera.position.lerp(want, k);
+    this.talkLook = (this.talkLook || look.clone()).lerp(look, k);
+    this.camera.lookAt(this.talkLook);
+    const fov = 42;
+    this.fov = damp(this.fov, fov, 4, dt);
+    this.yaw = Math.atan2(ux, uz);
     if (Math.abs(this.camera.fov - this.fov) > 0.05) { this.camera.fov = this.fov; this.camera.updateProjectionMatrix(); }
   }
 

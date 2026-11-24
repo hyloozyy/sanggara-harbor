@@ -124,6 +124,8 @@ export class Conversations {
     const g = this.game;
     this.partner = c;
     g.dialogue.clear();
+    g.cameraRig.talkFocus = { a: g.player.body, b: c };
+    g.cameraRig.talkLook = null;
     if (c.ai) { c.ai.prevMode = c.ai.mode; c.ai.mode = 'talk'; c.anim = 'idle'; c.vel.set(0, 0, 0); }
     const story = c === g.missions.giverNpc;
     const name = this.displayName(c);
@@ -241,6 +243,7 @@ export class Conversations {
     this.pendingChoices = null;
     this.partner = null;
     this.used = null;
+    this.game.cameraRig.talkFocus = null;
     if (!polite) this.game.dialogue.clear();
     if (p?.ai && p.ai.mode === 'talk') {
       if (this.fleeAfter) { p.ai.mode = 'flee'; p.ai.fleeFrom = { x: this.game.player.pos.x, z: this.game.player.pos.z }; p.ai.timer = 8; }
