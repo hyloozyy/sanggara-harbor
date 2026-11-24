@@ -38,8 +38,10 @@ export class GamepadInput {
       this.input.setAnalog('pad', { x: 0, y: 0, throttle: 0 });
       this.menuRepeat -= dt;
       const vert = pressed(12) || ly < -0.5 ? -1 : pressed(13) || ly > 0.5 ? 1 : 0;
+      const horiz = pressed(14) || lx < -0.5 ? -1 : pressed(15) || lx > 0.5 ? 1 : 0;
       if (vert && this.menuRepeat <= 0) { this.input.virtualTap(vert < 0 ? 'ArrowUp' : 'ArrowDown'); this.menuRepeat = 0.25; }
-      if (!vert) this.menuRepeat = 0;
+      else if (!vert && horiz && this.menuRepeat <= 0) { this.input.virtualTap(horiz < 0 ? 'ArrowLeft' : 'ArrowRight'); this.menuRepeat = 0.2; }
+      if (!vert && !horiz) this.menuRepeat = 0;
       for (const i of [0, 1, 9, 8]) {
         if (edge(i) !== 1) continue;
         this.input.virtualTap(i === 0 ? 'Enter' : i === 8 ? 'KeyM' : 'Escape');

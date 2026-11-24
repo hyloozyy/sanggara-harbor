@@ -36,4 +36,7 @@
 .settings { display: flex; flex-direction: column; gap: 14px; width: 440px; }
 .settings label { display: flex; justify-content: space-between; align-items: center; font-size: 16px; pointer-events: auto; }
 .settings input, .settings select { pointer-events: auto; width: 200px; }
+.settings label.focus { color: var(--gold); text-shadow: 0 0 8px rgba(255,122,61,0.6); }
+.settings label.focus::before { content: '▶ '; color: var(--gold); margin-right: -12px; }
+.settings button.focus { outline: 2px solid var(--gold); outline-offset: 2px; }
 .settings button { pointer-events: auto; font: inherit; font-size: 18px; padding: 8px 14px; background: var(--sunset); color: #fff; border: none; cursor: pointer; width: 160px; }

@@ -37,6 +37,8 @@ export class MenuScreens {
       else if (this.current === 'help') { e.preventDefault(); this.closeHelp(); }
       return;
     }
+    if (this.current === 'settings') { this.settingsKey(e); return; }
+    if (this.current === 'help' && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); this.closeHelp(); return; }
     if (!menu) return;
     const items = [...menu.querySelectorAll('button:not(:disabled)')];
     let i = items.findIndex((b) => b.classList.contains('focus'));
@@ -138,6 +140,45 @@ export class MenuScreens {
       this.current = 'layout';
       this.cb.onEditLayout(() => { $('settings-screen').classList.remove('hidden'); this.current = 'settings'; });
     });
+  }
+
+  // Keyboard / gamepad navigation of the settings form: up/down picks a row, left/right changes
+  // the value (slider step, next option, checkbox), Enter/Cross toggles or presses buttons.
+  settingsKey(e) {
+    const rows = [...$('settings-form').children];
+    if (!rows.length) return;
+    let i = rows.findIndex((r) => r.classList.contains('focus'));
+    const ctl = (r) => (r.tagName === 'BUTTON' ? r : r.querySelector('input,select'));
+    const fire = (el) => el.dispatchEvent(new Event('change'));
+    if (e.code === 'ArrowDown' || e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'KeyS') {
+      const d = e.code === 'ArrowDown' || e.code === 'KeyS' ? 1 : -1;
+      i = i < 0 ? 0 : (i + d + rows.length) % rows.length;
+      rows.forEach((r) => r.classList.remove('focus'));
+      rows[i].classList.add('focus');
+      rows[i].scrollIntoView?.({ block: 'nearest' });
+      e.preventDefault();
+      return;
+    }
+    if (i < 0) return;
+    const el = ctl(rows[i]);
+    if (!el) return;
+    const dir = e.code === 'ArrowRight' || e.code === 'KeyD' ? 1 : e.code === 'ArrowLeft' || e.code === 'KeyA' ? -1 : 0;
+    if (dir) {
+      e.preventDefault();
+      if (el.type === 'range') {
+        const step = +el.step || 0.1;
+        el.value = String(Math.min(+el.max, Math.max(+el.min, +el.value + dir * step)));
+        fire(el);
+      } else if (el.tagName === 'SELECT') {
+        el.selectedIndex = (el.selectedIndex + dir + el.options.length) % el.options.length;
+        fire(el);
+      } else if (el.type === 'checkbox') { el.checked = !el.checked; fire(el); }
+    } else if (e.code === 'Enter' || e.code === 'Space') {
+      e.preventDefault();
+      if (el.tagName === 'BUTTON') el.click();
+      else if (el.type === 'checkbox') { el.checked = !el.checked; fire(el); }
+      else if (el.tagName === 'SELECT') { el.selectedIndex = (el.selectedIndex + 1) % el.options.length; fire(el); }
+    }
   }
 
   // Keyboard & mouse, touch and gamepad side by side, on foot and in a vehicle.
