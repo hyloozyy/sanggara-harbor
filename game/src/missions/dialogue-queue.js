@@ -32,19 +32,23 @@ export class DialogueQueue {
       const line = this.current = this.queue.shift();
       this.overtime = 0;
       const character = line.character || this.findSpeaker(line.speaker);
-      const profile = line.profile || CAST_VOICES[line.speaker] || CAST_VOICES.warga;
+      let profile = line.profile || CAST_VOICES[line.speaker] || CAST_VOICES.warga;
+      // A cast member who is not standing here is on the phone.
+      line.phone = !character && CAST[line.speaker]?.look && line.speaker !== 'raka';
+      if (line.phone) profile = { ...profile, phone: true };
       let voiced = 0;
       if (this.voices) voiced = this.voices.speak(line.text, profile, character, character ? character.pos : null);
       this.timer = Math.max(Math.min(line.duration, voiced + 1.2), voiced + 0.35);
       events.emit('dialogue-line', line);
     }
     this.voices?.update();
+    this.onSpeaking?.(!!this.current);
   }
 
   // { name, color, text } for the HUD, or null.
   get line() {
     if (!this.current) return null;
     const c = CAST[this.current.speaker] || { name: this.current.speaker, color: '#fff' };
-    return { name: this.current.name || c.name, color: this.current.color || c.color, text: this.current.text };
+    return { name: (this.current.phone ? '📱 ' : '') + (this.current.name || c.name), color: this.current.color || c.color, text: this.current.text };
   }
 }

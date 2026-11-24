@@ -184,7 +184,7 @@ export class SideActivities {
     }
     const ammoPrice = 400000 * discount;
     if (a.owned.size > 1 && g.progression.money >= ammoPrice) {
-      g.progression.addMoney(-ammoPrice, 'Peluru');
+      g.progression.addMoney(-ammoPrice, 'Ammo and vest');
       for (const id of a.owned) if (!WEAPONS[id].melee) a.ammo[id] += WEAPONS[id].mag * 3;
       g.player.body.armour = Math.max(g.player.body.armour, g.progression.rankIndex >= 2 ? 100 : 50);
       events.emit('notify', { text: `Ammo and vest refilled (−${formatRupiah(ammoPrice)})` });

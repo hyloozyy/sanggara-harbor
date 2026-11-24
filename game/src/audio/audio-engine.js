@@ -39,6 +39,23 @@ export class AudioEngine {
 
   get now() { return this.ctx.currentTime; }
 
+  // Pause menu / map: the world goes quiet (effects and voices fade), the menus still click.
+  setWorldPaused(on) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.sfx.gain.setTargetAtTime(on ? 0 : this.volumes.sfx, t, 0.08);
+    this.voice.gain.setTargetAtTime(on ? 0 : this.volumes.voice, t, 0.08);
+    this.music.gain.setTargetAtTime(on ? this.volumes.music * 0.35 : this.volumes.music * (this.ducked ? 0.45 : 1), t, 0.2);
+    this.worldPaused = on;
+  }
+
+  // The radio dips while someone is talking.
+  duckMusic(on) {
+    if (!this.ctx || this.ducked === on || this.worldPaused) return;
+    this.ducked = on;
+    this.music.gain.setTargetAtTime(this.volumes.music * (on ? 0.45 : 1), this.ctx.currentTime, 0.25);
+  }
+
   noise(duration, { filter = 'lowpass', freq = 2000, q = 1, gain = 0.5, attack = 0.002, decay = duration, dest = this.sfx, when = 0 } = {}) {
     const c = this.ctx, t = this.now + when;
     const src = c.createBufferSource();

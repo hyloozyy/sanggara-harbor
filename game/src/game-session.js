@@ -76,6 +76,7 @@ export class GameSession {
     this.weaponFx = new WeaponFx(this.scene, this.sound);
     this.dialogue.voices = this.voices;
     this.dialogue.findSpeaker = (key) => this.findSpeaker(key);
+    this.dialogue.onSpeaking = (on) => audio.duckMusic?.(on);
     this.hud = new Hud();
     this.minimap = new Minimap(document.getElementById('minimap'), document.getElementById('big-map-canvas'));
     this.leftoverCombatants = [];

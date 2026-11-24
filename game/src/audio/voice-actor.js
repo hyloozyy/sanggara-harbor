@@ -83,6 +83,11 @@ export class VoiceDirector {
 
   get busy() { return !!this.current && (this.current.mode === 'speech' ? this.current.speaking : this.audio.ctx && this.audio.ctx.currentTime < this.current.end); }
 
+  pause(on) {
+    if (!this.synth) return;
+    try { if (on) this.synth.pause(); else this.synth.resume(); } catch { /* unsupported */ }
+  }
+
   stop() {
     if (this.current?.mode === 'speech') try { this.synth.cancel(); } catch { /* ignore */ }
     if (this.current?.nodes) for (const n of this.current.nodes) try { n.stop(); } catch { /* already stopped */ }
@@ -125,11 +130,11 @@ export class VoiceDirector {
     out.gain.value = 0.55;
     let dest = this.dest || a.voice || a.master;
     let tail = out;
-    if (profile.radio) {
+    if (profile.radio || profile.phone) {
       const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 1.2;
       const sh = c.createWaveShaper(); const curve = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 3); } sh.curve = curve;
       tail.connect(bp); bp.connect(sh); tail = sh;
-      a.noise(total + 0.3, { filter: 'bandpass', freq: 2500, q: 0.6, gain: 0.03, dest });
+      if (profile.radio) a.noise(total + 0.3, { filter: 'bandpass', freq: 2500, q: 0.6, gain: 0.03, dest });
     }
     if (position && this.listener && c.createStereoPanner) {
       const dx = position.x - this.listener.x, dz = position.z - this.listener.z, d = Math.hypot(dx, dz);

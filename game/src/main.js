@@ -77,10 +77,10 @@ const menus = new MenuScreens({
     input.enabled = true;
     if (!touch.wanted()) lockPointer(canvas);
   },
-  onResume() { menus.hidePause(); state = 'playing'; input.enabled = true; if (!touch.wanted()) lockPointer(canvas); },
+  onResume() { menus.hidePause(); state = 'playing'; worldPaused(false); input.enabled = true; if (!touch.wanted()) lockPointer(canvas); },
   onPauseAction(id) {
     if (id === 'save') session.saveGame('Manual');
-    else if (id === 'load') { applySave(session, readSave()); session.missions.refreshStartMarker(); menus.hidePause(); state = 'playing'; }
+    else if (id === 'load') { applySave(session, readSave()); session.missions.refreshStartMarker(); menus.hidePause(); state = 'playing'; worldPaused(false); }
     else if (id === 'map') { menus.hidePause(); openMap(); }
     else if (id === 'title') location.reload();
   },
@@ -89,19 +89,23 @@ const menus = new MenuScreens({
   onSettings: applySettings,
 });
 
+function worldPaused(on) { audio.setWorldPaused?.(on); session?.voices.pause(on); }
+
 let mapScreen = null;
 function openMap() {
   state = 'map';
+  worldPaused(true);
   input.releaseLock();
   mapScreen.open();
   document.getElementById('big-map-legend').innerHTML = '<b>MAP OF SANGGARA</b><br><i style="background:#ffd23a;border-radius:50%"></i>Next story mission · <i style="background:#ffc35a"></i>Story place<br><i style="background:#40ffc0"></i>Activity · <i style="background:#ff5a5a"></i>Gang turf · <i style="background:#e8e2d4"></i>Landmark<br><i style="background:#e65aff"></i>Waypoint · <i style="background:#ff3a3a;border-radius:50%"></i>Police<br>Click a district or place for details · right-click: waypoint<br>Drag to pan · wheel / pinch to zoom · M / Esc close';
 }
 
-function closeMap() { mapScreen.close(); state = 'playing'; if (!touch.wanted()) lockPointer(canvas); }
+function closeMap() { mapScreen.close(); state = 'playing'; worldPaused(false); if (!touch.wanted()) lockPointer(canvas); }
 
 function pause() {
   if (state !== 'playing') return;
   state = 'paused';
+  worldPaused(true);
   input.releaseLock();
   const st = session.progression.stats;
   menus.showPause({ ...st, rank: session.progression.rank.name, money: session.progression.money, hasSave: hasSave() });
