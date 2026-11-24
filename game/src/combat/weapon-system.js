@@ -104,16 +104,19 @@ export class WeaponSystem {
         const ch = hit.character;
         const dmg = w.damage * (hit.head ? 2.5 : 1) * (1 - Math.min(0.5, hit.t / w.range * 0.5));
         particles.blood(ex, ey, ez, dx, dz);
+        if (p === 0) events.emit('bullet-impact', { x: ex, y: ey, z: ez, surface: 'flesh' });
         ch.hit(dmg, origin, { knockback: w.id === 'shotgun' ? 2.2 : 0.8, cause: 'bullet', attacker: shooter });
         hits.push(hit);
       } else if (hit.vehicle) {
         particles.sparks(ex, ey, ez, 6, 6, -dx, -dz);
+        if (p < 2) events.emit('bullet-impact', { x: ex, y: ey, z: ez, surface: rng.chance(0.25) ? 'glass' : 'metal', vehicle: hit.vehicle });
         hit.vehicle.damage(w.damage * 0.9, 'bullet', { x: ex, z: ez });
         events.emit('vehicle-shot', { vehicle: hit.vehicle, shooter });
         hits.push(hit);
       } else if (hit.t < w.range) {
         particles.sparks(ex, ey, ez, 4, 4, -dx, -dz);
         particles.dust(ex, ey, ez, 2);
+        if (p < 2) events.emit('bullet-impact', { x: ex, y: ey, z: ez, surface: ey < 0.15 ? 'ground' : 'concrete' });
       }
     }
     return hits;

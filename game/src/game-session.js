@@ -16,6 +16,7 @@ import { CrewAbilities } from './missions/crew-abilities.js';
 import { DialogueQueue } from './missions/dialogue-queue.js';
 import { Conversations } from './missions/conversations.js';
 import { VoiceDirector } from './audio/voice-actor.js';
+import { SoundWorld } from './audio/sound-world.js';
 import { CAST } from './missions/story-cast.js';
 import { Progression } from './world/progression.js';
 import { Hud } from './ui/hud.js';
@@ -68,6 +69,8 @@ export class GameSession {
     this.progression = new Progression();
     this.dialogue = new DialogueQueue();
     this.voices = new VoiceDirector(audio);
+    this.sound = new SoundWorld(audio);
+    audio.uiClick = () => this.sound.uiClick();
     this.dialogue.voices = this.voices;
     this.dialogue.findSpeaker = (key) => this.findSpeaker(key);
     this.hud = new Hud();
@@ -313,13 +316,18 @@ export class GameSession {
   }
 
   updateAudio(dt) {
-    const a = this.audio;
-    const pv = this.player.vehicle;
-    a.updateEngine(pv);
-    let nearest = Infinity;
-    for (const v of this.police.policeCars) if (v.sirenOn) nearest = Math.min(nearest, this.camDist(v.pos.x, v.pos.z));
-    a.updateSiren(dt, nearest);
-    a.updateRotor(this.police.heliActive ? this.camDist(this.police.heli.pos.x, this.police.heli.pos.z) : Infinity);
+    const pv = this.player.vehicle, snd = this.sound, b = this.player.body;
+    snd.setListener(this.gfx.camera, this.cameraRig.forward, dt);
+    snd.updateVehicles(dt, pv, this.vehicles.list, this.police.policeCars, this.police.heliActive ? this.police.heli : null);
+    const w = this.weather;
+    snd.updateAmbience(dt, { x: b.pos.x, z: b.pos.z, night: w.clock.night ?? 0, rain: w.cur.rain, inCar: !!pv && !pv.spec.twoWheel, inCarRain: w.cur.rain });
+    // Footsteps: one per stride, by surface and wetness.
+    if (!pv && b.alive && b.grounded && b.knock <= 0) {
+      const sp = Math.hypot(b.vel.x, b.vel.z);
+      this.strideDist = (this.strideDist || 0) + sp * dt;
+      const stride = sp > 4 ? 1.25 : 0.78;
+      if (sp > 0.6 && this.strideDist > stride) { this.strideDist = 0; snd.footstep(b.pos.x, b.pos.z, { running: sp > 4, wet: w.wetness }); }
+    }
     this.radio.update(dt);
   }
 

@@ -11,7 +11,7 @@ export function wireGameEvents(game) {
 
   const P = () => self.player.body;
   events.on('shot-fired', ({ shooter, weapon, x, z }) => {
-    self.audio.gunshot(weapon, self.camDist(x, z));
+    self.sound.gunshot(WEAPONS[weapon]?.sound || weapon, x, 1.4, z);
     if (shooter === P()) {
       self.peds.scare(x, z, 45, 2, true);
       self.traffic.panicAround(x, z, 40);
@@ -61,9 +61,21 @@ export function wireGameEvents(game) {
     if (!self.radio.on && !self.radio.silent) self.radio.setOn(true);
     self.hud.notify(`${vehicle.spec.name}${carjack ? ' — carjacked!' : ''}`);
   });
-  events.on('vehicle-exited', () => self.radio.setOn(false));
+  events.on('vehicle-exited', ({ vehicle }) => {
+    self.radio.setOn(false);
+    if (!vehicle.spec.twoWheel && vehicle.spec.body !== 'bajaj') { self.sound.door(vehicle.pos.x, 1, vehicle.pos.z, true); setTimeout(() => self.sound.door(vehicle.pos.x, 1, vehicle.pos.z, false), 550); }
+  });
+  events.on('vehicle-entered', ({ vehicle }) => {
+    if (!vehicle.spec.twoWheel && vehicle.spec.body !== 'bajaj') { self.sound.door(vehicle.pos.x, 1, vehicle.pos.z, true); setTimeout(() => self.sound.door(vehicle.pos.x, 1, vehicle.pos.z, false), 700); }
+  });
+  events.on('bullet-impact', ({ x, y, z, surface }) => self.sound.impact(surface, x, y, z));
+  events.on('character-hit', ({ character, amount, cause }) => {
+    if (amount > 8 && character.alive !== false && Math.random() < 0.7) self.sound.grunt(character.pos.x, character.pos.y + 1.6, character.pos.z, { female: character.model?.look?.gender === 'f', pain: Math.min(1.3, 0.6 + amount / 60) });
+    void cause;
+  });
+  events.on('mission-started', () => self.sound.missionStart());
   events.on('vehicle-collision', ({ a, b, impact, x, z }) => {
-    if (self.camDist(x, z) < 80) self.audio.crash(impact);
+    self.sound.crash(impact, x, 0.8, z);
     self.particles.sparks(x, 0.8, z, Math.min(30, impact * 2), 7);
     const pv = self.player.vehicle;
     if (pv && (a === pv || b === pv)) {
@@ -75,7 +87,7 @@ export function wireGameEvents(game) {
   events.on('vehicle-damaged', ({ vehicle, cause, at }) => {
     if (cause === 'crash' && at && at.impact > 6) {
       self.particles.sparks(at.x, 0.7, at.z, Math.min(25, at.impact * 1.5), 6);
-      if (self.camDist(at.x, at.z) < 80) self.audio.crash(at.impact);
+      self.sound.crash(at.impact, at.x, 0.8, at.z);
       if (vehicle === self.player.vehicle) self.cameraRig.addShake(Math.min(0.7, at.impact * 0.04));
     }
   });
@@ -86,7 +98,7 @@ export function wireGameEvents(game) {
   events.on('explosion', ({ x, y, z, power }) => {
     self.particles.explosion(x, y, z, power);
     self.lights.flash(x, y + 2, z, 0xff8a3a, 160, 0.9, 50);
-    self.audio.explosion(self.camDist(x, z));
+    self.sound.explosion(x, y, z);
     const d = self.camDist(x, z);
     self.cameraRig.addShake(Math.max(0, 1.1 - d / 60));
     for (const ch of self.allCharacters()) {
@@ -123,14 +135,15 @@ export function wireGameEvents(game) {
     else if (WEAPONS[p.type]) { self.player.arsenal.give(p.type, p.amount || WEAPONS[p.type].mag * 2); self.hud.notify(`${WEAPONS[p.type].name} +${p.amount || WEAPONS[p.type].mag * 2} ammo`); }
     else if (p.type === 'ledger') self.hud.notify("Juragan Rusdi's ledger taken");
   });
-  events.on('money-changed', ({ amount, reason }) => { if (Math.abs(amount) >= 50000) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
+  events.on('money-changed', ({ amount, reason }) => {
+    if (amount > 0) self.sound.money(); if (Math.abs(amount) >= 50000) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
   events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) self.hud.notify(`+${amount} RESPECT · ${reason}`, 'xp'); });
   events.on('rank-up', ({ rank }) => { self.hud.activityResult(true, 'RANK UP', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); self.audio.missionJingle(true); });
   events.on('punch', () => self.audio.whoosh());
-  events.on('punch-hit', () => { self.audio.punch(); self.cameraRig.addShake(0.15); });
+  events.on('punch-hit', ({ target }) => { const p = target?.pos || P().pos; self.sound.punch(p.x, p.y + 1.3, p.z); self.cameraRig.addShake(0.15); });
   events.on('reload', () => self.audio.reload());
   events.on('checkpoint', () => self.audio.checkpoint());
-  events.on('horn', () => self.audio.horn());
+  events.on('horn', ({ vehicle }) => self.sound.horn(vehicle));
   events.on('notify', ({ text, kind }) => self.hud.notify(text, kind));
   events.on('crew-unlocked', ({ crew }) => self.hud.notify(`New crew: ${crew.name} — [${crew.label}] ${crew.ability}`, 'xp'));
   events.on('weapon-unlocked', ({ id }) => self.hud.notify(`New weapon: ${WEAPONS[id].name} [${WEAPONS[id].slot}]`, 'xp'));

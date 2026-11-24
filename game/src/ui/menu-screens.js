@@ -73,7 +73,7 @@ export class MenuScreens {
         return `<li class="${done ? 'done' : next ? 'next' : ''}"><b>${m.chapter}</b>${m.title}${done ? ' ✔' : next ? ' ◄' : ''}</li>`;
       }).join('')}</ul>
       <div class="cast">${['dimas', 'lastri', 'harun', 'rusdi'].map((k) => `<div><b>${CAST[k].full}</b>${CAST[k].role}</div>`).join('')}</div>
-      <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} story missions · street races · martabak deliveries · angkot fares · 12 golden shells · 16 vehicles · 4 radio stations · 6 districts</div>`;
+      <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} story missions · street races · martabak deliveries · angkot fares · 12 golden shells · 16 vehicles · 6 radio stations · 6 districts</div>`;
   }
 
   hideTitle() { $('title-screen').classList.add('hidden'); this.current = null; }

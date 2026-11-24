@@ -1,5 +1,20 @@
-// Car radio with four stations of procedurally composed music, scheduled ahead on the WebAudio
-// clock: dangdut with kendang and suling, lo-fi beats, keroncong plucks, and fast "funky kota".
+// Car radio with six stations of procedurally composed music, scheduled ahead on the WebAudio
+// clock: dangdut with kendang and suling, lo-fi beats, keroncong plucks, fast "funky kota",
+// neon synthwave, and a news-talk station whose presenters babble the city's headlines.
+import { VoiceDirector, voiceProfile } from './voice-actor.js';
+
+const HEADLINES = [
+  'Good evening Sanggara, this is the evening news on Suara Kota.',
+  'Police report another street race on the Pantai Senja boulevard last night.',
+  'The fish market opens early tomorrow after a record catch.',
+  'Commissioner Wulan promises more patrols in Kota Lama.',
+  'Traffic is slow on Jalan Raya Sanggara near the station.',
+  'Weather: a warm golden evening, with tropical showers possible later.',
+  'A container ship arrives at the harbour on the morning tide.',
+  'Residents of Bukit Hijau complain about noise from a private party.',
+  'And now, a word from our sponsor, Martabak Bulan. Hot, sweet, and delivered fast!',
+  'Callers tonight are talking about rising rents in Pusat Niaga.',
+];
 
 const STATIONS = [
   { id: 'dangdut', name: 'Gelombang Dangdut 98.7', dj: 'DJ Yuyun', bpm: 128, scale: [0, 1, 4, 5, 7, 8, 10], root: 57,
@@ -10,6 +25,10 @@ const STATIONS = [
     songs: ['Old Port', 'Missing the Harbour', 'Vintage Bicycle', 'Moon over the Tower'] },
   { id: 'funky', name: 'Pulse Sanggara 105.9', dj: 'MC Kilat', bpm: 150, scale: [0, 3, 5, 7, 10], root: 45,
     songs: ['Speeding till Dawn', 'Siren Remix', 'Full Throttle Dusk', 'Running Red Lights'] },
+  { id: 'synthwave', name: 'Neon Teluk 92.1', dj: 'Nova', bpm: 100, scale: [0, 2, 3, 5, 7, 8, 10], root: 45,
+    songs: ['Harbour Lights 1986', 'Chrome Sunset', 'Night Drive to Bukit Hijau', 'Palms in the Rear-view'] },
+  { id: 'news', name: 'Suara Kota Talk 88.0', dj: 'Bang Herman & Mbak Sinta', bpm: 60, scale: [0, 4, 7], root: 60,
+    songs: ['Evening News', 'Call-in Hour', 'Traffic and Weather', 'City Talk'] },
 ];
 
 const midi = (n) => 440 * 2 ** ((n - 69) / 12);
@@ -24,6 +43,10 @@ export class Radio {
     this.songTime = 0;
     this.songIndex = 0;
     this.seed = 1;
+    this.talk = new VoiceDirector(audio);
+    this.talk.useSpeech = false;
+    this.talkNext = 0;
+    this.hosts = [voiceProfile('m', 'adult', 'herman', { radio: true, f0: 108, rate: 1.05 }), voiceProfile('f', 'adult', 'sinta', { radio: true, f0: 205, rate: 1.1 })];
   }
 
   get stations() { return STATIONS; }
@@ -51,7 +74,18 @@ export class Radio {
 
   update(dt) {
     const a = this.audio;
-    if (!a.ctx || !this.on || this.silent) return;
+    if (!a.ctx || !this.on || this.silent) { if (this.talk.current) this.talk.stop(); return; }
+    if (this.station.id === 'news') {
+      this.talk.dest = a.music;
+      if (a.now > this.talkNext) {
+        const line = HEADLINES[Math.floor(Math.random() * HEADLINES.length)];
+        const host = this.hosts[Math.floor(Math.random() * 2)];
+        this.talkNext = a.now + this.talk.speak(line, host) + 0.6 + Math.random();
+      }
+      this.songTime += dt;
+      return;
+    }
+    if (this.talk.current) this.talk.stop();
     this.songTime += dt;
     if (this.songTime > 75) { this.songTime = 0; this.songIndex++; this.seed++; }
     const st = this.station;
@@ -98,6 +132,13 @@ export class Radio {
       if (s16 % 4 === 3 || s16 % 4 === 1) T(this.note(st, chordRoot + 4, 1), 0.08, { type: 'triangle', gain: 0.04 }); // cuk
       if (s16 % 8 === 0 || s16 % 8 === 5) T(this.note(st, chordRoot, -1), 0.4, { type: 'triangle', gain: 0.2 });      // cello pizz
       if (s16 % 4 === 0) T(this.note(st, Math.floor(this.r(step % 48) * 8) + chordRoot, 1), dur * 4, { type: 'sine', gain: 0.06, attack: 0.05 });
+    } else if (st.id === 'synthwave') {
+      if (s16 % 4 === 0) T(50, 0.28, { type: 'sine', gain: 0.5, slide: 0.35 });                                   // kick
+      if (s16 === 4 || s16 === 12) { N(0.35, { filter: 'bandpass', freq: 1700, gain: 0.16, decay: 0.35 }); N(0.9, { filter: 'bandpass', freq: 1200, gain: 0.04, attack: 0.05, decay: 0.9, when: when + 0.05 }); } // gated snare
+      if (s16 % 2 === 0) T(this.note(st, chordRoot, -2) * (s16 % 4 === 2 ? 2 : 1), dur * 1.8, { type: 'sawtooth', gain: 0.08 });  // octave bass
+      if (s16 === 0) for (const k of [0, 2, 4]) { T(this.note(st, chordRoot + k), dur * 15, { type: 'sawtooth', gain: 0.025, attack: 0.25 }); T(this.note(st, chordRoot + k) * 1.005, dur * 15, { type: 'sawtooth', gain: 0.02, attack: 0.25 }); } // pad
+      if (s16 % 2 === 1) N(0.03, { filter: 'highpass', freq: 9000, gain: 0.035 });
+      if (bar % 2 === 1 && s16 % 3 === 0) T(this.note(st, Math.floor(this.r(step % 24 + 11) * 7) + chordRoot, 1), dur * 2.5, { type: 'square', gain: 0.03, attack: 0.02 }); // lead
     } else if (st.id === 'funky') {
       if (s16 % 4 === 0) T(55, 0.2, { type: 'sine', gain: 0.5, slide: 0.4 });
       if (s16 % 4 === 2) T(this.note(st, chordRoot, -1), dur * 1.5, { type: 'sawtooth', gain: 0.09 });

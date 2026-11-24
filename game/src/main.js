@@ -30,6 +30,8 @@ const radio = new Radio(audio);
 const fill = document.getElementById('loading-fill');
 
 let session = null;
+// Every button in the menus, map and conversations clicks.
+document.addEventListener('click', (e) => { if (e.target.closest?.('button')) audio.uiClick?.(); }, true);
 let state = 'loading';
 let titleT = 0;
 

@@ -62,6 +62,7 @@ export class VoiceDirector {
     this.current = null;
     this.useSpeech = true;
     this.listener = null; // { x, z, yaw } of the camera, for panning babble
+    this.dest = null;     // output bus override (the radio uses the music bus)
     if (this.synth) {
       const load = () => { this.voices = this.synth.getVoices().filter((v) => /^en([-_]|$)/i.test(v.lang)); };
       load();
@@ -122,7 +123,7 @@ export class VoiceDirector {
     const t0 = c.currentTime + 0.03;
     const out = c.createGain();
     out.gain.value = 0.55;
-    let dest = a.voice || a.master;
+    let dest = this.dest || a.voice || a.master;
     let tail = out;
     if (profile.radio) {
       const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 1.2;
