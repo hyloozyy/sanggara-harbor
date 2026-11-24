@@ -137,7 +137,11 @@ export class Character {
     animateHumanoid(this.model, anim, speed, dt, {
       aiming: this.aiming, twoHanded: this.twoHanded, pitch: this.aimPitch, punchT: this.punchT, turnRate, flinch: this.flinch,
       talk: this.talk, umbrella: this.umbrella && !this.aiming, lookYaw: this.lookYaw, lookPitch: this.lookPitch,
+      airborne: !this.grounded && Math.abs(this.vy) > 0.6, vy: this.vy, drawT: this.drawT, reloadT: this.reloadT, recoil: this.recoil,
+      reach: this.reach, reachLow: this.reachLow, reachArm: this.reachArm !== false,
     });
+    this.recoil = Math.max(0, (this.recoil || 0) - dt * 7);
+    if (this.drawT != null && this.drawT < 1) this.drawT = Math.min(1, this.drawT + dt * 3.2);
     this.mesh.rotation.set(this.flinch * 0.25, this.heading, 0, 'YXZ');
     this.mesh.position.copy(this.pos);
   }

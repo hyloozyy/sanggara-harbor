@@ -42,6 +42,7 @@ export class PlayerController {
     if (this.heldId === this.arsenal.current) return;
     this.heldId = this.arsenal.current;
     this.body.model.hold(buildWeaponMesh(this.heldId));
+    this.body.drawT = 0; // holster the old weapon, draw the new one
     this.body.twoHanded = !!WEAPONS[this.heldId].twoHanded;
   }
 
@@ -55,7 +56,13 @@ export class PlayerController {
       const t = 1 - this.arsenal.reloading / (this.arsenal.reloadTime || 1.2);
       if (!this.magDropped && t > 0.28 && this.arsenal.current !== 'revolver' && this.arsenal.current !== 'shotgun') { this.magDropped = true; fx?.dropMag(item); }
       fx?.animateReload(item, t, this.arsenal.current);
-    } else if (wasReloading || this.magDropped) { this.magDropped = false; fx?.resetReload(item); }
+      b.reloadT = WEAPONS[this.arsenal.current].melee ? null : t;
+    } else { b.reloadT = null; if (wasReloading || this.magDropped) { this.magDropped = false; fx?.resetReload(item); } }
+    // The new weapon appears in the hand only once the hand has been down to the hip.
+    if (item) item.visible = b.drawT == null || b.drawT >= 0.45 || !!b.vehicle;
+    // Picking things up: a quick crouch-and-reach.
+    if (this.pickT > 0) { this.pickT = Math.max(0, this.pickT - dt * 2.2); b.reach = Math.sin(this.pickT * Math.PI); b.reachLow = true; b.reachArm = !this.rising; }
+    else if (!this.entering) { b.reach = 0; b.reachLow = false; this.rising = false; }
     if (!b.alive) { b.updateVisual(dt); return; }
 
     // Weapon selection.
@@ -66,8 +73,9 @@ export class PlayerController {
     if (input.hit('KeyR') && !b.vehicle) this.arsenal.startReload();
     this.syncHeldWeapon();
 
-    if (input.hit('KeyF')) this.tryEnterExit(game);
+    if (input.hit('KeyF')) { if (this.entering) this.entering = null; else if (b.vehicle) this.exitVehicle(game); else this.beginEnter(game); }
     if (b.vehicle) { this.drive(dt, input, game); return; }
+    if (this.entering && this.updateEnter(dt, input, game)) return;
 
     // On-foot movement relative to the camera.
     const cam = game.cameraRig.forward;
@@ -98,6 +106,7 @@ export class PlayerController {
         origin.addScaledVector(dir, Math.max(0, toPlayer + 0.5));
         b.aiming = true;
         const hits = game.weapons.fire(b, this.arsenal, origin, dir, 1);
+        if (hits) b.recoil = Math.min(1, (b.recoil || 0) + w.recoil * 9 + 0.15);
         if (hits) { game.cameraRig.addShake(w.recoil * 4); game.cameraRig.pitch += w.recoil; if (hits.some((h) => h.character)) events.emit('player-hit-target'); }
       }
     }
@@ -120,10 +129,42 @@ export class PlayerController {
     }
   }
 
-  tryEnterExit(game) {
+  // Walk to the driver's door, reach for the handle, then get in (F again or moving cancels).
+  beginEnter(game) {
+    const b = this.body;
+    const v = game.vehicles.nearest(b.pos.x, b.pos.z, 4.2, (c) => !c.wrecked);
+    if (!v) return;
+    this.entering = { v, t: 0, open: 0 };
+    b.aiming = false;
+  }
+
+  updateEnter(dt, input, game) {
+    const b = this.body, e = this.entering, v = e.v;
+    e.t += dt;
+    const side = v.spec.twoWheel ? 0.8 : v.spec.width / 2 + 0.55;
+    const rx = Math.cos(v.heading), rz = -Math.sin(v.heading);
+    const fwd = v.spec.twoWheel ? 0 : (v.spec.length || 4.2) * 0.08;
+    const dx = v.pos.x - rx * side + Math.sin(v.heading) * fwd, dz = v.pos.z - rz * side + Math.cos(v.heading) * fwd;
+    const d = Math.hypot(dx - b.pos.x, dz - b.pos.z);
+    if (v.wrecked || e.t > 3 || Math.hypot(v.pos.x - b.pos.x, v.pos.z - b.pos.z) > 7) { this.entering = null; b.reach = 0; return false; }
+    b.anim = 'auto';
+    if (d > 0.35 && e.open === 0) {
+      const sp = Math.min(3.6, d * 4);
+      b.move(dt, game.world, (dx - b.pos.x) / d * sp, (dz - b.pos.z) / d * sp, null, 14);
+    } else {
+      e.open += dt;
+      b.move(dt, game.world, 0, 0, v.heading + (v.spec.twoWheel ? Math.PI / 2 : Math.PI / 2 * 0.6), 10);
+      b.reach = Math.min(1, e.open / 0.25);
+      if (e.open > 0.38) { this.entering = null; b.reach = 0; this.tryEnterExit(game, v); return true; }
+    }
+    b.updateVisual(dt);
+    return true;
+  }
+
+  tryEnterExit(game, target = null) {
     const b = this.body;
     if (b.vehicle) { this.exitVehicle(game); return; }
-    const v = game.vehicles.nearest(b.pos.x, b.pos.z, 4.2, (c) => !c.wrecked);
+    const v = target || game.vehicles.nearest(b.pos.x, b.pos.z, 4.2, (c) => !c.wrecked);
     if (!v) return;
     const hadDriver = !!v.driverModel;
     if (hadDriver) game.ejectDriver(v, this);
@@ -149,6 +190,7 @@ export class PlayerController {
     b.heading = v.heading;
     b.vel.set(v.vel.x * 0.5, 0, v.vel.z * 0.5);
     if (bail) b.knock = 0.8;
+    else { this.pickT = 0.5; this.rising = true; } // step out of the seat and straighten up
     b.vehicle = null;
     b.mesh.visible = true;
     events.emit('vehicle-exited', { vehicle: v });

@@ -135,11 +135,12 @@ export function addHijab(b, shape) {
   b.ellipsoid({ lat: 18, lon: 26, weightFn: () => HEAD, keep: (d) => !opening(d),
     uvFn: (d) => regionUV('hat', 0.5 + Math.atan2(d.x, d.z) / (Math.PI * 2), 0.55 + d.y * 0.45),
     map: (d) => { const o = 0.011 + 0.007 * smooth(0.2, -0.8, d.y) + 0.004 * smooth(0.4, 1, d.y); return out(shape, d, o); } });
-  // The drape over the neck, shoulders and upper chest.
-  const rings = [
-    { c: [0, 1.62, -0.012], rx: 0.09, rz: 0.098 }, { c: [0, 1.585, -0.006], rx: 0.094, rz: 0.098 }, { c: [0, 1.54, -0.004], rx: 0.14, rz: 0.112 },
-    { c: [0, 1.5, 0.0], rx: 0.2, rz: 0.13 }, { c: [0, 1.44, 0.004], rx: 0.225, rz: 0.142 }, { c: [0, 1.37, 0.008], rx: 0.215, rz: 0.15 }, { c: [0, 1.35, 0.008], rx: 0.2, rz: 0.14 },
-  ];
+  // The drape over the neck, shoulders and upper chest: wrapped close under the chin, then
+  // flowing out over the shoulder slope in a soft curve and tucking in at a rounded hem.
+  const drape = [[1.625, 0.088, 0.098, -0.012], [1.598, 0.098, 0.103, -0.007], [1.565, 0.124, 0.11, -0.004], [1.53, 0.16, 0.121, -0.002],
+    [1.495, 0.19, 0.131, 0.0], [1.46, 0.21, 0.14, 0.003], [1.42, 0.219, 0.147, 0.006], [1.38, 0.214, 0.15, 0.008], [1.348, 0.2, 0.147, 0.009],
+    [1.328, 0.186, 0.14, 0.009], [1.318, 0.17, 0.13, 0.008]];
+  const rings = drape.map(([y, rx, rz, z]) => ({ c: [0, y, z], rx, rz }));
   b.sweep(rings, { segments: 22, uvFn: (u, v) => regionUV('hat', u, v * 0.5), weightFn: (p) => neckBlend(p.y, 1.62, 1.42) });
 }
 

@@ -5,6 +5,7 @@
 // the story has gone, a crash that just happened nearby. Story characters brief the next job and
 // can start it from the conversation.
 import * as THREE from 'three';
+import { angleDamp } from '../core/math-utils.js';
 import { CAST } from './story-cast.js';
 import { voiceProfile, VoiceDirector } from '../audio/voice-actor.js';
 import { DISTRICTS, districtAt } from '../city/city-layout.js';
@@ -117,9 +118,11 @@ export class Conversations {
       const d = Math.hypot(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
       if (!p.alive || p.knock > 0 || d > 6 || g.player.vehicle || (p.ai && p.ai.mode !== 'talk')) { this.end(false); return; }
       // Face each other; the townsperson stays put while talking.
-      p.heading = Math.atan2(b.pos.x - p.pos.x, b.pos.z - p.pos.z);
+      // Both turn smoothly (not snapping) and keep eye contact.
+      p.heading = angleDamp(p.heading, Math.atan2(b.pos.x - p.pos.x, b.pos.z - p.pos.z), 4, dt);
       p.lookAt?.(b.pos.x, b.pos.z, b.pos.y + 1.6);
-      if (!this.choices && d < 3.5) b.heading = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
+      if (d < 3.5) b.heading = angleDamp(b.heading, Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z), 5, dt);
+      b.lookAt(p.pos.x, p.pos.z, p.pos.y + 1.6);
       if (p === g.missions.giverNpc) p.updateVisual(dt);
       if (this.pendingChoices && g.dialogue.idle) { const c = this.pendingChoices; this.pendingChoices = null; c.length ? this.showChoices(c) : this.end(true); }
     }
@@ -266,6 +269,7 @@ export class Conversations {
     this.partner = null;
     this.used = null;
     this.game.cameraRig.talkFocus = null;
+    this.game.player.body.lookAt(null);
     if (!polite) this.game.dialogue.clear();
     if (p?.ai && p.ai.mode === 'talk') {
       if (this.fleeAfter) { p.ai.mode = 'flee'; p.ai.fleeFrom = { x: this.game.player.pos.x, z: this.game.player.pos.z }; p.ai.timer = 8; }

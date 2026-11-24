@@ -47,13 +47,22 @@ the D-pad/stick drive the menus and the map cursor. Pause → Controls shows all
   headlight beam on the player's car. Arcade physics with weight transfer, grip-limited cornering,
   handbrake drifts, tyre smoke, collisions, dents in the bodywork, broken headlights, smoke, fire
   and explosions.
+- **Character animation**: one continuous gait blended by a smoothed speed (idle, walk, jog,
+  sprint) with stride-matched foot planting, pelvis bob/sway/twist, counter-rotating shoulders,
+  arm swing and relaxed elbows; idle breathing, weight shifts and glances; a tucked jump pose and a
+  crouching landing; holster/draw when switching weapons (the new gun appears once the hand has
+  been to the hip); a two-handed reload where the support hand fetches a magazine from the belt;
+  recoil kick in the arms and chest; Raka walks to the driver's door and reaches for the handle
+  before getting in (F again cancels), steps out and straightens up, crouches to pick things up.
+  In conversations both people turn smoothly to face each other, keep eye contact and gesture
+  with their hands and nod while they speak.
 - **Traffic & people**: left-hand-drive traffic AI on the road graph obeying signals, keeping
   distance and overtaking stalled cars, parked cars, scooters; articulated pedestrians (some in
   headscarves) who walk the sidewalks, phone, cower,
   flee, get hit and call the police.
 - **Police**: 1-5 stars from witnessed crimes; patrol cars that route and ram, officers who get out
   and shoot, roadblocks, the Elang-1 helicopter with a searchlight, tactical vans; search zone on
-  the minimap, escape by staying unseen, the Bengkel Cat respray, and arrest ("TERTANGKAP").
+  the minimap, escape by staying unseen, the Bengkel Cat respray, and arrest.
 - **Combat**: fists, baseball bat, golok machete, pistol, revolver, SMG, assault rifle, shotgun and a
   scoped sniper rifle, each an original detailed model (extruded slides and receivers, turned
   barrels and scope, textured grips, sights, rails, stocks); hitscan with spread, headshots,
@@ -75,7 +84,7 @@ the D-pad/stick drive the menus and the map cursor. Pause → Controls shows all
   Martabak delivery runs on a scooter, "Narik Angkot" passenger fares in any angkot, twelve hidden
   Kerang Emas (golden shells), Hiu Merah ambushes on their industrial turf, respawning health/armour/
   weapon supplies, Toko Besi gun shop, Bengkel Cat respray, safehouse; money in US dollars, respect XP
-  and six ranks with perks; crew favours; hospital respawn ("TUMBANG") and arrest ("TERTANGKAP").
+  and six ranks with perks; crew favours; hospital respawn and arrest.
 - **Audio** (all WebAudio, no files): positional one-shots through PannerNodes with distance
   falloff — gunshots per weapon with street echo, impacts per surface, glass, crashes, explosions,
   doors, horns per vehicle type, grunts, footsteps by surface (asphalt, sand, wood, grass,
