@@ -367,16 +367,16 @@ const SCENES = {
     const s = session;
     s.hud.show(false);
     const keys = Object.keys(VEHICLE_MODELS);
-    for (const v of [...s.vehicles.list]) if (Math.hypot(v.pos.x + 40, v.pos.z - 118) < 40) s.vehicles.remove(v);
+    // Two rows parked along Jl. Bandar (z = 160), noses towards the camera side.
+    for (const v of [...s.vehicles.list]) if (Math.abs(v.pos.z - 160) < 40 && Math.abs(v.pos.x) < 80) s.vehicles.remove(v);
     keys.forEach((k, i) => {
       const row = i % 2, col = Math.floor(i / 2);
-      const v = s.vehicles.spawn(k, -62 + col * 6.2 + row * 3, 112 + row * 9, 0.6); v.ai = { kind: 'parked' }; v.syncMesh();
+      const v = s.vehicles.spawn(k, -30 + col * 8.2 + row * 4, 157.2 + row * 5.6, Math.PI / 2 + 0.5); v.ai = { kind: 'parked' }; v.syncMesh();
       v.mesh.updateMatrixWorld(true);
     });
-    s.peds.populate(-40, 120, 10);
-    s.cameraRig.override = { x: -40, y: 6, z: 134, tx: -40, ty: 0.5, tz: 116, fov: 62 };
+    s.cameraRig.override = { x: 4, y: 8.5, z: 147, tx: 2, ty: 0.3, tz: 160, fov: 76 };
     s.cameraRig.update(DT, s.player, s.input);
-    s.gfx.lighting.follow(-34, 120);
+    s.gfx.lighting.follow(4, 160);
     await finish(s, gfx);
   },
 
