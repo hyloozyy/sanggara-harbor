@@ -45,6 +45,7 @@ export function raySphere(ox, oy, oz, dx, dy, dz, cx, cy, cz, r) {
   return tca - Math.sqrt(r * r - d2);
 }
 
-export function formatRupiah(n) {
-  return 'Rp ' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+// US dollars with US digit grouping, e.g. $12,500.
+export function formatMoney(n) {
+  return '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }

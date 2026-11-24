@@ -2,7 +2,7 @@
 // deaths become crimes, rewards and loot, crashes make sparks and noise, explosions hurt
 // everything nearby, the wanted level drives radio chatter, and pickups pay out.
 import { WEAPONS } from './combat/weapon-catalog.js';
-import { formatRupiah } from './core/math-utils.js';
+import { formatMoney } from './core/math-utils.js';
 import { rng } from './core/rng.js';
 import { events } from './core/event-bus.js';
 import { townspersonName } from './missions/conversations.js';
@@ -52,7 +52,7 @@ export function wireGameEvents(game) {
       else self.crime(cause === 'vehicle' ? 'hit-and-run' : 'murder', character.pos.x, character.pos.z, self.policeNear(character.pos.x, character.pos.z, 60) || rng.chance(0.5));
     }
     if (character.faction !== 'player') {
-      const amount = character.faction === 'gang' ? rng.int(8, 25) * 10000 : rng.int(2, 9) * 10000;
+      const amount = character.faction === 'gang' ? rng.int(8, 25) * 10 : rng.int(2, 9) * 10;
       if (rng.chance(character.faction === 'gang' ? 1 : 0.6)) self.markers.addPickup('cash', character.pos.x + 0.5, character.pos.z + 0.3, amount);
       if (character.faction === 'police' && rng.chance(0.4)) self.markers.addPickup('pistol', character.pos.x - 0.5, character.pos.z, 24);
       if (character.faction === 'gang' && rng.chance(0.25)) self.markers.addPickup('armour', character.pos.x - 0.6, character.pos.z - 0.4, 25);
@@ -140,15 +140,16 @@ export function wireGameEvents(game) {
   events.on('mission-failed', () => self.audio.missionJingle(false));
   events.on('pickup', (p) => {
     self.audio.pickup();
+    if (!self.player.vehicle) self.player.pickT = 1;
     const b = self.player.body;
-    if (p.type === 'cash') self.progression.addMoney(p.amount || 50000, 'Dropped cash');
+    if (p.type === 'cash') self.progression.addMoney(p.amount || 50, 'Dropped cash');
     else if (p.type === 'health') b.health = Math.min(b.maxHealth, b.health + 60);
     else if (p.type === 'armour') b.armour = Math.min(100, b.armour + (p.amount || 50));
     else if (WEAPONS[p.type]) { self.player.arsenal.give(p.type, p.amount || WEAPONS[p.type].mag * 2); self.hud.notify(`${WEAPONS[p.type].name} +${p.amount || WEAPONS[p.type].mag * 2} ammo`); }
     else if (p.type === 'ledger') self.hud.notify("Juragan Rusdi's ledger taken");
   });
   events.on('money-changed', ({ amount, reason }) => {
-    if (amount > 0) self.sound.money(); if (Math.abs(amount) >= 50000) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
+    if (amount > 0) self.sound.money(); if (Math.abs(amount) >= 50) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatMoney(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
   events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) self.hud.notify(`+${amount} RESPECT · ${reason}`, 'xp'); });
   events.on('rank-up', ({ rank }) => { self.hud.activityResult(true, 'RANK UP', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); self.audio.missionJingle(true); });
   events.on('punch', ({ shooter }) => self.sound.swing(shooter.pos.x, shooter.pos.y + 1.3, shooter.pos.z));

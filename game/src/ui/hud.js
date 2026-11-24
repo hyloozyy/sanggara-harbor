@@ -1,7 +1,7 @@
 // The heads-up display: wanted stars, money and rank, weapon box with ammo and slots, crew
 // favours, mission panel with stages, police response list, district banner, subtitles,
 // notifications, speedometer with car condition, radio, health/armour, crosshair and overlays.
-import { formatRupiah } from '../core/math-utils.js';
+import { formatMoney } from '../core/math-utils.js';
 import { districtAt, streetAt, DISTRICTS } from '../city/city-layout.js';
 import { WEAPONS, WEAPON_ORDER } from '../combat/weapon-catalog.js';
 import { paintWeaponIcon } from '../combat/weapon-meshes.js';
@@ -49,7 +49,7 @@ export class Hud {
 
   missionResult(success, m, reason = '') {
     this.resultHtml(success
-      ? `<div class="big">MISSION COMPLETE</div><div class="small">${m.title} · +${formatRupiah(m.reward.money)} · +${m.reward.xp} XP</div>`
+      ? `<div class="big">MISSION COMPLETE</div><div class="small">${m.title} · +${formatMoney(m.reward.money)} · +${m.reward.xp} XP</div>`
       : `<div class="big" style="color:#ff6a5a">MISSION FAILED</div><div class="small">${reason}</div>`, 4.5);
   }
 
@@ -86,7 +86,7 @@ export class Hud {
     if (this.moneyShown === null) this.moneyShown = s.money;
     this.moneyShown += (s.money - this.moneyShown) * Math.min(1, dt * 6);
     if (Math.abs(s.money - this.moneyShown) < 1) this.moneyShown = s.money;
-    this.setText('money-display', formatRupiah(this.moneyShown));
+    this.setText('money-display', formatMoney(this.moneyShown));
     this.setText('rank-name', `${s.rank} · ${s.xp} XP`);
     this.el['xp-fill'].style.width = `${Math.round(s.rankProgress * 100)}%`;
 

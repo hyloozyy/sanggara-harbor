@@ -29,10 +29,10 @@ export class WorldEvents {
       if (p.type !== 'shell') return;
       this.shellsFound.add(p.shellId);
       const n = this.shellsFound.size;
-      game.progression.addMoney(250000, `Golden Shell ${n}/${SHELL_SPOTS.length}`);
+      game.progression.addMoney(250, `Golden Shell ${n}/${SHELL_SPOTS.length}`);
       game.progression.addXp(30, 'Golden Shell');
       if (n === SHELL_SPOTS.length) {
-        game.progression.addMoney(10000000, 'All Golden Shells!');
+        game.progression.addMoney(10000, 'All Golden Shells!');
         game.hud.activityResult(true, 'SHELL COLLECTOR', 'All 12 Golden Shells found');
       }
     });

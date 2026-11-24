@@ -74,7 +74,7 @@ the D-pad/stick drive the menus and the map cursor. Pause → Controls shows all
 - **Activities & progression**: Balap Liar Senja street race (14 gates against the clock),
   Martabak delivery runs on a scooter, "Narik Angkot" passenger fares in any angkot, twelve hidden
   Kerang Emas (golden shells), Hiu Merah ambushes on their industrial turf, respawning health/armour/
-  weapon supplies, Toko Besi gun shop, Bengkel Cat respray, safehouse; money in Rupiah, respect XP
+  weapon supplies, Toko Besi gun shop, Bengkel Cat respray, safehouse; money in US dollars, respect XP
   and six ranks with perks; crew favours; hospital respawn ("TUMBANG") and arrest ("TERTANGKAP").
 - **Audio** (all WebAudio, no files): positional one-shots through PannerNodes with distance
   falloff — gunshots per weapon with street echo, impacts per surface, glass, crashes, explosions,

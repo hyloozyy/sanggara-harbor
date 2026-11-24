@@ -192,7 +192,7 @@ export class GameSession {
     b.alive = true; b.health = b.maxHealth; b.state = 'idle'; b.knock = 0; b.fallT = 0;
     b.pos.set(place.x, 0.16, place.z);
     b.mesh.rotation.set(0, 0, 0);
-    const fee = Math.min(this.progression.money, Math.max(100000, Math.round(this.progression.money * 0.08 / 1000) * 1000));
+    const fee = Math.min(this.progression.money, Math.max(100, Math.round(this.progression.money * 0.08 / 10) * 10));
     this.progression.addMoney(-fee, this.busted ? `Fine · ${place.name}` : place.name);
     this.busted = false;
     this.wanted.minLevel = 0;

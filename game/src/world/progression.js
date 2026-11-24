@@ -1,4 +1,4 @@
-// Money in Rupiah, respect (XP) and street rank with perks unlocked as the player rises.
+// Money in US dollars, respect (XP) and street rank with perks unlocked as the player rises.
 import { events } from '../core/event-bus.js';
 
 export const RANKS = [
@@ -12,7 +12,7 @@ export const RANKS = [
 
 export class Progression {
   constructor() {
-    this.money = 150000;
+    this.money = 150;
     this.xp = 0;
     this.stats = { missions: 0, kills: 0, carsStolen: 0, distance: 0, maxWanted: 0, races: 0, deliveries: 0, playTime: 0 };
   }
@@ -38,6 +38,7 @@ export class Progression {
     if (this.rankIndex > before) events.emit('rank-up', { rank: this.rank });
   }
 
-  serialize() { return { money: this.money, xp: this.xp, stats: { ...this.stats } }; }
-  restore(d) { this.money = d.money; this.xp = d.xp; Object.assign(this.stats, d.stats || {}); }
+  serialize() { return { currency: 'usd', money: this.money, xp: this.xp, stats: { ...this.stats } }; }
+  // Saves from before the dollar switch stored rupiah-scale amounts (no currency tag): rescale them.
+  restore(d) { this.money = d.currency === 'usd' ? d.money : Math.round((d.money || 0) / 1000); this.xp = d.xp; Object.assign(this.stats, d.stats || {}); }
 }

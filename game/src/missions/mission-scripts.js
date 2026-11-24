@@ -12,7 +12,7 @@ export const MISSIONS = [
     id: 'pulang-kampung', chapter: 'CHAPTER 1', title: 'Homecoming', giver: 'dimas',
     start: { x: 7.5, z: -7.5 }, startNow: true,
     briefing: 'Dimas picks Raka up at Sanggara Station. The city has changed: Hiu Merah runs the harbour now.',
-    reward: { money: 500000, xp: 150 }, unlockCrew: 'dimas',
+    reward: { money: 500, xp: 150 }, unlockCrew: 'dimas',
     stages: [
       { type: 'talk', text: 'Meet Dimas', lines: [['dimas', 'Raka! Six years at sea and you finally came home, bro.'], ['raka', 'This town looks brighter than I remember.'], ['dimas', 'Bright lights, dark business. Come on, Bu Lastri is waiting.']] },
       { type: 'enter-vehicle', text: "Get in Dimas's Kancil Mini", vehicle: { model: 'kancil', x: -4.7, z: -26, heading: Math.PI, color: 0xe0b020 } },
@@ -24,7 +24,7 @@ export const MISSIONS = [
     id: 'ikan-busuk', chapter: 'CHAPTER 2', title: 'Rotten Fish', giver: 'lastri',
     start: P.lastriWarung,
     briefing: 'Hiu Merah collectors are shaking down the traders at Pasar Ikan. Drive them out, and catch the collector.',
-    reward: { money: 1500000, xp: 300 }, giveWeapon: ['pistol', 48],
+    reward: { money: 1500, xp: 300 }, giveWeapon: ['pistol', 48],
     stages: [
       { type: 'goto', text: 'Go to Pasar Ikan', target: P.fishMarket, radius: 8, lines: [['lastri', 'Be careful. They are not playing games.']] },
       { type: 'eliminate', text: 'Beat up the Hiu Merah collectors', enemies: [{ dx: 0, dz: -8, weapon: 'bat' }, { dx: 3, dz: 6, weapon: 'fists' }, { dx: -1, dz: 14, weapon: 'machete' }], lines: [['bayu', 'Who is this? A hero who showed up late?'], ['raka', "Pak Harun's nephew. You picked the wrong stall."]] },
@@ -36,7 +36,7 @@ export const MISSIONS = [
     id: 'angkot-panas', chapter: 'CHAPTER 3', title: 'Hot Angkot', giver: 'harun',
     start: P.fishMarket,
     briefing: 'Hiu Merah moves contraband in a fake angkot from their garage in Kawasan Industri. Steal it.',
-    reward: { money: 3000000, xp: 450 }, unlockCrew: 'lastri',
+    reward: { money: 3000, xp: 450 }, unlockCrew: 'lastri',
     stages: [
       { type: 'goto', text: 'Go to the Hiu Merah garage', target: P.hiuGarage, radius: 10, lines: [['harun', 'Route 04 angkot, teal paint. It is not carrying passengers.']] },
       { type: 'enter-vehicle', text: 'Steal the smuggling angkot', vehicle: { model: 'angkot', x: P.hiuGarage.x + 4, z: P.hiuGarage.z + 18, heading: 0, color: 0x18a6a0 }, wanted: 2, guards: [{ dx: 2, dz: 10, weapon: 'pistol' }, { dx: -4, dz: 26, weapon: 'pistol' }], lines: [['radio', 'All units, vehicle theft in Kawasan Industri!']] },
@@ -49,7 +49,7 @@ export const MISSIONS = [
     id: 'serangan-kota-lama', chapter: 'CHAPTER 4', title: 'Raid on Kota Lama', giver: 'lastri',
     start: P.lastriWarung,
     briefing: 'Hiu Merah knows who stole their angkot. Tonight they come to Kota Lama for revenge.',
-    reward: { money: 4000000, xp: 500 },
+    reward: { money: 4000, xp: 500 },
     stages: [
       { type: 'talk', text: 'Listen to Bu Lastri', lines: [['lastri', 'Raka, hear that? Black cars just stopped at the end of Jalan Bandar.'], ['raka', 'Get inside, Bu. Lock the door.']] },
       { type: 'eliminate', text: 'Defend the stall from the Hiu Merah gunmen', enemies: [{ dx: -22, dz: -4, weapon: 'pistol' }, { dx: -30, dz: -6.5, weapon: 'smg' }, { dx: 18, dz: -5, weapon: 'pistol' }, { dx: 26, dz: -7, weapon: 'pistol' }, { dx: -40, dz: -4, weapon: 'shotgun' }], lines: [['bayu', 'There he is! Wreck the stall while you are at it!'], ['lastri', 'Do not let them break my windows, Raka!']] },
@@ -60,7 +60,7 @@ export const MISSIONS = [
     id: 'senja-di-bukit', chapter: 'CHAPTER 5', title: 'Dusk on the Hill', giver: 'lastri',
     start: P.lastriWarung,
     briefing: "Juragan Rusdi's ledger is kept at his villa in Bukit Hijau. The guards are armed.",
-    reward: { money: 6000000, xp: 600 }, giveWeapon: ['smg', 120],
+    reward: { money: 6000, xp: 600 }, giveWeapon: ['smg', 120],
     stages: [
       { type: 'drive-to', text: "Go to Juragan Rusdi's villa in Bukit Hijau", target: P.hillVilla, radius: 9, lines: [['lastri', 'Rusdi is out on his boat. Only his men guard the villa.']] },
       { type: 'eliminate', text: 'Take out the villa guards', enemies: [{ dx: 0, dz: 8, weapon: 'pistol' }, { dx: -4, dz: 33, weapon: 'pistol' }, { dx: 4, dz: 35, weapon: 'pistol' }, { dx: 0, dz: 55, weapon: 'rifle' }, { dx: -28, dz: 33, weapon: 'revolver' }], lines: [['raka', 'Five guards. Busy evening.']] },
@@ -72,7 +72,7 @@ export const MISSIONS = [
     id: 'kontainer-27', chapter: 'CHAPTER 6', title: 'Container 27', giver: 'harun',
     start: P.fishMarket,
     briefing: 'The last evidence is in Container 27 at the container yard. Take the pickup with the evidence to the Beach House.',
-    reward: { money: 12000000, xp: 900 }, giveWeapon: ['shotgun', 36],
+    reward: { money: 12000, xp: 900 }, giveWeapon: ['shotgun', 36],
     stages: [
       { type: 'goto', text: 'Enter the container yard', target: P.containerYard, radius: 12, lines: [['harun', 'Those cranes used to be ours. Now everyone pays Rusdi.']] },
       { type: 'eliminate', text: 'Take down the Container 27 guards', enemies: [{ dx: 4, dz: -22, weapon: 'smg' }, { dx: 10, dz: 8, weapon: 'pistol' }, { dx: -2, dz: 24, weapon: 'rifle' }, { dx: 8, dz: -40, weapon: 'pistol' }, { dx: 14, dz: -6, weapon: 'shotgun' }, { dx: -4, dz: -8, weapon: 'pistol' }], lines: [['bayu', 'Finish him! The boss pays double!']] },
@@ -85,7 +85,7 @@ export const MISSIONS = [
     id: 'ombak-terakhir', chapter: 'CHAPTER 7', title: 'The Last Wave', giver: 'dimas',
     start: P.beachHouse,
     briefing: 'Juragan Rusdi has fled to his yacht at the pier. This is his last night in Sanggara.',
-    reward: { money: 25000000, xp: 1500 },
+    reward: { money: 25000, xp: 1500 },
     stages: [
       { type: 'drive-to', text: 'Go to the yacht pier', target: P.finalPier, radius: 12, lines: [['dimas', 'I will wait in the car. If you do not come back... I will keep waiting.']] },
       { type: 'eliminate', text: 'Defeat Juragan Rusdi and his men', boss: 'rusdi', enemies: [{ dx: -6, dz: -16, weapon: 'smg' }, { dx: 8, dz: -10, weapon: 'pistol' }, { dx: -4, dz: 6, weapon: 'shotgun' }, { dx: 10, dz: 12, weapon: 'rifle' }, { dx: 0, dz: 22, weapon: 'revolver', boss: true }], lines: [['rusdi', "A fisherman's boy dares to board my yacht?"], ['raka', 'Your yacht is moored in my town, Rusdi.']] },

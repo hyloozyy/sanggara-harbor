@@ -204,7 +204,7 @@ export class CityMapScreen {
   }
 
   placeCard(b) {
-    const info = b.mission ? { kind: 'Story mission', text: b.mission.briefing } : PLACE_INFO[b.key] || { kind: 'Location', text: b.key === 'hospital' ? 'Sanggara Sehat Hospital. Where you wake up after a bad day, minus a few rupiah.' : '' };
+    const info = b.mission ? { kind: 'Story mission', text: b.mission.briefing } : PLACE_INFO[b.key] || { kind: 'Location', text: b.key === 'hospital' ? 'Sanggara Sehat Hospital. Where you wake up after a bad day, minus a few dollars.' : '' };
     const dist = Math.hypot(b.x - this.s.player.pos.x, b.z - this.s.player.pos.z);
     const did = districtAt(b.x, b.z);
     this.cardFor = b.key;

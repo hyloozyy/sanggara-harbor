@@ -3,7 +3,7 @@
 // store that sells guns and ammo, and the safehouse where the game is saved.
 import { PLACES } from '../city/city-layout.js';
 import { MARKER_COLORS } from '../world/world-markers.js';
-import { formatRupiah } from '../core/math-utils.js';
+import { formatMoney } from '../core/math-utils.js';
 import { rng } from '../core/rng.js';
 import { events } from '../core/event-bus.js';
 import { WEAPONS } from '../combat/weapon-catalog.js';
@@ -86,7 +86,7 @@ export class SideActivities {
       events.emit('checkpoint', {});
       if (this.cp >= RACE_ROUTE.length) {
         const win = this.time <= RECORD;
-        const prize = win ? 2500000 : 300000;
+        const prize = win ? 2500 : 300;
         this.game.progression.addMoney(prize, 'Balap');
         this.game.progression.addXp(win ? 220 : 60, 'Balap');
         this.game.progression.stats.races++;
@@ -126,11 +126,11 @@ export class SideActivities {
     const [x, z] = this.drops[this.delivered];
     if (Math.hypot(p.pos.x - x, p.pos.z - z) < 4.5) {
       this.delivered++;
-      this.game.progression.addMoney(350000, 'Martabak delivery');
+      this.game.progression.addMoney(350, 'Martabak delivery');
       this.game.progression.stats.deliveries++;
       events.emit('checkpoint', {});
       if (this.delivered >= this.drops.length) {
-        this.game.progression.addMoney(600000, 'Speed bonus');
+        this.game.progression.addMoney(600, 'Speed bonus');
         this.game.progression.addXp(150, 'Martabak delivery');
         this.stop(true, `All deliveries done, ${Math.ceil(this.time)} s to spare`);
         return;
@@ -153,8 +153,8 @@ export class SideActivities {
   paintJob() {
     const g = this.game;
     this.cool.paint = 10;
-    const price = 500000 + g.wanted.level * 250000;
-    if (g.progression.money < price) { events.emit('notify', { text: `A respray costs ${formatRupiah(price)}`, kind: 'bad' }); return; }
+    const price = 500 + g.wanted.level * 250;
+    if (g.progression.money < price) { events.emit('notify', { text: `A respray costs ${formatMoney(price)}`, kind: 'bad' }); return; }
     g.progression.addMoney(-price, 'Paint Shop');
     g.wanted.clear('paint');
     const v = g.player.vehicle;
@@ -162,7 +162,7 @@ export class SideActivities {
     const color = rng.pick(colors);
     v.body.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.userData.paint) o.material = g.assets.carPaint(color); });
     v.health = v.spec.health;
-    events.emit('notify', { text: `Pak Darto's Paint Shop: car resprayed, the police lost your trail (−${formatRupiah(price)})` });
+    events.emit('notify', { text: `Pak Darto's Paint Shop: car resprayed, the police lost your trail (−${formatMoney(price)})` });
   }
 
   shop() {
@@ -176,18 +176,18 @@ export class SideActivities {
       if (g.progression.money >= price) {
         g.progression.addMoney(-price, 'Gun Shop');
         a.give(next, WEAPONS[next].melee ? 0 : WEAPONS[next].mag * 4);
-        events.emit('notify', { text: `Om Beni's Gun Shop: bought ${WEAPONS[next].name} (−${formatRupiah(price)})` });
+        events.emit('notify', { text: `Om Beni's Gun Shop: bought ${WEAPONS[next].name} (−${formatMoney(price)})` });
         events.emit('weapon-unlocked', { id: next });
         return;
       }
-      events.emit('notify', { text: `${WEAPONS[next].name} costs ${formatRupiah(price)} — not enough money`, kind: 'bad' });
+      events.emit('notify', { text: `${WEAPONS[next].name} costs ${formatMoney(price)} — not enough money`, kind: 'bad' });
     }
-    const ammoPrice = 400000 * discount;
+    const ammoPrice = 400 * discount;
     if (a.owned.size > 1 && g.progression.money >= ammoPrice) {
       g.progression.addMoney(-ammoPrice, 'Ammo and vest');
       for (const id of a.owned) if (!WEAPONS[id].melee) a.ammo[id] += WEAPONS[id].mag * 3;
       g.player.body.armour = Math.max(g.player.body.armour, g.progression.rankIndex >= 2 ? 100 : 50);
-      events.emit('notify', { text: `Ammo and vest refilled (−${formatRupiah(ammoPrice)})` });
+      events.emit('notify', { text: `Ammo and vest refilled (−${formatMoney(ammoPrice)})` });
     }
   }
 

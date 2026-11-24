@@ -50,7 +50,7 @@ const SCENES = {
   async cover(session, gfx) {
     const s = session;
     s.player.arsenal.give('pistol', 60); s.player.arsenal.give('smg', 120);
-    s.progression.money = 18450000; s.progression.xp = 2650;
+    s.progression.money = 18450; s.progression.xp = 2650;
     s.crew.unlock('dimas'); s.crew.unlock('lastri');
     s.start({});
     startMissionAt(s, 'kontainer-27', 3);
@@ -108,7 +108,7 @@ const SCENES = {
   async combat(session, gfx) {
     const s = session;
     s.player.arsenal.give('pistol', 60); s.player.arsenal.give('smg', 150);
-    s.progression.money = 6230000; s.progression.xp = 1350;
+    s.progression.money = 6230; s.progression.xp = 1350;
     s.crew.unlock('dimas'); s.crew.unlock('lastri');
     s.start({});
     startMissionAt(s, 'serangan-kota-lama', 1);
@@ -159,7 +159,7 @@ const SCENES = {
   // Cruising Jalan Pantai Senja into the sunset on a scooter: palms, beach, hotels, the sea.
   async beach(session, gfx) {
     const s = session;
-    s.progression.money = 9870000; s.progression.xp = 1900;
+    s.progression.money = 9870; s.progression.xp = 1900;
     s.player.arsenal.give('pistol', 48); s.player.arsenal.select('pistol');
     s.crew.unlock('dimas');
     for (const m of MISSIONS.slice(0, 4)) s.missions.completed.add(m.id);
@@ -190,7 +190,7 @@ const SCENES = {
 
   async harbor(session, gfx) {
     const s = session;
-    s.progression.money = 9870000; s.progression.xp = 1900;
+    s.progression.money = 9870; s.progression.xp = 1900;
     s.player.arsenal.give('pistol', 48); s.player.arsenal.give('smg', 90); s.player.arsenal.select('pistol');
     s.crew.unlock('dimas');
     for (const m of MISSIONS.slice(0, 4)) s.missions.completed.add(m.id);
@@ -220,7 +220,7 @@ const SCENES = {
 
   async drive(session, gfx) {
     const s = session;
-    s.progression.money = 9870000; s.progression.xp = 1900;
+    s.progression.money = 9870; s.progression.xp = 1900;
     s.crew.unlock('dimas');
     for (const m of MISSIONS.slice(0, 4)) s.missions.completed.add(m.id);
     s.start({});
@@ -256,7 +256,7 @@ const SCENES = {
     s.cameraRig.update(DT, s.player, s.input);
     s.hud.show(false);
     document.getElementById('title-screen').classList.remove('hidden');
-    ctx.menus.showTitle({ canContinue: true, saveLabel: 'Chapter 4 · Raid on Kota Lama · Rp 6,230,000', completed: MISSIONS.slice(0, 3).map((m) => m.id) });
+    ctx.menus.showTitle({ canContinue: true, saveLabel: 'Chapter 4 · Raid on Kota Lama · $6,230', completed: MISSIONS.slice(0, 3).map((m) => m.id) });
     await finish(s, gfx);
   },
 
@@ -475,7 +475,7 @@ const SCENES = {
   async cover2(session, gfx) {
     const s = session;
     s.player.arsenal.give('pistol', 60); s.player.arsenal.give('smg', 120);
-    s.progression.money = 18450000; s.progression.xp = 2650;
+    s.progression.money = 18450; s.progression.xp = 2650;
     s.crew.unlock('dimas'); s.crew.unlock('lastri');
     s.start({});
     startMissionAt(s, 'kontainer-27', 3);

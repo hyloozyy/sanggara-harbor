@@ -3,7 +3,7 @@
 import { Character } from '../characters/character.js';
 import { randomLook } from '../characters/humanoid-model.js';
 import { BLOCKS, districtAt, DISTRICTS } from '../city/city-layout.js';
-import { formatRupiah } from '../core/math-utils.js';
+import { formatMoney } from '../core/math-utils.js';
 import { rng } from '../core/rng.js';
 
 function kerbSpot(px, pz, minD, maxD) {
@@ -80,14 +80,14 @@ export class AngkotJob {
   alight() {
     const g = this.game;
     const dist = Math.hypot(this.spot.x - this.tripStart.x, this.spot.z - this.tripStart.z);
-    const fare = Math.round(dist * 120 / 1000) * 1000 + 5000;
+    const fare = Math.round(dist * 0.12) + 5;
     const quick = this.timer < dist / 9;
-    const pay = fare + (quick ? 20000 : 0);
+    const pay = fare + (quick ? 20 : 0);
     g.progression.addMoney(pay, quick ? 'Angkot fare + tip' : 'Angkot fare');
     g.progression.addXp(12, 'Angkot passenger');
     this.fares++;
     g.markers.remove(this.marker);
-    g.hud.notify(`Passenger ${this.fares} dropped off · ${formatRupiah(pay)}${quick ? ' (quick!)' : ''}`, 'xp');
+    g.hud.notify(`Passenger ${this.fares} dropped off · ${formatMoney(pay)}${quick ? ' (quick!)' : ''}`, 'xp');
     this.nextPassenger();
   }
 

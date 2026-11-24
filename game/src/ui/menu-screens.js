@@ -3,7 +3,7 @@
 import { WEATHER_STATES } from '../world/weather-system.js';
 import { CAST } from '../missions/story-cast.js';
 import { STORY_ARC, MISSIONS } from '../missions/mission-scripts.js';
-import { formatRupiah } from '../core/math-utils.js';
+import { formatMoney } from '../core/math-utils.js';
 import { CONTROL_MAP, KEYBOARD_HELP, PAD_SHOULDERS } from '../core/control-router.js';
 
 const $ = (id) => document.getElementById(id);
@@ -97,7 +97,7 @@ export class MenuScreens {
     });
     $('pause-stats').innerHTML = `
       <div>Rank <b>${stats.rank}</b></div>
-      <div>Money <b>${formatRupiah(stats.money)}</b></div>
+      <div>Money <b>${formatMoney(stats.money)}</b></div>
       <div>Story missions <b>${stats.missions} / ${MISSIONS.length}</b></div>
       <div>Cars stolen <b>${stats.carsStolen}</b></div>
       <div>Enemies down <b>${stats.kills}</b></div>
