@@ -53,7 +53,7 @@ const UP_FRAG = /* glsl */`
 const COMPOSITE_FRAG = /* glsl */`
   uniform sampler2D tScene; uniform sampler2D tBloom;
   uniform float bloomStrength; uniform float exposure; uniform float vignette; uniform float time;
-  uniform float saturation; uniform vec3 shadowTint; uniform float damageVignette;
+  uniform float saturation; uniform vec3 shadowTint; uniform float damageVignette; uniform float heat; uniform float flash;
   varying vec2 vUv;
 
   vec3 acesFilm(vec3 x) {
@@ -66,10 +66,14 @@ const COMPOSITE_FRAG = /* glsl */`
   float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233)) + time) * 43758.5453); }
 
   void main() {
-    vec3 col = texture2D(tScene, vUv).rgb;
-    vec3 bloom = texture2D(tBloom, vUv).rgb;
+    // Heat shimmer over the hot ground near the horizon in the dry season.
+    vec2 uv = vUv;
+    uv.x += sin(vUv.y * 140.0 + time * 7.0) * 0.0011 * heat * smoothstep(0.3, 0.48, vUv.y) * smoothstep(0.7, 0.5, vUv.y);
+    vec3 col = texture2D(tScene, uv).rgb;
+    vec3 bloom = texture2D(tBloom, uv).rgb;
     col += bloom * bloomStrength;
     col *= exposure;
+    col += vec3(0.6, 0.65, 0.8) * flash * 0.35;
     float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
     col = mix(col, col * shadowTint, smoothstep(0.25, 0.0, lum) * 0.6);
     col = acesFilm(col);
@@ -121,7 +125,7 @@ export class PostProcessPipeline {
     this.compositeMat = mat(COMPOSITE_FRAG, {
       tScene: { value: null }, tBloom: { value: null }, bloomStrength: { value: this.bloomStrength },
       exposure: { value: 1.12 }, vignette: { value: 1.25 }, time: { value: 0 }, saturation: { value: 1.12 },
-      shadowTint: { value: new THREE.Vector3(0.92, 0.94, 1.1) }, damageVignette: { value: 0 },
+      shadowTint: { value: new THREE.Vector3(0.92, 0.94, 1.1) }, damageVignette: { value: 0 }, heat: { value: 0 }, flash: { value: 0 },
     });
     this.sceneTarget = null;
     this.mips = [];

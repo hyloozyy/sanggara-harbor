@@ -1,5 +1,6 @@
 // Title screen with story briefing and cast, pause menu with stats, and the settings screen
 // (graphics quality, volumes, mouse sensitivity, invert Y). Keyboard and mouse navigable.
+import { WEATHER_STATES } from '../world/weather-system.js';
 import { CAST } from '../missions/story-cast.js';
 import { STORY_ARC, MISSIONS } from '../missions/mission-scripts.js';
 import { formatRupiah } from '../core/math-utils.js';
@@ -114,10 +115,12 @@ export class MenuScreens {
       <label>Effects volume <input id="set-sfx" type="range" min="0" max="1" step="0.05" value="${s.sfx}"></label>
       <label>Mouse sensitivity <input id="set-sens" type="range" min="0.3" max="2.5" step="0.1" value="${s.sensitivity}"></label>
       <label>Invert Y axis <input id="set-invert" type="checkbox" ${s.invertY ? 'checked' : ''}></label>
+      <label>Weather <select id="set-weather">${[['auto', 'Changing (auto)'], ...Object.entries(WEATHER_STATES).map(([k, v]) => [k, v.label])].map(([k, l]) => `<option value="${k}" ${k === s.weather ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label>Time of day <select id="set-time">${[['cycle', 'Day/night cycle'], ['golden', 'Golden hour'], ['dawn', 'Dawn'], ['noon', 'Noon'], ['sunset', 'Sunset'], ['night', 'Night']].map(([k, l]) => `<option value="${k}" ${k === s.timeMode ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <button id="set-back">BACK</button>`;
     const read = () => ({
       quality: $('set-quality').value, master: +$('set-master').value, music: +$('set-music').value, sfx: +$('set-sfx').value,
-      sensitivity: +$('set-sens').value, invertY: $('set-invert').checked,
+      sensitivity: +$('set-sens').value, invertY: $('set-invert').checked, weather: $('set-weather').value, timeMode: $('set-time').value,
     });
     $('settings-form').querySelectorAll('input,select').forEach((el) => el.addEventListener('change', () => this.cb.onSettings(read())));
     $('set-back').addEventListener('click', () => this.closeSettings());

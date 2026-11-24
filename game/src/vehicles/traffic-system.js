@@ -1,7 +1,7 @@
 // Civilian traffic: cars, angkots and scooters that follow left-hand lanes, stop at red lights,
 // keep distance from what is ahead, panic when shot at, and are recycled around the player.
 import { rng } from '../core/rng.js';
-import { TRAFFIC_MIX } from './vehicle-catalog.js';
+import { TRAFFIC_MIX, VEHICLE_MODELS } from './vehicle-catalog.js';
 import { N, neighbours, laneLine, chooseNext, steerToward, edgeFromPose } from './road-graph.js';
 import { GRID } from '../city/city-layout.js';
 import { randomLook } from '../characters/humanoid-model.js';
@@ -39,7 +39,7 @@ export class TrafficSystem {
     const L = laneLine(from, to);
     const x = L.ax + (L.bx - L.ax) * t, z = L.az + (L.bz - L.az) * t;
     const key = modelKey || rng.pick(TRAFFIC_MIX);
-    const v = this.vehicles.spawn(key, x, z, Math.atan2(L.dx, L.dz), { driverLook: randomLook(rng) });
+    const v = this.vehicles.spawn(key, x, z, Math.atan2(L.dx, L.dz), { driverLook: randomLook(rng, VEHICLE_MODELS[key]?.twoWheel ? { role: 'rider' } : {}) });
     v.ai = { kind: 'traffic', from, to, panic: 0, cruise: CRUISE * rng.range(0.85, 1.12), honk: 0 };
     v.vel.set(L.dx * 8, 0, L.dz * 8);
     return v;

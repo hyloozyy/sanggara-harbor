@@ -160,7 +160,7 @@ export class SideActivities {
     const v = g.player.vehicle;
     const colors = [0x1a60e0, 0xf0c000, 0x101010, 0xf0f0f0, 0x20a050, 0x8a1a1a];
     const color = rng.pick(colors);
-    v.body.traverse((o) => { if (o.isMesh && o.material && o.material.userData.paint) o.material = g.assets.carPaint(color); });
+    v.body.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.userData.paint) o.material = g.assets.carPaint(color); });
     v.health = v.spec.health;
     events.emit('notify', { text: `Pak Darto's Paint Shop: car resprayed, the police lost your trail (−${formatRupiah(price)})` });
   }

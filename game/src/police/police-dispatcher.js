@@ -2,7 +2,7 @@
 // the streets and ram, officers who bail out and shoot, the Elang-1 helicopter, roadblocks across
 // the player's path and tactical vans at five stars. Also decides whether the player is seen.
 import { rng } from '../core/rng.js';
-import { Combatant, POLICE_LOOK } from '../combat/combatant-ai.js';
+import { Combatant, policeLook } from '../combat/combatant-ai.js';
 import { PoliceHelicopter } from './police-helicopter.js';
 import { Arsenal } from '../combat/weapon-system.js';
 import { N, neighbours, laneLine, chooseNext, steerToward, nearestNode, nodePos } from '../vehicles/road-graph.js';
@@ -69,7 +69,7 @@ export class PoliceDispatcher {
       if (camDir && ((p.x - px) * camDir.x + (p.z - pz) * camDir.z) / d > 0.6 && d < 150) continue;
       const to = chooseNext([i, j], [i, j], rng, { x: px, z: pz });
       const L = laneLine([i, j], to);
-      const v = this.game.vehicles.spawn(kind === 'van' ? 'taktis' : 'patroli', L.ax + L.dx * 10, L.az + L.dz * 10, Math.atan2(L.dx, L.dz), { driverLook: POLICE_LOOK });
+      const v = this.game.vehicles.spawn(kind === 'van' ? 'taktis' : 'patroli', L.ax + L.dx * 10, L.az + L.dz * 10, Math.atan2(L.dx, L.dz), { driverLook: policeLook(kind === 'van' ? 'tactical' : 'police') });
       v.sirenOn = true;
       v.ai = { kind: 'police', from: [i, j], to, stuck: 0, reverseT: 0 };
       v.vel.set(L.dx * 12, 0, L.dz * 12);
@@ -109,7 +109,7 @@ export class PoliceDispatcher {
   }
 
   spawnOfficer(x, z, weapon = 'pistol') {
-    const o = new Combatant(this.game.scene, { ...POLICE_LOOK, skin: rng.pick([0xa8744e, 0x8d5b3a, 0xc68e64]) }, x, z, {
+    const o = new Combatant(this.game.scene, policeLook(rng.chance(0.25) ? 'tactical' : 'police'), x, z, {
       faction: 'police', weapon, health: 90, accuracy: 0.28 + this.game.wanted.level * 0.05, armour: weapon === 'smg' ? 50 : 0,
     });
     this.officers.push(o);
@@ -134,7 +134,7 @@ export class PoliceDispatcher {
     for (const o of [...this.officers]) {
       const d = Math.hypot(o.body.pos.x - px, o.body.pos.z - pz);
       if ((!o.alive && o.body.deadTime > 30) || (wanted.level === 0 && d > 90)) {
-        this.game.scene.remove(o.body.mesh);
+        this.game.scene.remove(o.body.mesh); o.body.dispose();
         this.officers.splice(this.officers.indexOf(o), 1);
       }
     }
@@ -268,7 +268,7 @@ export class PoliceDispatcher {
 
   clearAll() {
     for (const u of this.units) { if (u.vehicle) this.game.vehicles.remove(u.vehicle); if (u.extra) this.game.vehicles.remove(u.extra); }
-    for (const o of this.officers) this.game.scene.remove(o.body.mesh);
+    for (const o of this.officers) { this.game.scene.remove(o.body.mesh); o.body.dispose(); }
     this.units = []; this.officers = [];
     this.heliActive = false; this.setHeliVisible(false);
   }

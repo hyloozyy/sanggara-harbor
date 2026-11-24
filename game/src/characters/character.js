@@ -10,9 +10,9 @@ import { events } from '../core/event-bus.js';
 let nextId = 1;
 
 export class Character {
-  constructor(look, x, z, { health = 100, faction = 'civilian', name = null } = {}) {
+  constructor(look, x, z, { health = 100, faction = 'civilian', name = null, atlasSize = 256 } = {}) {
     this.id = nextId++;
-    this.model = new HumanoidModel(look);
+    this.model = new HumanoidModel(look, { atlasSize });
     this.mesh = this.model.root;
     this.mesh.userData.character = this;
     this.pos = new THREE.Vector3(x, groundHeightAt(x, z), z);
@@ -84,6 +84,17 @@ export class Character {
     return false;
   }
 
+  // Set the head's look direction towards a world point (null to look ahead).
+  lookAt(x, z, y = null) {
+    if (x == null) { this.lookYaw = undefined; this.lookPitch = 0; return; }
+    const a = Math.atan2(x - this.pos.x, z - this.pos.z) - this.heading;
+    this.lookYaw = Math.atan2(Math.sin(a), Math.cos(a));
+    if (Math.abs(this.lookYaw) > 1.6) this.lookYaw = undefined;
+    this.lookPitch = y == null ? 0 : Math.atan2(this.headY - y, Math.hypot(x - this.pos.x, z - this.pos.z)) * 0.6;
+  }
+
+  dispose() { this.model.dispose(); }
+
   die(attacker = null, cause = 'bullet') {
     if (!this.alive) return;
     this.alive = false;
@@ -100,7 +111,7 @@ export class Character {
     if (!this.alive) {
       this.deadTime += dt;
       this.fallT = Math.min(1, this.fallT + dt * 2.2);
-      animateHumanoid(this.model, 'dead', 0, dt);
+      animateHumanoid(this.model, 'dead', 0, dt, { dead: true });
       this.mesh.rotation.set(-Math.PI / 2 * easeOutBounce(this.fallT), this.heading, 0, 'YXZ');
       this.mesh.position.set(this.pos.x, this.pos.y + 0.18 * this.fallT, this.pos.z);
       return;
@@ -120,8 +131,14 @@ export class Character {
     if (anim === 'auto') anim = speed > 4.2 ? 'run' : speed > 0.4 ? 'walk' : 'idle';
     if (this.punchT < 1) anim = 'punch';
     if (this.aiming && anim !== 'punch') anim = speed > 0.4 ? 'aim-walk' : 'aim';
-    animateHumanoid(this.model, anim, speed, dt, { aiming: this.aiming, twoHanded: this.twoHanded, pitch: this.aimPitch, punchT: this.punchT });
-    this.mesh.rotation.set(this.flinch * 0.6, this.heading, 0, 'YXZ');
+    const turnRate = this.lastHeading == null || dt <= 0 ? 0 : Math.atan2(Math.sin(this.heading - this.lastHeading), Math.cos(this.heading - this.lastHeading)) / dt;
+    this.lastHeading = this.heading;
+    this.talk = Math.max(0, (this.talk || 0) - dt * 4);
+    animateHumanoid(this.model, anim, speed, dt, {
+      aiming: this.aiming, twoHanded: this.twoHanded, pitch: this.aimPitch, punchT: this.punchT, turnRate, flinch: this.flinch,
+      talk: this.talk, umbrella: this.umbrella && !this.aiming, lookYaw: this.lookYaw, lookPitch: this.lookPitch,
+    });
+    this.mesh.rotation.set(this.flinch * 0.25, this.heading, 0, 'YXZ');
     this.mesh.position.copy(this.pos);
   }
 }

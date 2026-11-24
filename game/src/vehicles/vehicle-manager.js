@@ -34,10 +34,11 @@ export class VehicleManager {
   }
 
   removeDriverModel(v) {
-    if (v.driverModel) { v.body.remove(v.driverModel.root); v.driverModel = null; }
+    if (v.driverModel) { v.body.remove(v.driverModel.root); v.driverModel.dispose(); v.driverModel = null; }
   }
 
   remove(v) {
+    this.removeDriverModel(v);
     this.scene.remove(v.mesh);
     const i = this.list.indexOf(v);
     if (i >= 0) this.list.splice(i, 1);

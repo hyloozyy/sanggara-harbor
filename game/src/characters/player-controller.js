@@ -1,5 +1,6 @@
 // The player, Raka: camera-relative WASD on foot with sprint, stamina and jump, aiming and
 // shooting, punching, weapon switching, entering/stealing/exiting cars, and driving controls.
+import { generateLook } from './character-generator.js';
 import { Character } from './character.js';
 import { Arsenal } from '../combat/weapon-system.js';
 import { buildWeaponMesh } from '../combat/weapon-meshes.js';
@@ -7,11 +8,20 @@ import { WEAPONS } from '../combat/weapon-catalog.js';
 import { clamp } from '../core/math-utils.js';
 import { events } from '../core/event-bus.js';
 
-export const PLAYER_LOOK = { skin: 0xb07a52, hair: 0x120e0c, shirt: 0x2b3f5c, pants: 0x2a2620, shoes: 0xe8e4dc, vest: 0x8a3a24, scale: 1.0 };
+// Raka: a sailor back from six years at sea, maroon jacket over a navy tee, worn jeans.
+export const PLAYER_LOOK = generateLook(1986, 'auto', {
+  gender: 'm', age: 'adult', build: 'strong', height: 1.0, skin: 0xb07a52, hair: 'undercut', hairColor: 0x120e0c, headwear: null,
+  top: { kind: 'tshirt', color: 0x1e2c44, color2: 0xe8e2d4, pattern: 'plain', print: null, tucked: false, longSleeves: false },
+  bottom: { kind: 'jeans', color: 0x2a3650, pattern: 'denim', belt: 0x2a1a10 },
+  outer: { kind: 'jacket', color: 0x7a2a22, open: true }, shoes: { kind: 'sneaker', color: 0xe8e4dc, color2: 0x7a2a22 },
+  glasses: false, bag: null, name: 'Raka Wiratama',
+  face: { stubble: true, beard: null, moustache: false, sunglasses: false, browThick: 4.6, browArch: 2, eyeColor: 0x2a1608, mole: false, freckles: false },
+  gait: { stride: 1.04, bounce: 0.9, swing: 1.0, tempo: 1, slouch: 0.0, sway: 0.55 },
+});
 
 export class PlayerController {
   constructor(scene, x, z) {
-    this.body = new Character(PLAYER_LOOK, x, z, { health: 200, faction: 'player', name: 'Raka' });
+    this.body = new Character(PLAYER_LOOK, x, z, { health: 200, faction: 'player', name: 'Raka', atlasSize: 512 });
     this.body.maxHealth = 200;
     this.body.armour = 50;
     this.scene = scene;

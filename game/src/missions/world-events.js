@@ -1,8 +1,7 @@
 // Open-world happenings outside the story: Hiu Merah gunmen ambush Raka on their turf in the
 // industrial district, and twelve hidden golden shells (Kerang Emas) reward exploration.
-import { Combatant, GANG_LOOKS } from '../combat/combatant-ai.js';
+import { Combatant, gangLook } from '../combat/combatant-ai.js';
 import { MARKER_COLORS } from '../world/world-markers.js';
-import { SKIN_TONES } from '../characters/humanoid-model.js';
 import { districtAt } from '../city/city-layout.js';
 import { rng } from '../core/rng.js';
 import { events } from '../core/event-bus.js';
@@ -74,7 +73,7 @@ export class WorldEvents {
       const d = Math.hypot(c.body.pos.x - p.pos.x, c.body.pos.z - p.pos.z);
       if ((!c.alive && c.body.deadTime > 20) || d > 160) {
         if (c.arrow) g.markers.remove(c.arrow);
-        g.scene.remove(c.body.mesh);
+        g.scene.remove(c.body.mesh); c.body.dispose();
         this.gang.splice(this.gang.indexOf(c), 1);
       } else if (!c.alive && c.arrow) { g.markers.remove(c.arrow); c.arrow = null; }
     }
@@ -85,7 +84,7 @@ export class WorldEvents {
     const n = rng.int(2, 3);
     for (let i = 0; i < n; i++) {
       const a = rng.range(0, Math.PI * 2), r = rng.range(22, 32);
-      const c = new Combatant(g.scene, { ...rng.pick(GANG_LOOKS), skin: rng.pick(SKIN_TONES) }, p.pos.x + Math.cos(a) * r, p.pos.z + Math.sin(a) * r, {
+      const c = new Combatant(g.scene, gangLook(), p.pos.x + Math.cos(a) * r, p.pos.z + Math.sin(a) * r, {
         faction: 'gang', weapon: rng.pick(['pistol', 'pistol', 'smg']), health: 90, accuracy: 0.38,
       });
       c.arrow = g.markers.addArrow(c.body, MARKER_COLORS.enemy);

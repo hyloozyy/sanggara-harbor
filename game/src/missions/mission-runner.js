@@ -2,11 +2,10 @@
 // enemies, vehicles and pickups, dialogue, fail conditions, rewards, crew unlocks and autosave.
 import { MISSIONS } from './mission-scripts.js';
 import { CAST } from './story-cast.js';
-import { Combatant, GANG_LOOKS } from '../combat/combatant-ai.js';
+import { Combatant, gangLook } from '../combat/combatant-ai.js';
 import { Character } from '../characters/character.js';
 import { MARKER_COLORS } from '../world/world-markers.js';
 import { laneLine, chooseNext, steerToward, edgeFromPose, nodePos } from '../vehicles/road-graph.js';
-import { SKIN_TONES } from '../characters/humanoid-model.js';
 import { rng } from '../core/rng.js';
 import { clamp } from '../core/math-utils.js';
 import { events } from '../core/event-bus.js';
@@ -131,7 +130,7 @@ export class MissionRunner {
 
   spawnEnemy(x, z, weapon, bossKey = null) {
     const g = this.game;
-    const look = bossKey ? CAST[bossKey].look : { ...rng.pick(GANG_LOOKS), skin: rng.pick(SKIN_TONES), hair: 0x111111 };
+    const look = bossKey ? CAST[bossKey].look : gangLook();
     const c = new Combatant(g.scene, look, x, z, {
       faction: 'gang', weapon, health: bossKey ? 420 : weapon === 'fists' ? 70 : 100, accuracy: bossKey ? 0.75 : 0.42, armour: bossKey ? 100 : 0,
       name: bossKey ? CAST[bossKey].name : null,

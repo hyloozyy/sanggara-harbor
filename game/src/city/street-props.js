@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { assets } from '../assets/asset-library.js';
 import { mergeGeometries } from '../assets/mesh-batcher.js';
 import { createRng } from '../core/rng.js';
+import { palmVariant, treeVariant } from './vegetation-geometry.js';
 import { GRID, ROAD_HALF, CURB_HEIGHT, BLOCK_PITCH, districtAt } from './city-layout.js';
 
 const rng = createRng(808);
@@ -33,43 +34,6 @@ function lampGeometries() {
     pole: mergeGeometries([pole, arm, housing].map((geometry) => ({ geometry, matrix: new THREE.Matrix4() }))),
     glow,
   };
-}
-
-function palmGeometries() {
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.3, 3, 0), new THREE.Vector3(1.0, 6, 0), new THREE.Vector3(1.9, 8.6, 0),
-  ]);
-  const trunk = new THREE.TubeGeometry(curve, 10, 0.22, 7, false);
-  const fronds = [];
-  for (let i = 0; i < 9; i++) {
-    const g = new THREE.PlaneGeometry(1.5, 5.6, 1, 8);
-    const pos = g.attributes.position;
-    for (let k = 0; k < pos.count; k++) {
-      const y = pos.getY(k) + 2.8; // 0..5.6 along the frond
-      const t = y / 5.6;
-      pos.setX(k, pos.getX(k) * Math.sin(t * Math.PI) * 1.1);
-      pos.setZ(k, -t * t * 2.2 + Math.abs(pos.getX(k)) * 0.25);
-      pos.setY(k, y);
-    }
-    g.rotateX(-Math.PI / 2 + 0.35);
-    g.rotateY((i / 9) * Math.PI * 2 + rng.range(-0.2, 0.2));
-    g.translate(1.9, 8.6, 0);
-    g.computeVertexNormals();
-    fronds.push({ geometry: g, matrix: new THREE.Matrix4() });
-  }
-  const coconut = new THREE.SphereGeometry(0.22, 6, 5);
-  for (let i = 0; i < 4; i++) fronds.push({ geometry: coconut, matrix: new THREE.Matrix4().makeTranslation(1.9 + Math.cos(i * 1.6) * 0.3, 8.3, Math.sin(i * 1.6) * 0.3) });
-  return { trunk, fronds: mergeGeometries(fronds) };
-}
-
-function treeGeometries() {
-  const trunk = new THREE.CylinderGeometry(0.18, 0.28, 3.4, 7).translate(0, 1.7, 0);
-  const parts = [];
-  for (let i = 0; i < 4; i++) {
-    const g = new THREE.IcosahedronGeometry(1.5 + rng.next() * 0.6, 1);
-    parts.push({ geometry: g, matrix: new THREE.Matrix4().makeTranslation(rng.range(-0.9, 0.9), 3.9 + rng.range(-0.3, 0.8), rng.range(-0.9, 0.9)) });
-  }
-  return { trunk, canopy: mergeGeometries(parts) };
 }
 
 export class TrafficSignals {
@@ -143,16 +107,22 @@ export function buildStreetProps(collision) {
   // Warm pools of sodium light on the pavement under each lamp head (additive decals).
   const poolGeo = new THREE.PlaneGeometry(11, 11).rotateX(-Math.PI / 2).translate(2.0, 0.05, 0);
   const poolMat = new THREE.MeshBasicMaterial({ map: assets.texture('glow'), color: 0xffa860, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, fog: true });
+  poolMat.userData.lampPool = true;
   const pools = instanced(poolGeo, poolMat, lamps, { castShadow: false });
   pools.receiveShadow = false;
   pools.renderOrder = 2;
   group.add(pools);
-  const palm = palmGeometries();
-  group.add(instanced(palm.trunk, assets.material('palm-trunk'), palms));
-  group.add(instanced(palm.fronds, assets.material('palm-leaves'), palms));
-  const tree = treeGeometries();
-  group.add(instanced(tree.trunk, assets.material('trunk'), trees));
-  group.add(instanced(tree.canopy, assets.material('leaves'), trees));
+  // Three palm and three shade-tree variants, each instanced.
+  for (let v = 0; v < 3; v++) {
+    const ps = palms.filter((_, i) => i % 3 === v), ts = trees.filter((_, i) => i % 3 === v);
+    const palm = assets.geometry(`palm-v${v}`, () => palmVariant(101 + v * 17));
+    group.add(instanced(palm.trunk, assets.material('palm-trunk'), ps));
+    group.add(instanced(palm.shank, assets.material('palm-trunk'), ps));
+    group.add(instanced(palm.crown, assets.material('palm-crown'), ps));
+    const tree = assets.geometry(`tree-v${v}`, () => treeVariant(203 + v * 31));
+    group.add(instanced(tree.wood, assets.material('trunk'), ts));
+    group.add(instanced(tree.leaves, assets.material(v === 1 ? 'leaf-card-warm' : 'leaf-card'), ts));
+  }
   for (const p of [...lamps, ...palms, ...trees]) collision.addCenteredBox(p.x, p.z, 0.35, 0.35, 8, 'pole');
 
   // Traffic signals: one pole per approach corner, heads facing oncoming traffic.

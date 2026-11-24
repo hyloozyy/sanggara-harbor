@@ -27,6 +27,7 @@ export class DuskLighting {
 
     scene.fog = new THREE.Fog(0xc07a62, 160, 1150);
     this.focus = new THREE.Vector3();
+    this.direction = SUN_DIRECTION.clone(); // moved by the time of day
   }
 
   setShadowQuality(size, enabled) {
@@ -41,6 +42,6 @@ export class DuskLighting {
     const fx = Math.round(x / texel) * texel, fz = Math.round(z / texel) * texel;
     this.focus.set(fx, 0, fz);
     this.sun.target.position.copy(this.focus);
-    this.sun.position.copy(this.focus).addScaledVector(SUN_DIRECTION, 400);
+    this.sun.position.copy(this.focus).addScaledVector(this.direction, 400);
   }
 }

@@ -58,6 +58,7 @@ export class PedestrianSystem {
 
   remove(p) {
     this.scene.remove(p.mesh);
+    p.dispose();
     this.list.splice(this.list.indexOf(p), 1);
   }
 
@@ -80,7 +81,8 @@ export class PedestrianSystem {
     }
   }
 
-  update(dt, player, vehicles) {
+  update(dt, player, vehicles, weather = null) {
+    const rain = weather ? weather.cur.rain + weather.cur.snow * 0.5 : 0;
     const px = player.pos.x, pz = player.pos.z;
     for (const p of [...this.list]) {
       const d = Math.hypot(p.pos.x - px, p.pos.z - pz);
@@ -94,11 +96,20 @@ export class PedestrianSystem {
       const ai = p.ai;
       let wx = 0, wz = 0;
       ai.timer -= dt;
+      // Rain: umbrellas go up; people without one hurry along.
+      const brolly = rain > 0.2 && p.model.look.props?.umbrella;
+      if (brolly !== !!p.umbrella) { p.umbrella = brolly; p.model.showProp('umbrella', brolly); }
+      const phoning = p.anim === 'phone';
+      if (phoning !== !!p.phoneShown) { p.phoneShown = phoning; p.model.showProp('phone', phoning); }
+      const pace = WALK * (p.model.gait.tempo || 1) * (rain > 0.2 && !brolly ? 2.3 : 1);
+      if (rain > 0.2 && !brolly && ai.mode === 'idle') { ai.mode = 'walk'; p.anim = 'auto'; }
       if (ai.mode === 'walk') {
         const t = ringPoint(ai.block, ai.s + ai.dir * 1.5);
         const dx = t.x - p.pos.x, dz = t.z - p.pos.z, dd = Math.hypot(dx, dz) || 1;
-        if (dd < 3) ai.s += ai.dir * WALK * dt;
-        wx = dx / dd * WALK; wz = dz / dd * WALK;
+        if (dd < 3) ai.s += ai.dir * pace * dt;
+        wx = dx / dd * pace; wz = dz / dd * pace;
+        const pd = Math.hypot(player.pos.x - p.pos.x, player.pos.z - p.pos.z);
+        p.lookAt(pd < 7 ? player.pos.x : null, player.pos.z, player.pos.y + 1.6);
         if (ai.timer <= 0) { ai.timer = rng.range(8, 25); if (rng.chance(0.2)) { ai.mode = 'idle'; ai.timer = rng.range(3, 8); p.anim = rng.chance(0.4) ? 'phone' : 'idle'; } }
       } else if (ai.mode === 'idle') {
         if (ai.timer <= 0) { ai.mode = 'walk'; p.anim = 'auto'; ai.timer = rng.range(8, 20); }

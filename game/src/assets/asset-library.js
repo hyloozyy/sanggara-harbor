@@ -1,6 +1,8 @@
 // The one registry every system asks for textures, materials and geometries, so each procedural
 // asset is generated once and reused everywhere (and tinted variants are cached by key).
 import * as THREE from 'three';
+import { weatherizeMaterial } from '../render/surface-weather.js';
+import { addWindSway } from '../render/wind-sway.js';
 
 // Texture generators register themselves here (see texture-catalog.js), keeping this registry
 // free of the painting code.
@@ -34,11 +36,12 @@ export const assets = {
     const p = paletteIndex % count;
     return cached(materialCache, `facade:${style}:${p}`, () => {
       const t = factories.facade(style, p, 7 + p);
-      return new THREE.MeshStandardMaterial({
+      const m = new THREE.MeshStandardMaterial({
         map: t.map, emissiveMap: t.emissiveMap, emissive: new THREE.Color(1.0, 0.82, 0.6), emissiveIntensity: 1.05,
         roughnessMap: t.ormMap, metalnessMap: t.ormMap, normalMap: t.normalMap, normalScale: new THREE.Vector2(1.2, 1.2), roughness: 1, metalness: style === 'glass' ? 0.9 : 0.6,
         envMapIntensity: 1.0,
       });
+      return weatherizeMaterial(m);
     });
   },
 
@@ -49,9 +52,20 @@ export const assets = {
     });
   },
 
-  // Plain PBR materials by name.
+  // Plain PBR materials by name (each patched for rain, snow and dry-season looks).
   material(name) {
     return cached(materialCache, name, () => {
+      const m = this.makeMaterial(name);
+      const dry = ['grass', 'hill', 'leaves', 'palm-leaves', 'palm-crown', 'leaf-card', 'leaf-card-warm', 'grass-tuft'].includes(name) ? 1 : 0;
+      const sway = { 'palm-crown': [0.012, 0.6], 'palm-trunk': [0.012, 0], 'leaf-card': [0.014, 1], 'leaf-card-warm': [0.014, 1], trunk: [0.01, 0], 'grass-tuft': [0.25, 0.5] }[name];
+      if (sway) addWindSway(m, { amp: sway[0], flutter: sway[1] });
+      const noWet = ['water', 'pool', 'glass-dark', 'lamp-glow', 'headlight', 'taillight', 'brakelight', 'umbrella'].includes(name);
+      return weatherizeMaterial(m, { wet: noWet ? 0 : 1, snow: name === 'water' || name === 'pool' ? 0 : 1, dry });
+    });
+  },
+
+  makeMaterial(name) {
+    {
       const T = (n) => this.texture(n);
       const std = (o) => new THREE.MeshStandardMaterial(o);
       switch (name) {
@@ -86,8 +100,12 @@ export const assets = {
         case 'brakelight': return std({ color: 0x550000, emissive: 0xff2010, emissiveIntensity: 12 });
         case 'siren-red': return std({ color: 0x330000, emissive: 0xff1020, emissiveIntensity: 0 });
         case 'siren-blue': return std({ color: 0x000033, emissive: 0x1050ff, emissiveIntensity: 0 });
-        case 'trunk': return std({ color: 0x6b5340, roughness: 0.95 });
-        case 'palm-trunk': return std({ color: 0x8a7258, roughness: 0.95 });
+        case 'trunk': return std({ map: T('bark'), color: 0xb0a090, roughness: 0.95 });
+        case 'palm-trunk': return std({ map: T('palm-bark'), color: 0xd8ccb8, roughness: 0.92 });
+        case 'palm-crown': return std({ map: T('palm-frond'), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.68 });
+        case 'leaf-card': return std({ map: T('leaf-card'), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.75 });
+        case 'leaf-card-warm': return std({ map: T('leaf-card-warm'), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.75 });
+        case 'grass-tuft': return std({ map: T('grass-tuft'), alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 });
         case 'leaves': return std({ color: 0x3f7a30, roughness: 0.8, side: THREE.DoubleSide });
         case 'palm-leaves': return std({ color: 0x4d8a34, roughness: 0.75, side: THREE.DoubleSide });
         case 'water': return new THREE.MeshPhysicalMaterial({
@@ -105,7 +123,7 @@ export const assets = {
         case 'umbrella': return std({ color: 0xffffff, vertexColors: true, roughness: 0.7, side: THREE.DoubleSide });
         default: throw new Error('unknown material ' + name);
       }
-    });
+    }
   },
 
   // Metallic car paint with clearcoat, cached per colour.
@@ -113,13 +131,13 @@ export const assets = {
     return cached(materialCache, `paint:${hex}`, () => {
       const m = new THREE.MeshPhysicalMaterial({ color: hex, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.3 });
       m.userData.paint = true;
-      return m;
+      return weatherizeMaterial(m, { wet: 0.35, snow: 1 });
     });
   },
 
   // Matte cloth/skin colours for people, cached per colour.
   cloth(hex) {
-    return cached(materialCache, `cloth:${hex}`, () => new THREE.MeshStandardMaterial({ color: hex, roughness: 0.85 }));
+    return cached(materialCache, `cloth:${hex}`, () => weatherizeMaterial(new THREE.MeshStandardMaterial({ color: hex, roughness: 0.85 })));
   },
 
   emissive(hex, intensity = 4) {
@@ -127,6 +145,8 @@ export const assets = {
   },
 
   geometry(key, make) { return cached(geometryCache, key, make); },
+
+  forEachMaterial(fn) { for (const [k, m] of materialCache) fn(m, k); },
 
   // Assign the baked sky to every standard material that wants reflections.
   applyEnvironment(root) {

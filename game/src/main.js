@@ -26,6 +26,21 @@ let session = null;
 let state = 'loading';
 let titleT = 0;
 
+// Weather and time of day from the settings (or ?weather= / ?hour= in the address).
+const TIME_MODES = { golden: 17.0, dawn: 6.2, noon: 12.5, sunset: 18.2, night: 22.5 };
+function applyWorldSettings() {
+  const w = session.weather;
+  const urlWeather = params.get('weather'), urlHour = params.get('hour');
+  const wx = urlWeather || (shot ? 'clear' : settings.weather);
+  w.auto = wx === 'auto';
+  if (!w.auto && w.state !== wx) w.setState(wx, true);
+  const mode = urlHour ? 'fixed' : shot ? 'golden' : settings.timeMode;
+  w.clock.frozen = mode !== 'cycle';
+  if (urlHour) w.clock.hour = Number(urlHour);
+  else if (TIME_MODES[mode] != null) w.clock.hour = TIME_MODES[mode];
+  w.clock.compute();
+}
+
 function applySettings(s) {
   Object.assign(settings, s);
   saveSettings(settings);
@@ -33,7 +48,7 @@ function applySettings(s) {
   audio.setVolume('master', settings.master);
   audio.setVolume('music', settings.music);
   audio.setVolume('sfx', settings.sfx);
-  if (session) { session.cameraRig.sensitivity = 0.0024 * settings.sensitivity; session.cameraRig.invertY = settings.invertY; }
+  if (session) { session.cameraRig.sensitivity = 0.0024 * settings.sensitivity; session.cameraRig.invertY = settings.invertY; applyWorldSettings(); }
 }
 
 const menus = new MenuScreens({
@@ -126,6 +141,7 @@ function frame(now) {
     session.sea.update(now / 1000);
     session.ambient.update(now / 1000);
     session.lights.update(dt);
+    session.weather.update(dt, gfx.camera);
   } else if (state === 'playing') {
     session.update(dt);
     session.hud.update(dt, session.hudState());
@@ -146,6 +162,7 @@ async function boot() {
   if (shot) {
     state = 'shot';
     document.getElementById('title-screen').classList.add('hidden');
+    window.__game = { session, gfx };
     await stageScreenshot(shot, { session, gfx, menus, params });
     return;
   }

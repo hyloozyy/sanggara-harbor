@@ -42,6 +42,7 @@ export class AudioEngine {
     const c = this.ctx, t = this.now + when;
     const src = c.createBufferSource();
     src.buffer = this.noiseBuffer;
+    src.loop = duration > 1.9;
     const f = c.createBiquadFilter(); f.type = filter; f.frequency.value = freq; f.Q.value = q;
     const g = c.createGain();
     g.gain.setValueAtTime(0, t);
@@ -173,6 +174,51 @@ export class AudioEngine {
   updateRotor(distance) {
     if (!this.ctx) return;
     this.rotorAmp.gain.setTargetAtTime(distance === Infinity ? 0 : 0.9 * this.distanceGain(distance * 0.7), this.now, 0.2);
+  }
+
+  // Thunder rolling in `delay` seconds after a flash: a crack for close strikes, then a long rumble.
+  thunder(delay = 1, strength = 1) {
+    if (!this.ctx) return;
+    const when = Math.min(8, delay);
+    if (delay < 1.6) this.noise(0.35, { filter: 'highpass', freq: 900, gain: 0.35 * strength, attack: 0.005, decay: 0.35, when });
+    this.noise(4.5, { filter: 'lowpass', freq: 160 + Math.random() * 120, q: 0.7, gain: 0.9 * strength, attack: 0.08 + delay * 0.05, decay: 4.5, when: when + 0.05 });
+    this.noise(3.2, { filter: 'lowpass', freq: 70, q: 0.5, gain: 0.8 * strength, attack: 0.3, decay: 3.2, when: when + 0.4 });
+  }
+
+  // Continuous weather soundscape: rain (drizzle hiss to downpour roar), wind gusts, dry-season
+  // cicadas and night insects; snow muffles the city hum.
+  weatherAmbience({ rain = 0, wind = 0, dry = 0, snow = 0, night = 0 }) {
+    if (!this.ctx) return;
+    const c = this.ctx;
+    if (!this.wx) {
+      const loop = (freqType, freq, q = 0.7) => {
+        const src = c.createBufferSource(); src.buffer = this.noiseBuffer; src.loop = true; src.playbackRate.value = 0.8 + Math.random() * 0.4;
+        const f = c.createBiquadFilter(); f.type = freqType; f.frequency.value = freq; f.Q.value = q;
+        const gn = c.createGain(); gn.gain.value = 0;
+        src.connect(f).connect(gn).connect(this.sfx); src.start();
+        return { f, gn };
+      };
+      const hiss = loop('highpass', 1400), roar = loop('lowpass', 520), wind = loop('bandpass', 380, 1.4);
+      const cic = c.createOscillator(); cic.type = 'triangle'; cic.frequency.value = 4300;
+      const am = c.createOscillator(); am.type = 'square'; am.frequency.value = 28;
+      const amG = c.createGain(); amG.gain.value = 0.5;
+      const cicG = c.createGain(); cicG.gain.value = 0;
+      const amBias = c.createConstantSource(); amBias.offset.value = 0.5;
+      const mod = c.createGain(); mod.gain.value = 0;
+      am.connect(amG).connect(mod.gain); amBias.connect(mod.gain);
+      cic.connect(mod).connect(cicG).connect(this.sfx);
+      cic.start(); am.start(); amBias.start();
+      this.wx = { hiss, roar, wind, cicG, gust: 0 };
+    }
+    const w = this.wx, t = this.now;
+    w.gust += 0.016;
+    const gust = 0.6 + 0.4 * Math.sin(w.gust * 0.7) * Math.sin(w.gust * 0.23 + 1);
+    w.hiss.gn.gain.setTargetAtTime(0.16 * rain, t, 0.5);
+    w.roar.gn.gain.setTargetAtTime(0.22 * rain * rain, t, 0.5);
+    w.wind.gn.gain.setTargetAtTime(0.06 * wind * gust + 0.02 * snow, t, 0.4);
+    w.wind.f.frequency.setTargetAtTime(260 + 260 * gust, t, 0.4);
+    w.cicG.gain.setTargetAtTime(0.012 * dry + 0.006 * night * (1 - rain), t, 0.8);
+    if (this.ambGain) this.ambGain.gain.setTargetAtTime(0.035 * (1 - snow * 0.7), t, 1);
   }
 
   buildAmbience() {

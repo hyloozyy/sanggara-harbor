@@ -7,6 +7,9 @@ import { clamp, damp, wrapAngle } from '../core/math-utils.js';
 import { groundHeightAt } from '../city/city-layout.js';
 import { events } from '../core/event-bus.js';
 
+// Road surface grip, lowered by the weather (wet asphalt, snow).
+export const ROAD = { grip: 1 };
+
 let nextId = 1;
 let blobGeo = null, blobMat = null;
 function contactShadowGeometry() { return blobGeo || (blobGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)); }
@@ -107,7 +110,7 @@ export class Vehicle {
     }
     vF -= vF * Math.abs(vF) * 0.0006 * dt;
 
-    let grip = s.grip;
+    let grip = s.grip * ROAD.grip;
     if (c.handbrake) {
       grip = 1.1;
       vF -= Math.sign(vF) * Math.min(Math.abs(vF), 5 * dt);
@@ -122,7 +125,7 @@ export class Vehicle {
     // Tyres can only give so much sideways grip (about 2.2 g); beyond that the car understeers,
     // unless the handbrake breaks traction on purpose.
     if (!c.handbrake && Math.abs(vF) > 1) {
-      const maxYaw = (s.grip * 2.9) / Math.abs(vF);
+      const maxYaw = (s.grip * ROAD.grip * 2.9) / Math.abs(vF);
       yawTarget = clamp(yawTarget, -maxYaw, maxYaw);
     }
     this.angVel = damp(this.angVel, yawTarget, c.handbrake ? 4 : 9, dt);
@@ -184,7 +187,7 @@ export class Vehicle {
     const radius = 0.9, depth = Math.min(0.16, 0.03 + severity * 0.008);
     const maxY = this.spec.height * 0.72;                  // panels below the windows only
     this.body.traverse((o) => {
-      if (!o.isMesh || !o.material || !o.material.userData.paint) return;
+      if (!o.isMesh || !o.material || Array.isArray(o.material) || !o.material.userData.paint) return;
       const pos = o.geometry.attributes.position;
       let moved = false;
       for (let i = 0; i < pos.count; i++) {

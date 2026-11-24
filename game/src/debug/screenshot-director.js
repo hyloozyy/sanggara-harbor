@@ -4,6 +4,9 @@
 import { rng } from '../core/rng.js';
 import { MISSIONS } from '../missions/mission-scripts.js';
 import { Combatant } from '../combat/combatant-ai.js';
+import { Character } from '../characters/character.js';
+import { generateLook } from '../characters/character-generator.js';
+import { CAST } from '../missions/story-cast.js';
 
 const DT = 1 / 30;
 
@@ -25,6 +28,7 @@ function startMissionAt(session, id, stageIndex) {
 }
 
 function finish(session, gfx) {
+  session.weather.update(0, gfx.camera);
   session.hud.resultTimer = 0.0001;
   session.hud.update(DT, session.hudState());
   session.minimap.draw(DT, session.minimapState());
@@ -350,6 +354,55 @@ const SCENES = {
     s.cameraRig.override = { x: -48, y: 3.5, z: 131, tx: -46, ty: 0.5, tz: 120, fov: 55 };
     s.cameraRig.update(DT, s.player, s.input);
     s.gfx.lighting.follow(-34, 120);
+    await finish(s, gfx);
+  },
+
+  // Character showcase: Raka, the story cast and a crowd of generated townspeople, police,
+  // harbour workers, market sellers and gangsters lined up in good light (?shot=characters).
+  async characters(session, gfx, ctx) {
+    const s = session;
+    s.hud.show(false);
+    for (const v of [...s.vehicles.list]) if (Math.hypot(v.pos.x + 41, v.pos.z - 87) < 30) s.vehicles.remove(v);
+    for (const p of [...s.peds.list]) s.peds.remove(p);
+    const close = ctx?.params?.get('close') === '1';
+    const people = [];
+    const add = (look, x, z, heading, anim = 'idle', extra = {}) => {
+      const c = new Character(look, x, z, { atlasSize: 512 });
+      c.heading = heading; c.anim = anim; Object.assign(c, extra);
+      s.scene.add(c.mesh); people.push(c);
+      return c;
+    };
+    const X0 = -48.5, Z0 = 87.6;
+    const cast = ['dimas', 'lastri', 'harun', 'rusdi', 'bayu', 'wulan'];
+    const roles = ['auto', 'auto', 'market', 'auto', 'worker', 'auto', 'police', 'auto', 'gang', 'auto', 'rider', 'auto', 'tactical', 'auto'];
+    // Front row: the player and the cast. Back row: generated people.
+    s.player.body.pos.set(X0, 0.16, Z0); s.player.body.heading = 0.15;
+    if (close) {
+      cast.slice(0, 4).forEach((k, i) => add(CAST[k].look, X0 + 0.75 * (i + 1), Z0 + 0.05 * i, -0.1 + i * 0.04));
+    } else {
+      cast.forEach((k, i) => add(CAST[k].look, X0 + 1.05 * (i + 1), Z0 + (i % 2) * 0.25, 0.1 - i * 0.05, i === 2 ? 'talk' : 'idle'));
+      for (let i = 0; i < 14; i++) {
+        const look = generateLook(7000 + i * 37, roles[i]);
+        const anim = i % 5 === 1 ? 'phone' : i % 4 === 3 ? 'walk' : 'idle';
+        const c = add(look, X0 - 0.4 + i * 0.62, Z0 - 2.2 - (i % 2) * 0.7, (i % 3 - 1) * 0.35, anim);
+        if (i % 6 === 4) c.umbrella = true;
+        if (anim === 'phone') c.model.showProp('phone', true);
+        if (c.umbrella) c.model.showProp('umbrella', true);
+      }
+    }
+    for (let k = 0; k < 40; k++) {
+      for (const c of people) {
+        const spd = c.anim === 'walk' ? 1.35 : 0;
+        if (c.anim === 'talk') c.talk = 0.6 + 0.4 * Math.sin(k * 1.7);
+        c.pos.y = 0.16;
+        c.updateVisual(DT, spd);
+      }
+      s.player.body.updateVisual(DT, 0);
+    }
+    const cx = close ? X0 + 1.9 : X0 + 3.6;
+    s.cameraRig.override = close ? { x: cx, y: 1.72, z: Z0 + 2.3, tx: cx, ty: 1.55, tz: Z0, fov: 40 } : { x: cx, y: 2.0, z: Z0 + 7.6, tx: cx, ty: 1.0, tz: Z0 - 1, fov: 52 };
+    s.cameraRig.update(DT, s.player, s.input);
+    s.gfx.lighting.follow(cx, Z0);
     await finish(s, gfx);
   },
 

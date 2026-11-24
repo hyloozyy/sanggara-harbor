@@ -3,6 +3,7 @@ import { assets } from './asset-library.js';
 import * as surfaces from './surface-textures.js';
 import { facadeTextures, FACADE_PALETTES } from './facade-textures.js';
 import { shopfrontTextures, billboardTextures, neonSignTexture } from './signage-textures.js';
+import { palmFrondTexture, leafClusterTexture, palmBarkTexture, barkTexture, grassTuftTexture } from './foliage-textures.js';
 
 export function registerProceduralTextures() {
   assets.registerTextures({
@@ -25,5 +26,11 @@ export function registerProceduralTextures() {
     facade: facadeTextures,
     facadePaletteCount: (style) => FACADE_PALETTES[style].length,
     neon: neonSignTexture,
+    'palm-frond': palmFrondTexture,
+    'leaf-card': () => leafClusterTexture(5, 100),
+    'leaf-card-warm': () => leafClusterTexture(9, 82),
+    'palm-bark': palmBarkTexture,
+    bark: barkTexture,
+    'grass-tuft': grassTuftTexture,
   });
 }

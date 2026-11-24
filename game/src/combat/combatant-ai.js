@@ -5,13 +5,11 @@ import { Arsenal } from './weapon-system.js';
 import { buildWeaponMesh } from './weapon-meshes.js';
 import { WEAPONS } from './weapon-catalog.js';
 import { rng } from '../core/rng.js';
+import { generateLook } from '../characters/character-generator.js';
 
-export const POLICE_LOOK = { skin: 0xa8744e, hair: 0x111111, shirt: 0xa88f5e, pants: 0x4a3a28, shoes: 0x111111, cap: 0x3a2e22, longSleeves: true };
-export const GANG_LOOKS = [
-  { shirt: 0xb0201a, pants: 0x1a1a1a, cap: 0x111111 },
-  { shirt: 0x1a1a1a, pants: 0x2a2e3a, vest: 0xb0201a },
-  { shirt: 0xd8d8d0, pants: 0x1a1a1a, vest: 0x8a1a14 },
-];
+// Every officer and gangster is generated from a fresh seed in their role's outfit.
+export const policeLook = (role = 'police') => generateLook(rng.int(1, 1e9), role);
+export const gangLook = () => generateLook(rng.int(1, 1e9), 'gang');
 
 export class Combatant {
   constructor(scene, look, x, z, { faction, weapon = 'pistol', health = 100, accuracy = 0.5, name = null, hostile = true, armour = 0 }) {

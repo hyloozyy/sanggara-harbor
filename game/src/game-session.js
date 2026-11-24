@@ -29,6 +29,8 @@ import { writeSave } from './save/save-system.js';
 import { PLACES } from './city/city-layout.js';
 import { rng } from './core/rng.js';
 import { wireGameEvents } from './game-event-wiring.js';
+import { WeatherSystem } from './world/weather-system.js';
+import { ROAD } from './vehicles/vehicle.js';
 import { buildHudState, buildMinimapState } from './ui/hud-state.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'Sanggara Sehat Hospital' };
@@ -48,6 +50,8 @@ export class GameSession {
     this.world = { collision: city.collision };
     this.sea = city.sea;
     this.ambient = new AmbientLife(this.scene);
+    this.weather = new WeatherSystem(gfx, audio);
+    this.weather.attachCity(city.root);
     this.particles = new ParticleSystem(this.scene);
     this.lights = new LightFlashes(this.scene);
     this.vehicles = new VehicleManager(this.scene, this.world);
@@ -133,8 +137,8 @@ export class GameSession {
 
   // A carjacked driver is pulled out and runs.
   ejectDriver(v, player) {
+    const look = v.driverModel ? v.driverModel.look : { shirt: 0xe8e2d4, pants: 0x2a2e3a, skin: 0xa8744e };
     this.vehicles.removeDriverModel(v);
-    const look = { shirt: 0xe8e2d4, pants: 0x2a2e3a, skin: 0xa8744e };
     const rx = Math.cos(v.heading), rz = -Math.sin(v.heading);
     const ped = new Character(look, v.pos.x + rx * 2.2, v.pos.z + rz * 2.2, { health: 60 });
     ped.knock = 0.9;
@@ -218,7 +222,7 @@ export class GameSession {
     this.crew.update(dt, input);
     this.traffic.update(dt, player, camDir);
     this.vehicles.update(dt);
-    this.peds.update(dt, player, this.vehicles);
+    this.peds.update(dt, player, this.vehicles, this.weather);
     this.police.update(dt, player, camDir);
     this.missions.update(dt);
     this.side.update(dt);
@@ -226,7 +230,7 @@ export class GameSession {
     this.angkotJob.update(dt);
     for (const c of [...this.leftoverCombatants]) {
       c.update(dt, this, null);
-      if (Math.hypot(c.body.pos.x - player.pos.x, c.body.pos.z - player.pos.z) > 140) { this.scene.remove(c.body.mesh); this.leftoverCombatants.splice(this.leftoverCombatants.indexOf(c), 1); }
+      if (Math.hypot(c.body.pos.x - player.pos.x, c.body.pos.z - player.pos.z) > 140) { this.scene.remove(c.body.mesh); c.body.dispose(); this.leftoverCombatants.splice(this.leftoverCombatants.indexOf(c), 1); }
     }
     this.markers.update(dt, player);
     this.dialogue.update(dt);
@@ -238,6 +242,8 @@ export class GameSession {
     this.ambient.update(this.time);
     this.cameraRig.update(dt, player, input);
     this.updateHeadlight();
+    this.weather.update(dt, this.gfx.camera);
+    ROAD.grip = this.weather.grip;
     this.gfx.lighting.follow(player.pos.x, player.pos.z);
     this.updateAudio(dt);
     this.progression.stats.distance += this.lastPos.distanceTo(player.pos) < 20 ? this.lastPos.distanceTo(player.pos) : 0;
