@@ -68,7 +68,7 @@ export class Minimap {
       ctx.beginPath(); ctx.arc(toMap(z.x), toMap(z.z), z.r * PX, 0, Math.PI * 2); ctx.fill();
     }
     if (state.route) {
-      ctx.strokeStyle = 'rgba(255,200,64,0.85)'; ctx.lineWidth = 5 * s; ctx.setLineDash([9 * s, 6 * s]);
+      ctx.strokeStyle = state.waypoint ? 'rgba(230,90,255,0.9)' : 'rgba(255,200,64,0.85)'; ctx.lineWidth = 5 * s; ctx.setLineDash([9 * s, 6 * s]);
       ctx.beginPath(); ctx.moveTo(toMap(px), toMap(pz)); for (const p of state.route) ctx.lineTo(toMap(p.x), toMap(p.z)); ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -96,19 +96,26 @@ export class Minimap {
     if (state.heli) { blip(state.heli.x, state.heli.z, '#9fd0ff', 7); }
     ctx.restore();
 
-    // Objective marker, clamped to the rim when off-map.
-    if (state.objective) {
-      const o = state.objective;
+    // Objective and waypoint markers; off the map they sit on the rim with an arrow pointing out.
+    const marker = (o, color, glyph) => {
       const rel = this.project(o.x - px, o.z - pz, yaw, zoom);
       const d = Math.hypot(rel.x, rel.y), lim = R - 12;
       const k = d > lim ? lim / d : 1;
       const x = R + rel.x * k, y = R + rel.y * k;
-      ctx.fillStyle = o.kind === 'enemy' ? '#ff4a3a' : o.kind === 'vehicle' ? '#40c0ff' : '#ffc040';
+      if (k < 1) {
+        const a = Math.atan2(rel.y, rel.x);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(6, -6); ctx.lineTo(6, 6); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      ctx.fillStyle = color;
       ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#000'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(o.kind === 'mission' ? '!' : '★', x, y + 0.5);
-    }
+      ctx.fillText(glyph, x, y + 0.5);
+    };
+    if (state.objective) { const o = state.objective; marker(o, o.kind === 'enemy' ? '#ff4a3a' : o.kind === 'vehicle' ? '#40c0ff' : '#ffc040', o.kind === 'mission' ? '!' : '★'); }
+    if (state.waypoint) marker(state.waypoint, '#e65aff', '⚑');
     // Player arrow (points along the player's heading relative to the camera).
     ctx.save();
     ctx.translate(R, R);

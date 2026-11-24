@@ -44,6 +44,7 @@ const self = game;
     health: b.health / b.maxHealth, armour: b.armour / 100,
     aiming: b.aiming && !v, aimTarget,
     hint, activity,
+    gps: self.gpsRoute ? `${self.waypoint ? '⚑ ' + self.waypoint.label : '★ Objective'} · ${self.gpsDistance < 1000 ? Math.round(self.gpsDistance) + ' m' : (self.gpsDistance / 1000).toFixed(1) + ' km'}` : '',
     wasted: self.wastedTimer > 0 ? (self.busted ? 'BUSTED' : 'WASTED') : null,
   };
 }
@@ -64,6 +65,7 @@ const self = game;
     heli: self.police.heliActive ? { x: self.police.heli.pos.x, z: self.police.heli.pos.z } : null,
     enemies, activities: acts,
     objective: self.missions.objectivePoint(self.angkotJob.objective()) || (self.side.markers[0] ? { x: self.side.markers[0].x, z: self.side.markers[0].z, kind: 'objective' } : null),
+    route: self.gpsRoute, waypoint: self.waypoint, gps: self.gpsRoute ? { dist: self.gpsDistance, label: self.waypoint ? self.waypoint.label : 'Objective' } : null,
     searchZone: self.wanted.level > 0 && self.wanted.unseen > 2 ? { x: self.wanted.lastKnown.x, z: self.wanted.lastKnown.z, r: self.wanted.searchRadius } : null,
   };
 }

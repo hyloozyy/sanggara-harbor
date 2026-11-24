@@ -12,6 +12,7 @@ import { stageScreenshot } from './debug/screenshot-director.js';
 import { ControlRouter } from './core/control-router.js';
 import { GamepadInput } from './core/gamepad.js';
 import { TouchController } from './ui/touch-controller.js';
+import { CityMapScreen } from './ui/city-map-screen.js';
 
 registerProceduralTextures();
 
@@ -86,14 +87,15 @@ const menus = new MenuScreens({
   onSettings: applySettings,
 });
 
+let mapScreen = null;
 function openMap() {
   state = 'map';
-  document.getElementById('big-map').classList.remove('hidden');
-  session.minimap.drawBig(session.minimapState());
-  document.getElementById('big-map-legend').innerHTML = '<b>MAP OF SANGGARA</b><br>■ Race · Delivery · Paint Shop · Gun Shop · Safehouse · Hospital<br>● Mission objective<br>[M] close';
+  input.releaseLock();
+  mapScreen.open();
+  document.getElementById('big-map-legend').innerHTML = '<b>MAP OF SANGGARA</b><br><i style="background:#ffd23a;border-radius:50%"></i>Next story mission · <i style="background:#ffc35a"></i>Story place<br><i style="background:#40ffc0"></i>Activity · <i style="background:#ff5a5a"></i>Gang turf · <i style="background:#e8e2d4"></i>Landmark<br><i style="background:#e65aff"></i>Waypoint · <i style="background:#ff3a3a;border-radius:50%"></i>Police<br>Click a district or place for details · right-click: waypoint<br>Drag to pan · wheel / pinch to zoom · M / Esc close';
 }
 
-function closeMap() { document.getElementById('big-map').classList.add('hidden'); state = 'playing'; }
+function closeMap() { mapScreen.close(); state = 'playing'; if (!touch.wanted()) lockPointer(canvas); }
 
 function pause() {
   if (state !== 'playing') return;
@@ -157,6 +159,9 @@ function frame(now) {
     session.ambient.update(now / 1000);
     session.lights.update(dt);
     session.weather.update(dt, gfx.camera);
+  } else if (state === 'map') {
+    mapScreen.update(dt, gamepad.mapCursor);
+    gamepad.mapCursor = null;
   } else if (state === 'playing') {
     session.update(dt);
     session.hud.update(dt, session.hudState());
@@ -172,7 +177,9 @@ async function boot() {
   await step(0.05);
   session = new GameSession(gfx, input, audio, radio, (p) => { fill.style.width = `${Math.round(p * 100)}%`; });
   session.onTalkAvailable = (on) => touch.setTalkAvailable(on);
-  window.__game = { session, gfx, input, touch, gamepad };
+  mapScreen = new CityMapScreen(session, session.minimap);
+  mapScreen.onClose = () => closeMap();
+  window.__game = { session, gfx, input, touch, gamepad, mapScreen };
   await step(1);
   applySettings(settings);
   document.getElementById('loading-screen').classList.add('hidden');

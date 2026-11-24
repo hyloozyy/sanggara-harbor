@@ -153,6 +153,8 @@ export class Hud {
     $('health-bar').querySelector('.fill').style.width = `${Math.max(0, s.health) * 100}%`;
     $('armour-bar').querySelector('.fill').style.width = `${Math.max(0, s.armour) * 100}%`;
 
+    $('gps-readout').textContent = s.gps || '';
+
     // Crosshair, hints, overlays.
     this.el.crosshair.classList.toggle('show', s.aiming);
     this.el.crosshair.classList.toggle('target', !!s.aimTarget);

@@ -52,6 +52,7 @@
 
     <div id="hud-bottom-left">
       <canvas id="minimap" width="256" height="256"></canvas>
+      <div id="gps-readout"></div>
       <div id="vitals">
         <div class="bar" id="health-bar"><div class="fill"></div></div>
         <div class="bar" id="armour-bar"><div class="fill"></div></div>
@@ -73,7 +74,12 @@
     <div id="wasted-screen" class="hidden"></div>
   </div>
 
-  <div id="big-map" class="hidden"><canvas id="big-map-canvas" width="900" height="900"></canvas><div id="big-map-legend"></div></div>
+  <div id="big-map" class="hidden">
+    <canvas id="big-map-canvas" width="900" height="900"></canvas>
+    <div id="big-map-legend"></div>
+    <div id="map-card" class="hidden"></div>
+    <button id="map-close">✕ CLOSE MAP</button>
+  </div>
 
   <div id="title-screen" class="screen">
     <div class="title-block">

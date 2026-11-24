@@ -35,6 +35,7 @@ import { wireGameEvents } from './game-event-wiring.js';
 import { WeatherSystem } from './world/weather-system.js';
 import { ROAD } from './vehicles/vehicle.js';
 import { buildHudState, buildMinimapState } from './ui/hud-state.js';
+import { roadRoute, routeLength } from './world/gps-route.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'Sanggara Sehat Hospital' };
 const POLICE_STATION = { x: 86.5, z: 120, name: 'Kota Lama Police Station' };
@@ -80,6 +81,10 @@ export class GameSession {
     this.worldEvents = new WorldEvents(this);
     this.angkotJob = new AngkotJob(this);
     this.talk = new Conversations(this);
+    this.hospital = HOSPITAL;
+    this.waypoint = null;
+    this.gpsRoute = null;
+    this.gpsTimer = 0;
     this.time = 0;
     this.wastedTimer = 0;
     this.crimeCooldown = {};
@@ -194,6 +199,18 @@ export class GameSession {
   }
 
   // ---------------------------------------------------------------- update
+  // GPS route to the player's waypoint (cleared on arrival) or else the current objective.
+  updateGps(dt) {
+    this.gpsTimer -= dt;
+    if (this.gpsTimer > 0) return;
+    this.gpsTimer = 0.4;
+    const p = this.player.pos;
+    if (this.waypoint && Math.hypot(this.waypoint.x - p.x, this.waypoint.z - p.z) < 12) { this.waypoint = null; this.hud.notify('Waypoint reached'); }
+    const target = this.waypoint || buildMinimapState(this, HOSPITAL).objective;
+    this.gpsRoute = target ? roadRoute(p.x, p.z, target.x, target.z) : null;
+    this.gpsDistance = target ? routeLength(p.x, p.z, this.gpsRoute) : 0;
+  }
+
   // The Character in the world who speaks for a cast key (for lip-sync and voice panning).
   findSpeaker(key) {
     if (key === 'raka') return this.player.body;
@@ -251,6 +268,7 @@ export class GameSession {
     }
     this.markers.update(dt, player);
     this.talk.update(dt);
+    this.updateGps(dt);
     const cam = this.gfx.camera, fw = this.cameraRig.forward;
     this.voices.listener = { x: cam.position.x, z: cam.position.z, yaw: Math.atan2(fw.x, fw.z) };
     this.dialogue.update(dt);
