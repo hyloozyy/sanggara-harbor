@@ -81,7 +81,7 @@ export class Input {
     this.virtualHeld.set(id, code);
     if (code.startsWith('Mouse')) { const b = Number(code.slice(5)); this.buttons.add(b); this.clicked.add(b); }
     else if (code.startsWith('Wheel')) this.wheel += code.endsWith('+') ? 1 : -1;
-    else dispatchEvent(new KeyboardEvent('keydown', { code, key: code }));
+    else dispatchEvent(new KeyboardEvent('keydown', { code, key: code, cancelable: true }));
   }
 
   virtualUp(id) {
@@ -89,13 +89,13 @@ export class Input {
     if (code == null) return;
     this.virtualHeld.delete(id);
     if (code.startsWith('Mouse')) this.buttons.delete(Number(code.slice(5)));
-    else if (!code.startsWith('Wheel')) dispatchEvent(new KeyboardEvent('keyup', { code, key: code }));
+    else if (!code.startsWith('Wheel')) dispatchEvent(new KeyboardEvent('keyup', { code, key: code, cancelable: true }));
   }
 
   // A quick tap of a key (down now, up shortly after, so hit() sees it this frame).
   virtualTap(code) {
-    dispatchEvent(new KeyboardEvent('keydown', { code, key: code }));
-    setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { code, key: code })), 60);
+    dispatchEvent(new KeyboardEvent('keydown', { code, key: code, cancelable: true }));
+    setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { code, key: code, cancelable: true })), 60);
   }
 
   releaseLock() { if (document.exitPointerLock && this.locked) document.exitPointerLock(); }

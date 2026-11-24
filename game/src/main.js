@@ -112,6 +112,7 @@ function pause() {
 }
 
 addEventListener('keydown', (e) => {
+  if (e.defaultPrevented) return; // already handled by a menu (e.g. Esc that just resumed)
   if (state === 'playing' && session.talk.choosing) return; // the conversation handles its own keys
   if (state === 'playing' && (e.code === 'Escape' || e.code === 'KeyP')) { e.preventDefault(); pause(); }
   else if (state === 'playing' && e.code === 'KeyM') openMap();

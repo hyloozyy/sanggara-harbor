@@ -82,7 +82,7 @@ export class TouchController {
   refreshVisible() {
     const show = this.editing || (this.active && this.wanted());
     this.root.classList.toggle('hidden', !show);
-    document.body.classList.toggle('touch-mode', show && !this.editing);
+    document.body.classList.toggle('touch-mode', show);
   }
   get visible() { return !this.root.classList.contains('hidden'); }
 
