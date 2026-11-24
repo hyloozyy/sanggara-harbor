@@ -6,7 +6,7 @@
 // can start it from the conversation.
 import * as THREE from 'three';
 import { CAST } from './story-cast.js';
-import { voiceProfile } from '../audio/voice-actor.js';
+import { voiceProfile, VoiceDirector } from '../audio/voice-actor.js';
 import { DISTRICTS, districtAt } from '../city/city-layout.js';
 import { events } from '../core/event-bus.js';
 
@@ -61,6 +61,27 @@ export class Conversations {
     this.v = new THREE.Vector3();
     events.on('vehicle-collision', ({ impact, x, z }) => { if (impact > 6) this.lastCrash = { x, z, t: game.time }; });
     addEventListener('keydown', (e) => this.onKey(e));
+    // Ambient chatter: people nearby mutter to themselves or into their phones (no subtitles).
+    this.chatter = new VoiceDirector(game.audio);
+    this.chatter.useSpeech = false;
+    this.chatterT = 4;
+  }
+
+  updateChatter(dt) {
+    const g = this.game;
+    this.chatter.listener = g.voices.listener;
+    this.chatter.update();
+    this.chatterT -= dt;
+    if (this.chatterT > 0 || this.chatter.busy || !g.dialogue.idle || g.player.vehicle) return;
+    this.chatterT = 5 + Math.random() * 8;
+    const b = g.player.body;
+    const near = g.peds.list.filter((p) => p.alive && p.ai && p !== this.partner && (p.ai.mode === 'walk' || p.ai.mode === 'idle') && Math.hypot(p.pos.x - b.pos.x, p.pos.z - b.pos.z) < 14);
+    if (!near.length) return;
+    const p = near[Math.floor(Math.random() * near.length)], look = p.model.look;
+    const lines = p.anim === 'phone'
+      ? ['Yes, Mum, I will be home for dinner.', 'No, no, tell him the shipment is late.', 'Hello? Hello? The signal here is terrible.']
+      : g.weather.cur.rain > 0.3 ? ['Ugh, this rain never stops.', 'Where did I leave my umbrella?'] : ['Now where is that warung?', 'So hot today...', 'I should have taken the angkot.', 'Martabak tonight, I think.'];
+    this.chatter.speak(lines[Math.floor(Math.random() * lines.length)], { ...voiceProfile(look.gender, look.age, look.seed || p.id), rate: 1.05 }, p, p.pos);
   }
 
   get choosing() { return !!this.choices; }
@@ -103,6 +124,7 @@ export class Conversations {
       if (this.pendingChoices && g.dialogue.idle) { const c = this.pendingChoices; this.pendingChoices = null; c.length ? this.showChoices(c) : this.end(true); }
     }
     this.updateTag();
+    this.updateChatter(dt);
     g.onTalkAvailable?.(!!this.candidate);
   }
 

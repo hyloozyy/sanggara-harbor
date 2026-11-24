@@ -352,11 +352,11 @@ const SCENES = {
     ids.forEach((id, i) => {
       const m = buildWeaponMesh(id);
       m.rotation.set(0, Math.PI / 2, 0);
-      m.scale.setScalar(2.4);
-      m.position.set(X0 - 1.2 + (i % 2) * 2.6, Y + 1.5 - Math.floor(i / 2) * 0.55, Z0);
+      m.scale.setScalar(1.8);
+      m.position.set(X0 - 1.0 + (i % 2) * 2.3, Y + 1.7 - Math.floor(i / 2) * 0.62, Z0);
       s.scene.add(m);
     });
-    s.cameraRig.override = { x: X0, y: Y + 0.8, z: Z0 + 3.4, tx: X0, ty: Y + 0.7, tz: Z0, fov: 50 };
+    s.cameraRig.override = { x: X0 + 0.2, y: Y + 0.8, z: Z0 + 3.6, tx: X0 + 0.2, ty: Y + 0.75, tz: Z0, fov: 50 };
     s.cameraRig.update(DT, s.player, s.input);
     s.gfx.lighting.follow(X0, Z0);
     await finish(s, gfx);

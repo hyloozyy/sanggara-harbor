@@ -24,8 +24,8 @@ export const CONTROL_MAP = {
 export const KEYBOARD_HELP = {
   foot: [
     ['W A S D', 'Move'], ['Mouse', 'Look (click to capture; drag works too)'], ['Shift', 'Sprint'], ['Space', 'Jump'],
-    ['F', 'Enter / steal vehicle'], ['E', 'Talk to someone nearby'], ['Left click', 'Shoot / punch'], ['Right click', 'Aim'],
-    ['R', 'Reload'], ['1-4 / wheel / hold Tab', 'Weapons'], ['Z / X', 'Phone the crew'], ['M', 'City map'], ['Esc', 'Pause, save, settings'],
+    ['F', 'Enter / steal vehicle'], ['E', 'Talk to someone nearby'], ['1-4 / ↑↓ Enter / click', 'Dialogue choices'], ['Left click', 'Shoot / punch'], ['Right click', 'Aim'],
+    ['R', 'Reload'], ['1-9 / wheel / hold Tab', 'Weapons'], ['Z / X', 'Phone the crew'], ['M', 'City map'], ['Esc', 'Pause, save, settings'],
   ],
   vehicle: [
     ['W / S', 'Accelerate / brake, reverse'], ['A / D', 'Steer'], ['Space', 'Handbrake'], ['F', 'Leave vehicle'],

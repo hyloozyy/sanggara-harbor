@@ -5,6 +5,16 @@ import { WEAPONS } from './combat/weapon-catalog.js';
 import { formatRupiah } from './core/math-utils.js';
 import { rng } from './core/rng.js';
 import { events } from './core/event-bus.js';
+import { townspersonName } from './missions/conversations.js';
+import { voiceProfile } from './audio/voice-actor.js';
+
+// Name, voice and mouth for a townsperson who shouts a line.
+function townsperson(c) {
+  if (!c?.model?.look) return {};
+  const look = c.model.look;
+  c.talkName ||= townspersonName(look);
+  return { name: c.talkName, character: c, profile: voiceProfile(look.gender, look.age, look.seed || c.id) };
+}
 
 export function wireGameEvents(game) {
   const self = game;
@@ -24,7 +34,7 @@ export function wireGameEvents(game) {
     if (character === P()) { self.hud.damageFlash(amount); self.cameraRig.addShake(0.25); }
     if (attacker === P() && character !== P()) {
       self.hud.hitMarker();
-      if (character.faction === 'civilian' && character.alive && rng.chance(0.3)) self.dialogue.say('warga', rng.pick(['Ow! Why me?!', 'Mercy, mister!', 'Help! There is a maniac!']));
+      if (character.faction === 'civilian' && character.alive && rng.chance(0.3)) self.dialogue.say('warga', rng.pick(['Ow! Why me?!', 'Mercy, mister!', 'Help! There is a maniac!']), townsperson(character));
       if (character.faction === 'police') self.crime('cop-assault', character.pos.x, character.pos.z);
       else if (character.faction === 'civilian') {
         self.peds.scare(character.pos.x, character.pos.z, 25, 1, true);
@@ -54,7 +64,8 @@ export function wireGameEvents(game) {
     if (vehicle.isPolice) self.crime('car-theft-seen', x, z);
     else if (carjack) {
       self.peds.scare(x, z, 20, 1, false);
-      self.dialogue.say('warga', rng.pick(['Help! Thief! He took my car!', 'Hey! That is my car!', 'Carjacking! Call the police!']));
+      const victim = self.peds.list.filter((p) => p.alive && p.model?.look).sort((a, b) => Math.hypot(a.pos.x - x, a.pos.z - z) - Math.hypot(b.pos.x - x, b.pos.z - z))[0];
+      self.dialogue.say('warga', rng.pick(['Help! Thief! He took my car!', 'Hey! That is my car!', 'Carjacking! Call the police!']), victim && Math.hypot(victim.pos.x - x, victim.pos.z - z) < 12 ? townsperson(victim) : {});
       if (self.policeNear(x, z, 70)) self.crime('carjack', x, z);
       // Someone on the pavement phones it in a moment later.
       else if (rng.chance(0.45)) setTimeout(() => { if (self.wanted.level === 0) self.crime('carjack', x, z, false); }, 3000);
