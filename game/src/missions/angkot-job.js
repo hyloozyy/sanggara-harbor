@@ -32,7 +32,7 @@ export class AngkotJob {
     const inAngkot = v && v.modelKey === 'angkot' && !g.missions.active && !g.side.mode;
     if (!this.active && inAngkot) this.begin();
     if (!this.active) return;
-    if (!inAngkot) { this.end('Turun dari angkot'); return; }
+    if (!inAngkot) { this.end('Left the angkot'); return; }
     this.timer += dt;
     const p = g.player.pos;
     if (this.phase === 'pickup') {
@@ -46,14 +46,14 @@ export class AngkotJob {
   begin() {
     this.active = true;
     this.fares = 0;
-    this.game.hud.notify('Narik Angkot — jemput penumpang yang melambai (tanda biru)');
+    this.game.hud.notify('Angkot Driver — pick up waving passengers (blue markers)');
     this.nextPassenger();
   }
 
   nextPassenger() {
     const g = this.game, p = g.player.pos;
     this.spot = kerbSpot(p.x, p.z, 60, 220);
-    if (!this.spot) { this.end('Tidak ada penumpang'); return; }
+    if (!this.spot) { this.end('No passengers'); return; }
     this.phase = 'pickup';
     this.timer = 0;
     this.waiting = new Character(randomLook(rng), this.spot.x, this.spot.z, { health: 60 });
@@ -68,13 +68,13 @@ export class AngkotJob {
     this.waiting = null;
     g.markers.remove(this.marker);
     const dest = kerbSpot(p.x, p.z, 150, 420);
-    if (!dest) { this.end('Penumpang batal'); return; }
+    if (!dest) { this.end('Passenger gave up'); return; }
     this.spot = dest;
     this.tripStart = { x: p.x, z: p.z };
     this.phase = 'dropoff';
     this.timer = 0;
     this.marker = g.markers.addZone(dest.x, dest.z, { radius: 3.5, color: 0x40c0ff, kind: 'angkot' });
-    g.dialogue.say('raka', `Naik, Bu. Turun di ${DISTRICTS[districtAt(dest.x, dest.z)].name}?`);
+    g.dialogue.say('raka', `Hop in. Dropping you at ${DISTRICTS[districtAt(dest.x, dest.z)].name}?`);
   }
 
   alight() {
@@ -83,11 +83,11 @@ export class AngkotJob {
     const fare = Math.round(dist * 120 / 1000) * 1000 + 5000;
     const quick = this.timer < dist / 9;
     const pay = fare + (quick ? 20000 : 0);
-    g.progression.addMoney(pay, quick ? 'Ongkos angkot + tip' : 'Ongkos angkot');
-    g.progression.addXp(12, 'Penumpang angkot');
+    g.progression.addMoney(pay, quick ? 'Angkot fare + tip' : 'Angkot fare');
+    g.progression.addXp(12, 'Angkot passenger');
     this.fares++;
     g.markers.remove(this.marker);
-    g.hud.notify(`Penumpang ${this.fares} turun · ${formatRupiah(pay)}${quick ? ' (cepat!)' : ''}`, 'xp');
+    g.hud.notify(`Passenger ${this.fares} dropped off · ${formatRupiah(pay)}${quick ? ' (quick!)' : ''}`, 'xp');
     this.nextPassenger();
   }
 
@@ -97,12 +97,12 @@ export class AngkotJob {
     if (this.waiting) g.scene.remove(this.waiting.mesh);
     this.waiting = null; this.marker = null;
     this.active = false;
-    if (this.fares) g.hud.activityResult(true, 'NARIK ANGKOT', `${this.fares} penumpang diantar · ${reason}`);
+    if (this.fares) g.hud.activityResult(true, 'ANGKOT DRIVER', `${this.fares} passengers delivered · ${reason}`);
   }
 
   hudLine() {
     if (!this.active) return null;
-    return `<b>NARIK ANGKOT</b><br>${this.phase === 'pickup' ? 'Jemput penumpang' : 'Antar ke tujuan'} · ${this.fares} diantar`;
+    return `<b>ANGKOT DRIVER</b><br>${this.phase === 'pickup' ? 'Pick up a passenger' : 'Drive to the destination'} · ${this.fares} delivered`;
   }
 
   objective() { return this.active ? { x: this.spot.x, z: this.spot.z, kind: 'vehicle' } : null; }

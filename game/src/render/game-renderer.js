@@ -7,13 +7,13 @@ import { DuskLighting, SUN_DIRECTION } from './dusk-lighting.js';
 import { assets } from '../assets/asset-library.js';
 
 export const QUALITY_PRESETS = {
-  rendah: { scale: 0.6, shadows: false, shadowSize: 1024, bloom: false, samples: 0 },
-  sedang: { scale: 0.85, shadows: true, shadowSize: 1024, bloom: true, samples: 0 },
-  tinggi: { scale: 1.0, shadows: true, shadowSize: 2048, bloom: true, samples: 4 },
+  low: { scale: 0.6, shadows: false, shadowSize: 1024, bloom: false, samples: 0 },
+  medium: { scale: 0.85, shadows: true, shadowSize: 1024, bloom: true, samples: 0 },
+  high: { scale: 1.0, shadows: true, shadowSize: 2048, bloom: true, samples: 4 },
 };
 
 export class GameRenderer {
-  constructor(canvas, quality = 'tinggi', { keepFrames = false } = {}) {
+  constructor(canvas, quality = 'high', { keepFrames = false } = {}) {
     this.canvas = canvas;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: keepFrames });
     this.renderer.shadowMap.enabled = true;
@@ -35,7 +35,7 @@ export class GameRenderer {
   }
 
   setQuality(name) {
-    const q = QUALITY_PRESETS[name] || QUALITY_PRESETS.tinggi;
+    const q = QUALITY_PRESETS[name] || QUALITY_PRESETS.high;
     this.quality = name;
     this.scale = q.scale;
     this.post.enabled = q.bloom;

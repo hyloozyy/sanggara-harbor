@@ -77,7 +77,7 @@ function decals() {
     return toTexture(c, { repeat: false });
   };
   decalCache = {
-    police: new THREE.MeshStandardMaterial({ map: mk('POLISI SANGGARA', '#1a3f9e', '#ffffff'), roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -2 }),
+    police: new THREE.MeshStandardMaterial({ map: mk('SANGGARA POLICE', '#1a3f9e', '#ffffff'), roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -2 }),
     taxi: new THREE.MeshStandardMaterial({ map: mk('TAKSI', '#f2c230', '#1a1a1a', 256, 96), emissiveMap: mk('TAKSI', '#f2c230', '#1a1a1a', 256, 96), emissive: 0xffffff, emissiveIntensity: 1.6 }),
     angkot: new THREE.MeshStandardMaterial({ map: mk('04  KOTA LAMA - PASAR IKAN', '#101010', '#ffd24a'), emissiveMap: mk('04  KOTA LAMA - PASAR IKAN', '#101010', '#ffd24a'), emissive: 0xffffff, emissiveIntensity: 1.2 }),
     plate: new THREE.MeshStandardMaterial({ map: mk('SG 4417 RK', '#111111', '#f0f0f0', 256, 64), roughness: 0.5 }),

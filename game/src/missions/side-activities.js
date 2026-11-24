@@ -12,7 +12,7 @@ const RACE_ROUTE = [
   [-40, 317.4], [80, 317.4], [200, 317.4], [317.4, 290], [317.4, 190], [317.4, 80], [317.4, -30], [300, -77.4],
   [200, -77.4], [90, -77.4], [2.6, -40], [2.6, 90], [2.6, 220], [-60, 322.6],
 ];
-const RECORD = 78; // seconds to beat ("rekor Kobra Senja")
+const RECORD = 78; // seconds to beat ("record of Kobra Senja")
 const DELIVERY_SPOTS = [[-40, 87.5], [114, 166.6], [-114, 245.6], [86, -86.5], [166.5, 114], [-86.5, 34], [246, 86.5], [-166.6, 200]];
 
 export class SideActivities {
@@ -47,14 +47,14 @@ export class SideActivities {
   update(dt) {
     const g = this.game, p = g.player;
     for (const k of Object.keys(this.cool)) this.cool[k] -= dt;
-    if (!p.alive) { if (this.mode) this.stop(false, 'Gagal'); return; }
+    if (!p.alive) { if (this.mode) this.stop(false, 'Failed'); return; }
     const busy = g.missions.active || this.mode;
 
     if (!busy && p.vehicle && this.near(PLACES.raceStart, 4.5) && this.ready('race')) this.startRace();
     if (!busy && !p.vehicle && this.near(PLACES.deliveryDepot, 2.5) && this.ready('delivery')) this.startDelivery();
     if (p.vehicle && this.near(PLACES.paintShop, 5.5) && this.ready('paint') && g.wanted.level > 0) this.paintJob();
     if (!p.vehicle && this.near(PLACES.gunShop, 2.2) && this.ready('guns')) this.shop();
-    if (!p.vehicle && this.near(PLACES.safehouse, 2.2) && this.ready('save')) { this.cool.save = 8; g.saveGame('Kos Raka'); }
+    if (!p.vehicle && this.near(PLACES.safehouse, 2.2) && this.ready('save')) { this.cool.save = 8; g.saveGame("Raka's Room"); }
 
     if (this.mode === 'race') this.updateRace(dt);
     else if (this.mode === 'delivery') this.updateDelivery(dt);
@@ -66,7 +66,7 @@ export class SideActivities {
     this.time = 0;
     this.cp = 0;
     this.showCheckpoint();
-    this.game.dialogue.say('dimas', `Balap Liar Senja! Rekor Kobra Senja ${RECORD} detik. Ikuti gerbang hijau!`);
+    this.game.dialogue.say('dimas', `Sunset Street Race! Kobra Senja's record is ${RECORD} seconds. Follow the green gates!`);
     events.emit('activity', { kind: 'race-start' });
   }
 
@@ -79,7 +79,7 @@ export class SideActivities {
   updateRace(dt) {
     const p = this.game.player;
     this.time += dt;
-    if (!p.vehicle) { this.stop(false, 'Keluar dari kendaraan'); return; }
+    if (!p.vehicle) { this.stop(false, 'Left the vehicle'); return; }
     const [x, z] = RACE_ROUTE[this.cp];
     if (Math.hypot(p.pos.x - x, p.pos.z - z) < 7) {
       this.cp++;
@@ -91,7 +91,7 @@ export class SideActivities {
         this.game.progression.addXp(win ? 220 : 60, 'Balap');
         this.game.progression.stats.races++;
         this.raceBest = Math.min(this.raceBest ?? Infinity, this.time);
-        this.stop(win, `${this.time.toFixed(1)} dtk ${win ? '— rekor baru!' : `(rekor ${RECORD} dtk)`}`);
+        this.stop(win, `${this.time.toFixed(1)} s ${win ? '— new record!' : `(record ${RECORD} s)`}`);
         return;
       }
       this.showCheckpoint();
@@ -110,7 +110,7 @@ export class SideActivities {
     v.ownedByPlayer = true;
     this.scooter = v;
     this.showDrop();
-    g.dialogue.say('lastri', 'Martabak Bulan butuh kurir! Tiga antaran, 75 detik, jangan sampai dingin.');
+    g.dialogue.say('lastri', 'Martabak Bulan needs a courier! Three drops in 75 seconds, before they go cold.');
   }
 
   showDrop() {
@@ -122,17 +122,17 @@ export class SideActivities {
   updateDelivery(dt) {
     const p = this.game.player;
     this.time -= dt;
-    if (this.time <= 0) { this.stop(false, 'Martabak keburu dingin'); return; }
+    if (this.time <= 0) { this.stop(false, 'The martabak went cold'); return; }
     const [x, z] = this.drops[this.delivered];
     if (Math.hypot(p.pos.x - x, p.pos.z - z) < 4.5) {
       this.delivered++;
-      this.game.progression.addMoney(350000, 'Antar martabak');
+      this.game.progression.addMoney(350000, 'Martabak delivery');
       this.game.progression.stats.deliveries++;
       events.emit('checkpoint', {});
       if (this.delivered >= this.drops.length) {
-        this.game.progression.addMoney(600000, 'Bonus kilat');
-        this.game.progression.addXp(150, 'Antar martabak');
-        this.stop(true, `Semua antaran selesai, sisa ${Math.ceil(this.time)} dtk`);
+        this.game.progression.addMoney(600000, 'Speed bonus');
+        this.game.progression.addXp(150, 'Martabak delivery');
+        this.stop(true, `All deliveries done, ${Math.ceil(this.time)} s to spare`);
         return;
       }
       this.time += 20;
@@ -143,7 +143,7 @@ export class SideActivities {
   stop(success, detail) {
     for (const m of this.markers) this.game.markers.remove(m);
     this.markers = [];
-    const title = this.mode === 'race' ? 'BALAP LIAR SENJA' : 'ANTAR MARTABAK';
+    const title = this.mode === 'race' ? 'SUNSET STREET RACE' : 'MARTABAK DELIVERY';
     this.cool[this.mode] = 6;
     this.mode = null;
     this.game.hud.activityResult(success, title, detail);
@@ -154,15 +154,15 @@ export class SideActivities {
     const g = this.game;
     this.cool.paint = 10;
     const price = 500000 + g.wanted.level * 250000;
-    if (g.progression.money < price) { events.emit('notify', { text: `Cat ulang butuh ${formatRupiah(price)}`, kind: 'bad' }); return; }
-    g.progression.addMoney(-price, 'Bengkel Cat');
+    if (g.progression.money < price) { events.emit('notify', { text: `A respray costs ${formatRupiah(price)}`, kind: 'bad' }); return; }
+    g.progression.addMoney(-price, 'Paint Shop');
     g.wanted.clear('paint');
     const v = g.player.vehicle;
     const colors = [0x1a60e0, 0xf0c000, 0x101010, 0xf0f0f0, 0x20a050, 0x8a1a1a];
     const color = rng.pick(colors);
     v.body.traverse((o) => { if (o.isMesh && o.material && o.material.userData.paint) o.material = g.assets.carPaint(color); });
     v.health = v.spec.health;
-    events.emit('notify', { text: `Bengkel Cat Pak Darto: mobil dicat ulang, polisi kehilangan jejak (−${formatRupiah(price)})` });
+    events.emit('notify', { text: `Pak Darto's Paint Shop: car resprayed, the police lost your trail (−${formatRupiah(price)})` });
   }
 
   shop() {
@@ -174,20 +174,20 @@ export class SideActivities {
     if (next) {
       const price = WEAPONS[next].price * discount;
       if (g.progression.money >= price) {
-        g.progression.addMoney(-price, 'Toko Besi');
+        g.progression.addMoney(-price, 'Gun Shop');
         a.give(next, WEAPONS[next].mag * 4);
-        events.emit('notify', { text: `Toko Besi Om Beni: ${WEAPONS[next].name} dibeli (−${formatRupiah(price)})` });
+        events.emit('notify', { text: `Om Beni's Gun Shop: bought ${WEAPONS[next].name} (−${formatRupiah(price)})` });
         events.emit('weapon-unlocked', { id: next });
         return;
       }
-      events.emit('notify', { text: `${WEAPONS[next].name} seharga ${formatRupiah(price)} — uangmu belum cukup`, kind: 'bad' });
+      events.emit('notify', { text: `${WEAPONS[next].name} costs ${formatRupiah(price)} — not enough money`, kind: 'bad' });
     }
     const ammoPrice = 400000 * discount;
     if (a.owned.size > 1 && g.progression.money >= ammoPrice) {
       g.progression.addMoney(-ammoPrice, 'Peluru');
       for (const id of a.owned) if (id !== 'fists') a.ammo[id] += WEAPONS[id].mag * 3;
       g.player.body.armour = Math.max(g.player.body.armour, g.progression.rankIndex >= 2 ? 100 : 50);
-      events.emit('notify', { text: `Peluru dan rompi diisi ulang (−${formatRupiah(ammoPrice)})` });
+      events.emit('notify', { text: `Ammo and vest refilled (−${formatRupiah(ammoPrice)})` });
     }
   }
 

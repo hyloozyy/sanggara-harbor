@@ -73,7 +73,7 @@ export class PoliceDispatcher {
       v.sirenOn = true;
       v.ai = { kind: 'police', from: [i, j], to, stuck: 0, reverseT: 0 };
       v.vel.set(L.dx * 12, 0, L.dz * 12);
-      const unit = { kind, vehicle: v, officers: [], callsign: `${kind === 'van' ? 'TAKTIS' : 'PATROLI'}-${unitNumber++}`, state: 'menuju' };
+      const unit = { kind, vehicle: v, officers: [], callsign: `${kind === 'van' ? 'TACTICAL' : 'PATROL'}-${unitNumber++}`, state: 'en route' };
       this.units.push(unit);
       events.emit('police-unit', { unit, action: 'dispatched' });
       return unit;
@@ -103,7 +103,7 @@ export class PoliceDispatcher {
       o.holdPosition = { x: o.body.pos.x, z: o.body.pos.z };
       officers.push(o);
     }
-    const unit = { kind: 'roadblock', vehicle: cars[0], extra: cars[1], officers, callsign: `PENGHADANG ${streetAt(p.x, p.z) || ''}`.trim(), state: 'siaga' };
+    const unit = { kind: 'roadblock', vehicle: cars[0], extra: cars[1], officers, callsign: `ROADBLOCK ${streetAt(p.x, p.z) || ''}`.trim(), state: 'standing by' };
     this.units.push(unit);
     events.emit('police-unit', { unit, action: 'roadblock' });
   }
@@ -155,7 +155,7 @@ export class PoliceDispatcher {
       this.heliActive = true;
       this.heli.pos.set(px + 150, 70, pz - 150);
       this.setHeliVisible(true);
-      events.emit('police-unit', { unit: { callsign: 'HELI ELANG-1', kind: 'heli' }, action: 'dispatched' });
+      events.emit('police-unit', { unit: { callsign: 'ELANG-1 HELI', kind: 'heli' }, action: 'dispatched' });
     } else if (!plan.heli && this.heliActive) {
       this.heliActive = false;
       this.setHeliVisible(false);
@@ -165,7 +165,7 @@ export class PoliceDispatcher {
     let spotted = false;
     for (const u of this.units) {
       const v = u.vehicle;
-      if (!v || v.wrecked) { u.state = 'hancur'; continue; }
+      if (!v || v.wrecked) { u.state = 'wrecked'; continue; }
       if (u.kind === 'roadblock') { if (this.sees(v.pos.x, 1.5, v.pos.z, player, 70)) spotted = true; continue; }
       const sees = this.sees(v.pos.x, 1.5, v.pos.z, player, 85);
       if (sees) spotted = true;
@@ -187,7 +187,7 @@ export class PoliceDispatcher {
     wanted.update(dt, spotted, px, pz);
     this.spotted = spotted;
 
-    if (wanted.level === 0) for (const u of this.units) if (u.vehicle) { u.vehicle.sirenOn = false; u.state = 'kembali'; }
+    if (wanted.level === 0) for (const u of this.units) if (u.vehicle) { u.vehicle.sirenOn = false; u.state = 'returning'; }
   }
 
   sees(x, y, z, player, range) {
@@ -210,13 +210,13 @@ export class PoliceDispatcher {
       const pv = player.vehicle ? player.vehicle.vel : { x: 0, z: 0 };
       tx = px + pv.x * 0.6; tz = pz + pv.z * 0.6;
       want = player.vehicle ? clamp(Math.abs(player.vehicle.speed) + 8, 12, v.spec.maxSpeed) : clamp((d - 11) * 0.7, 0, 14);
-      u.state = player.vehicle ? 'mengejar' : 'mendekat';
+      u.state = player.vehicle ? 'pursuing' : 'closing in';
       // On foot nearby: stop and send officers out.
       if (!player.vehicle && d < 24 && !u.officers.length && Math.abs(v.speed) < 6) {
         const rx = Math.cos(v.heading), rz = -Math.sin(v.heading);
         for (const s of [-1, 1]) u.officers.push(this.spawnOfficer(v.pos.x + rx * s * 2, v.pos.z + rz * s * 2, u.kind === 'van' ? 'smg' : 'pistol'));
         this.game.vehicles.removeDriverModel(v);
-        u.state = 'turun';
+        u.state = 'on foot';
       }
       if (u.officers.length) want = 0;
     } else {
@@ -234,7 +234,7 @@ export class PoliceDispatcher {
       const look = Math.max(0, along) + 10;
       tx = L.ax + L.dx * look; tz = L.az + L.dz * look;
       want = tracking ? 30 : 20;
-      u.state = tracking ? 'mengejar' : 'mencari';
+      u.state = tracking ? 'pursuing' : 'searching';
       void GRID;
     }
     const { steer, err } = steerToward(v, tx, tz);
@@ -257,12 +257,12 @@ export class PoliceDispatcher {
   hudList(player) {
     const list = this.units.map((u) => ({
       callsign: u.callsign, kind: u.kind,
-      state: u.vehicle && u.vehicle.wrecked ? 'hancur' : u.state,
+      state: u.vehicle && u.vehicle.wrecked ? 'wrecked' : u.state,
       dist: u.vehicle ? Math.round(Math.hypot(u.vehicle.pos.x - player.pos.x, u.vehicle.pos.z - player.pos.z)) : 0,
     }));
-    if (this.heliActive) list.unshift({ callsign: 'HELI ELANG-1', kind: 'heli', state: this.game.wanted.unseen < 2 ? 'lampu sorot' : 'menyisir', dist: Math.round(Math.hypot(this.heli.pos.x - player.pos.x, this.heli.pos.z - player.pos.z)) });
+    if (this.heliActive) list.unshift({ callsign: 'ELANG-1 HELI', kind: 'heli', state: this.game.wanted.unseen < 2 ? 'searchlight' : 'sweeping', dist: Math.round(Math.hypot(this.heli.pos.x - player.pos.x, this.heli.pos.z - player.pos.z)) });
     const onFoot = this.officers.filter((o) => o.alive).length;
-    if (onFoot) list.push({ callsign: `PERSONEL ×${onFoot}`, kind: 'foot', state: 'menembak', dist: 0 });
+    if (onFoot) list.push({ callsign: `OFFICERS ×${onFoot}`, kind: 'foot', state: 'firing', dist: 0 });
     return list;
   }
 

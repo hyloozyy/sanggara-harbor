@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Pelabuhan Sanggara — Senja di Kota Pelabuhan</title>
+  <title>Pelabuhan Sanggara — Dusk in the Harbour City</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/hud.css">
@@ -23,7 +23,7 @@
         <div id="mission-objective"></div>
       </div>
       <div id="police-panel" class="panel hidden">
-        <div class="panel-head">POLISI SANGGARA · RESPON</div>
+        <div class="panel-head">SANGGARA POLICE · RESPONSE</div>
         <ul id="police-units"></ul>
       </div>
     </div>
@@ -61,7 +61,7 @@
       <div id="vehicle-panel" class="hidden">
         <div id="vehicle-name"></div>
         <canvas id="speedometer" width="200" height="120"></canvas>
-        <div id="car-damage"><span>KONDISI</span><div class="bar"><div class="fill"></div></div></div>
+        <div id="car-damage"><span>CONDITION</span><div class="bar"><div class="fill"></div></div></div>
       </div>
       <div id="radio-display" class="hidden"><span class="radio-icon">◉</span> <span id="radio-name"></span><div id="radio-song"></div></div>
     </div>
@@ -76,27 +76,27 @@
 
   <div id="title-screen" class="screen">
     <div class="title-block">
-      <div class="title-kicker">SEBUAH KISAH DARI KOTA PELABUHAN</div>
+      <div class="title-kicker">A STORY FROM THE HARBOUR CITY</div>
       <h1>PELABUHAN<br><span>SANGGARA</span></h1>
-      <div class="title-tagline">Senja tidak pernah setenang kelihatannya.</div>
+      <div class="title-tagline">Dusk is never as calm as it looks.</div>
     </div>
     <div id="title-menu" class="menu"></div>
     <div id="title-briefing" class="briefing"></div>
-    <div class="title-footer">WASD jalan · Mouse lihat/bidik · F masuk/curi mobil · Shift lari · Spasi lompat/rem tangan · 1-4/Tab senjata · R radio · M peta · Esc jeda</div>
+    <div class="title-footer">WASD move · Mouse look/aim · F enter/steal car · Shift sprint · Space jump/handbrake · 1-4/Tab weapons · R radio · M map · Esc pause</div>
   </div>
 
   <div id="pause-screen" class="screen hidden">
-    <h2>JEDA</h2>
+    <h2>PAUSED</h2>
     <div id="pause-menu" class="menu"></div>
     <div id="pause-stats" class="stats"></div>
   </div>
 
   <div id="settings-screen" class="screen hidden">
-    <h2>PENGATURAN</h2>
+    <h2>SETTINGS</h2>
     <div id="settings-form" class="settings"></div>
   </div>
 
-  <div id="loading-screen" class="screen"><div class="loading-text">Memuat Pelabuhan Sanggara…</div><div class="loading-bar"><div id="loading-fill"></div></div></div>
+  <div id="loading-screen" class="screen"><div class="loading-text">Loading Pelabuhan Sanggara…</div><div class="loading-bar"><div id="loading-fill"></div></div></div>
 
   <script type="module" src="src/main.js"></script>
 </body>

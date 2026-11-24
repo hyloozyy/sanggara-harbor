@@ -108,7 +108,7 @@ export class MissionRunner {
           loan.ai = { kind: 'activity' }; loan.ownedByPlayer = true; loan.controls.handbrake = true;
           st.loan = g.markers.addArrow(loan, MARKER_COLORS.vehicle);
           st.loanVehicle = loan;
-          g.dialogue.say('harun', 'Pakai motorku, Raka! Cepat!');
+          g.dialogue.say('harun', 'Take my scooter, Raka! Hurry!');
         }
         break;
       }
@@ -206,10 +206,10 @@ export class MissionRunner {
       if (m && this.armed && this.cooldown <= 0 && p.alive && Math.hypot(p.pos.x - m.start.x, p.pos.z - m.start.z) < 3.2 && (!p.vehicle || Math.abs(p.vehicle.speed) < 4)) this.start(m);
       return;
     }
-    if (!p.alive) { this.fail('Raka tumbang'); return; }
+    if (!p.alive) { this.fail('Raka went down'); return; }
     const a = this.active, st = a.stage, def = st.def;
     st.timer += dt;
-    if (a.vehicle && a.vehicle.wrecked && (def.type === 'enter-vehicle' || def.requireMissionVehicle)) { this.fail('Kendaraan misi hancur'); return; }
+    if (a.vehicle && a.vehicle.wrecked && (def.type === 'enter-vehicle' || def.requireMissionVehicle)) { this.fail('Mission vehicle destroyed'); return; }
     let done = false;
     switch (def.type) {
       case 'goto':
@@ -219,7 +219,7 @@ export class MissionRunner {
         const inside = Math.hypot(p.pos.x - def.target.x, p.pos.z - def.target.z) < (def.radius || 5);
         const okVehicle = !def.requireMissionVehicle || p.vehicle === a.vehicle;
         done = inside && okVehicle && (!p.vehicle || Math.abs(p.vehicle.speed) < 7);
-        st.hint = def.requireMissionVehicle && p.vehicle !== a.vehicle ? 'Kembali ke kendaraan misi' : null;
+        st.hint = def.requireMissionVehicle && p.vehicle !== a.vehicle ? 'Get back in the mission vehicle' : null;
         break;
       }
       case 'enter-vehicle':
@@ -256,11 +256,11 @@ export class MissionRunner {
     const g = this.game, v = st.target, p = g.player;
     const rider = v.driverCharacter;
     // A hard knock throws Bayu off his scooter.
-    if (v.health < v.spec.health * 0.6 && !st.thrown) { st.thrown = true; g.dialogue.say('bayu', 'Aduh! Ampun, ampun! Aku cuma disuruh!'); }
+    if (v.health < v.spec.health * 0.6 && !st.thrown) { st.thrown = true; g.dialogue.say('bayu', 'Ow! Mercy, mercy! I was only following orders!'); }
     if (v.wrecked || st.thrown || (rider && !rider.alive)) { if (v.driverModel) g.vehicles.removeDriverModel(v); v.controls.throttle = 0; return true; }
     const d = Math.hypot(v.pos.x - p.pos.x, v.pos.z - p.pos.z);
     if (st.loan && p.vehicle) { g.markers.remove(st.loan); st.loan = null; }
-    if (d > 340) { this.fail('Bayu lolos'); return false; }
+    if (d > 340) { this.fail('Bayu got away'); return false; }
     if (d < 5 && Math.abs(v.speed) < 3 && st.timer > 3) {
       g.vehicles.removeDriverModel(v);
       return true;
@@ -292,8 +292,8 @@ export class MissionRunner {
     const a = this.active, m = a.mission;
     const st = a.stage;
     let objective = st?.def.text || '';
-    if (st?.def.type === 'eliminate' && st.count !== undefined) objective += ` (${st.count} tersisa)`;
-    if (st?.def.type === 'survive') objective += ` — ${Math.ceil(Math.max(0, st.left))} dtk`;
+    if (st?.def.type === 'eliminate' && st.count !== undefined) objective += ` (${st.count} left)`;
+    if (st?.def.type === 'survive') objective += ` — ${Math.ceil(Math.max(0, st.left))} s`;
     if (st?.hint) objective = st.hint;
     return {
       chapter: `${m.chapter} · ${CAST[m.giver]?.full || ''}`, title: m.title,

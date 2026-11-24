@@ -231,11 +231,11 @@ function buildBillboardsAndNeon(collision) {
   });
   const neon = [
     { text: 'HOTEL OMBAK', color: '#ff4fa0', x: -268, z: 296, rot: 0, y: 14 },
-    { text: 'SEAFOOD 24 JAM', color: '#4ff0ff', x: 205, z: 262, rot: Math.PI, y: 6 },
+    { text: 'SEAFOOD 24 HOURS', color: '#4ff0ff', x: 205, z: 262, rot: Math.PI, y: 6 },
     { text: 'KARAOKE SENJA', color: '#c86bff', x: -110, z: 245, rot: Math.PI, y: 7 },
     { text: 'KOPI KAPAL', color: '#ffb347', x: 30, z: 166.5, rot: Math.PI, y: 5.6 },
-    { text: 'DISKOTIK LAUT', color: '#4f8bff', x: -58, z: 296, rot: 0, y: 12 },
-    { text: 'BAR DERMAGA', color: '#ff6a3a', x: 270, z: 128, rot: Math.PI / 2, y: 6 },
+    { text: 'LAUT DISCO', color: '#4f8bff', x: -58, z: 296, rot: 0, y: 12 },
+    { text: 'DERMAGA BAR', color: '#ff6a3a', x: 270, z: 128, rot: Math.PI / 2, y: 6 },
   ];
   for (const n of neon) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.75), assets.neonMaterial(n.text, n.color));

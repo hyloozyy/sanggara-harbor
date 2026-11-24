@@ -56,7 +56,7 @@ const SCENES = {
     s.player.body.pos.set(v.pos.x + 2, 0, v.pos.z);
     s.player.tryEnterExit(s);
     s.missions.update(DT);
-    s.wanted.setLevel(3, 'Pencurian di pelabuhan');
+    s.wanted.setLevel(3, 'Theft at the harbour');
     const offsets = [[3.2, 7], [-0.6, 17], [3.4, 28]];
     for (const [dx, dz] of offsets) {
       const u = s.police.spawnCar('car', v.pos.x, v.pos.z, null);
@@ -92,7 +92,7 @@ const SCENES = {
     h.aim.set(v.pos.x, 0, v.pos.z);
     h.update(0.001, { x: v.pos.x, z: v.pos.z }, s.wanted.lastKnown, true);
     h.pos.set(v.pos.x + fx * 44 + 4, 15, v.pos.z + fz * 44); h.root.position.copy(h.pos);
-    s.dialogue.say('dimas', 'Polisi di mana-mana! Lewat pantai, Rak!');
+    s.dialogue.say('dimas', 'Cops everywhere! Take the beach road, Rak!');
     s.dialogue.update(0.01);
     s.cameraRig.update(DT, s.player, s.input);
     await finish(s, gfx);
@@ -142,7 +142,7 @@ const SCENES = {
     // Keep the camera clear: drop blood puffs from hits on Raka himself.
     s.particles.soft.items = s.particles.soft.items.filter((p) => !(p.color0[0] === 0.45 && Math.hypot(p.x - b.pos.x, p.z - b.pos.z) < 2.5));
     s.particles.soft.update(0);
-    s.dialogue.say('lastri', 'Jangan sampai kaca warungku pecah, Raka!');
+    s.dialogue.say('lastri', 'Do not let them break my windows, Raka!');
     s.dialogue.update(0.01);
     void fireT;
     await finish(s, gfx);
@@ -177,7 +177,7 @@ const SCENES = {
     s.input.simulateHold('KeyW', false);
     for (let k = 0; k < 300 && s.peds.list.length < 50; k++) s.peds.spawn(v.pos.x - 25, v.pos.z, 6, 45);
     for (let i = 0; i < 10; i++) s.peds.update(DT, s.player, s.vehicles);
-    s.dialogue.say('dimas', 'Senja di Pantai Senja. Gas sampai gerbang pertama, Rak!');
+    s.dialogue.say('dimas', 'Sunset on Pantai Senja. Floor it to the first gate, Rak!');
     s.dialogue.update(0.01);
     await finish(s, gfx);
   },
@@ -207,7 +207,7 @@ const SCENES = {
       s.cameraRig.idleMouse = 0; s.cameraRig.yaw = yaw; s.cameraRig.pitch = pitch;
     });
     s.input.simulateHold('KeyW', false);
-    s.dialogue.say('dimas', 'Lewat bawah derek! Polisi pelabuhan tidak akan sempat!');
+    s.dialogue.say('dimas', 'Under the cranes! The harbour cops will never make it!');
     s.dialogue.update(0.01);
     await finish(s, gfx);
   },
@@ -235,7 +235,7 @@ const SCENES = {
       s.cameraRig.idleMouse = 0; s.cameraRig.yaw = yaw; s.cameraRig.pitch = pitch;
     });
     s.input.simulateHold('KeyW', false); s.input.simulateHold('KeyA', false);
-    s.dialogue.say('dimas', 'Gerbang berikutnya di ujung dermaga. Gas terus, Rak!');
+    s.dialogue.say('dimas', 'Next gate is at the end of the wharf. Keep going, Rak!');
     s.dialogue.update(0.01);
     await finish(s, gfx);
   },
@@ -250,7 +250,7 @@ const SCENES = {
     s.cameraRig.update(DT, s.player, s.input);
     s.hud.show(false);
     document.getElementById('title-screen').classList.remove('hidden');
-    ctx.menus.showTitle({ canContinue: true, saveLabel: 'Bab 4 · Serangan di Kota Lama · Rp 6.230.000', completed: MISSIONS.slice(0, 3).map((m) => m.id) });
+    ctx.menus.showTitle({ canContinue: true, saveLabel: 'Chapter 4 · Raid on Kota Lama · Rp 6,230,000', completed: MISSIONS.slice(0, 3).map((m) => m.id) });
     await finish(s, gfx);
   },
 
@@ -410,7 +410,7 @@ const SCENES = {
     s.player.body.pos.set(v.pos.x, 0, v.pos.z - 2);
     s.player.tryEnterExit(s);
     s.missions.update(DT);
-    s.wanted.setLevel(3, 'Pencurian di pelabuhan');
+    s.wanted.setLevel(3, 'Theft at the harbour');
     for (let i = 0; i < 3; i++) {
       const u = s.police.spawnCar('car', v.pos.x, v.pos.z, null);
       if (u) { u.vehicle.pos.set(X0 + 12 + i * 10, 0, Z0 - 2 + (i % 2) * 3); u.vehicle.heading = -Math.PI / 2; u.vehicle.vel.set(-25, 0, 0); u.vehicle.ai.from = [5, 8]; u.vehicle.ai.to = [4, 8]; }
@@ -436,7 +436,7 @@ const SCENES = {
     h.aim.set(v.pos.x, 0, v.pos.z);
     h.update(0.001, { x: v.pos.x, z: v.pos.z }, s.wanted.lastKnown, true);
     h.pos.set(v.pos.x - 40, 16, v.pos.z - 10); h.root.position.copy(h.pos);
-    s.dialogue.say('dimas', 'Polisi di mana-mana! Lewat pantai, Rak!');
+    s.dialogue.say('dimas', 'Cops everywhere! Take the beach road, Rak!');
     s.dialogue.update(0.01);
     s.cameraRig.update(DT, s.player, s.input);
     await finish(s, gfx);

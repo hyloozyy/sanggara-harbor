@@ -16,7 +16,7 @@ const params = new URLSearchParams(location.search);
 const shot = params.get('shot');
 const settings = loadSettings();
 const canvas = document.getElementById('game-canvas');
-const gfx = new GameRenderer(canvas, shot ? (params.get('quality') || 'tinggi') : settings.quality, { keepFrames: !!shot });
+const gfx = new GameRenderer(canvas, shot ? (params.get('quality') || 'high') : settings.quality, { keepFrames: !!shot });
 const input = new Input(canvas);
 const audio = new AudioEngine();
 const radio = new Radio(audio);
@@ -45,8 +45,8 @@ const menus = new MenuScreens({
     session.start({ freeRoam: mode === 'free' });
     if (mode === 'new') session.missions.start(session.missions.nextMission);
     state = 'playing';
-    session.hud.notify('WASD jalan · Mouse lihat · F masuk/curi mobil · Klik kiri tembak, kanan bidik');
-    setTimeout(() => session.hud.notify('Lingkaran kuning = misi · M peta · Esc jeda & simpan'), 4500);
+    session.hud.notify('WASD move · Mouse look · F enter/steal car · Left click shoot, right click aim');
+    setTimeout(() => session.hud.notify('Yellow circle = mission · M map · Esc pause & save'), 4500);
     session.cameraRig.override = null;
     input.enabled = true;
     lockPointer(canvas);
@@ -66,7 +66,7 @@ function openMap() {
   state = 'map';
   document.getElementById('big-map').classList.remove('hidden');
   session.minimap.drawBig(session.minimapState());
-  document.getElementById('big-map-legend').innerHTML = '<b>PETA SANGGARA</b><br>■ Balap · Antar · Bengkel Cat · Toko Besi · Simpan · RS<br>● Tujuan misi<br>[M] tutup';
+  document.getElementById('big-map-legend').innerHTML = '<b>MAP OF SANGGARA</b><br>■ Race · Delivery · Paint Shop · Gun Shop · Safehouse · Hospital<br>● Mission objective<br>[M] close';
 }
 
 function closeMap() { document.getElementById('big-map').classList.add('hidden'); state = 'playing'; }
@@ -102,7 +102,7 @@ function autoQuality(rawDt) {
   perf.frames++; perf.time += rawDt;
   if (perf.time < 4) return;
   const fps = perf.frames / perf.time;
-  const order = ['tinggi', 'sedang', 'rendah'];
+  const order = ['high', 'medium', 'low'];
   const i = order.indexOf(gfx.quality);
   if (fps < 34 && i < order.length - 1) {
     gfx.setQuality(order[i + 1]);
@@ -151,7 +151,7 @@ async function boot() {
   }
   state = 'title';
   const save = readSave();
-  menus.showTitle({ canContinue: !!save, saveLabel: save ? `${save.label || 'Simpanan'} · ${new Date(save.savedAt).toLocaleString('id-ID')}` : '', completed: save?.missions?.completed || [] });
+  menus.showTitle({ canContinue: !!save, saveLabel: save ? `${save.label || 'Save'} · ${new Date(save.savedAt).toLocaleString('en-GB')}` : '', completed: save?.missions?.completed || [] });
   session.traffic.populate(-40, 160, 18);
   input.enabled = false;
   requestAnimationFrame(frame);

@@ -28,7 +28,7 @@ export function drawSpeedometer(canvas, kmh, maxKmh, gear, drifting) {
   ctx.font = 'bold 34px "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillText(String(Math.round(kmh)), cx, cy - 18);
   ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('KM/J', cx, cy - 4);
+  ctx.fillText('KM/H', cx, cy - 4);
   ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#ffc35a';
   ctx.fillText(gear, cx + r - 6, cy - 2);
   if (drifting) { ctx.fillStyle = '#3fd6c6'; ctx.fillText('DRIFT!', cx - r + 14, cy - 2); }

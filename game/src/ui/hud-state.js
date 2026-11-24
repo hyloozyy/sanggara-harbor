@@ -9,11 +9,11 @@ const self = game;
   let hint = null;
   if (!v && b.alive) {
     const near = self.vehicles.nearest(b.pos.x, b.pos.z, 4.2, (c) => !c.wrecked);
-    if (near) hint = `<kbd>F</kbd>${near.driverModel ? 'Bajak' : 'Masuk'} ${near.spec.name}`;
+    if (near) hint = `<kbd>F</kbd>${near.driverModel ? 'Carjack' : 'Enter'} ${near.spec.name}`;
   } else if (v) hint = null;
   const next = self.missions.nextMission;
   if (!self.missions.active && next && Math.hypot(b.pos.x - next.start.x, b.pos.z - next.start.z) < 10) {
-    hint = `<kbd>${next.chapter}</kbd>${next.title} — masuk ke lingkaran kuning`;
+    hint = `<kbd>${next.chapter}</kbd>${next.title} — step into the yellow circle`;
   }
   let aimTarget = false;
   if (b.aiming && !v) {
@@ -22,8 +22,8 @@ const self = game;
     aimTarget = !!(hit.character && hit.character.faction !== 'civilian');
   }
   let activity = null;
-  if (self.side.mode === 'race') activity = `<b>BALAP LIAR SENJA</b><br>Gerbang ${self.side.cp + 1}/${self.side.routeLength} · rekor ${self.side.record} dtk · ${self.side.time.toFixed(1)} dtk`;
-  if (self.side.mode === 'delivery') activity = `<b>ANTAR MARTABAK</b><br>Antaran ${self.side.delivered + 1}/3 · sisa ${Math.ceil(self.side.time)} dtk`;
+  if (self.side.mode === 'race') activity = `<b>SUNSET STREET RACE</b><br>Gate ${self.side.cp + 1}/${self.side.routeLength} · record ${self.side.record} s · ${self.side.time.toFixed(1)} s`;
+  if (self.side.mode === 'delivery') activity = `<b>MARTABAK DELIVERY</b><br>Drop ${self.side.delivered + 1}/3 · ${Math.ceil(self.side.time)} s left`;
   if (!activity) activity = self.angkotJob.hudLine();
   const sp = v ? Math.abs(v.speed) * 3.6 : 0;
   return {
@@ -43,7 +43,7 @@ const self = game;
     health: b.health / b.maxHealth, armour: b.armour / 100,
     aiming: b.aiming && !v, aimTarget,
     hint, activity,
-    wasted: self.wastedTimer > 0 ? (self.busted ? 'TERTANGKAP' : 'TUMBANG') : null,
+    wasted: self.wastedTimer > 0 ? (self.busted ? 'BUSTED' : 'WASTED') : null,
   };
 }
 
@@ -51,9 +51,9 @@ export function buildMinimapState(game, HOSPITAL) {
 const self = game;
   const p = self.player;
   const acts = [
-    { ...PLACES.raceStart, color: '#40ffc0', name: 'Balap', icon: 'B' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Antar', icon: 'A' },
-    { ...PLACES.paintShop, color: '#8080ff', name: 'Bengkel Cat', icon: 'C' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Toko Besi', icon: 'T' },
-    { ...PLACES.safehouse, color: '#60ff80', name: 'Simpan', icon: 'S' }, { ...HOSPITAL, color: '#ffffff', name: 'RS', icon: '+' },
+    { ...PLACES.raceStart, color: '#40ffc0', name: 'Race', icon: 'R' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Delivery', icon: 'D' },
+    { ...PLACES.paintShop, color: '#8080ff', name: 'Paint Shop', icon: 'P' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Gun Shop', icon: 'G' },
+    { ...PLACES.safehouse, color: '#60ff80', name: 'Safehouse', icon: 'S' }, { ...HOSPITAL, color: '#ffffff', name: 'Hospital', icon: '+' },
   ];
   const enemies = [...self.missions.enemies, ...self.worldEvents.gang].filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
   return {

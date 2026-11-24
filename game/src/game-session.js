@@ -31,8 +31,8 @@ import { rng } from './core/rng.js';
 import { wireGameEvents } from './game-event-wiring.js';
 import { buildHudState, buildMinimapState } from './ui/hud-state.js';
 
-const HOSPITAL = { x: -86.5, z: 40, name: 'RS Sanggara Sehat' };
-const POLICE_STATION = { x: 86.5, z: 120, name: 'Polsek Kota Lama' };
+const HOSPITAL = { x: -86.5, z: 40, name: 'Sanggara Sehat Hospital' };
+const POLICE_STATION = { x: 86.5, z: 120, name: 'Kota Lama Police Station' };
 
 export class GameSession {
   constructor(gfx, input, audio, radio, onProgress = () => {}) {
@@ -159,7 +159,7 @@ export class GameSession {
       this.wastedTimer = 4;
       this.wanted.clear('busted'); // officers lower their weapons
       this.audio.missionJingle(false);
-      if (this.missions.active) this.missions.fail('Raka ditangkap polisi');
+      if (this.missions.active) this.missions.fail('Raka was arrested');
       for (const id of ['pistol', 'smg', 'shotgun']) this.player.arsenal.ammo[id] = Math.floor((this.player.arsenal.ammo[id] || 0) / 2);
     }
   }
@@ -170,7 +170,7 @@ export class GameSession {
     b.pos.set(place.x, 0.16, place.z);
     b.mesh.rotation.set(0, 0, 0);
     const fee = Math.min(this.progression.money, Math.max(100000, Math.round(this.progression.money * 0.08 / 1000) * 1000));
-    this.progression.addMoney(-fee, this.busted ? `Denda ${place.name}` : place.name);
+    this.progression.addMoney(-fee, this.busted ? `Fine · ${place.name}` : place.name);
     this.busted = false;
     this.wanted.minLevel = 0;
     this.wanted.clear('hospital');
@@ -179,7 +179,7 @@ export class GameSession {
   }
 
   saveGame(label) {
-    if (writeSave(this, label)) this.hud.notify(`Permainan tersimpan · ${label}`, 'xp');
+    if (writeSave(this, label)) this.hud.notify(`Game saved · ${label}`, 'xp');
   }
 
   // ---------------------------------------------------------------- update
@@ -190,7 +190,7 @@ export class GameSession {
 
     if (input.hit('KeyR') && player.vehicle) {
       const st = this.radio.next();
-      this.hud.notify(st ? `📻 ${st.name}` : 'Radio dimatikan');
+      this.hud.notify(st ? `📻 ${st.name}` : 'Radio off');
     }
     // Weapon wheel on Tab.
     const tab = input.down('Tab') && !player.vehicle;

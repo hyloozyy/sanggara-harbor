@@ -30,11 +30,11 @@ export class WorldEvents {
       if (p.type !== 'shell') return;
       this.shellsFound.add(p.shellId);
       const n = this.shellsFound.size;
-      game.progression.addMoney(250000, `Kerang Emas ${n}/${SHELL_SPOTS.length}`);
-      game.progression.addXp(30, 'Kerang Emas');
+      game.progression.addMoney(250000, `Golden Shell ${n}/${SHELL_SPOTS.length}`);
+      game.progression.addXp(30, 'Golden Shell');
       if (n === SHELL_SPOTS.length) {
-        game.progression.addMoney(10000000, 'Semua Kerang Emas!');
-        game.hud.activityResult(true, 'KOLEKTOR KERANG', 'Semua 12 Kerang Emas ditemukan');
+        game.progression.addMoney(10000000, 'All Golden Shells!');
+        game.hud.activityResult(true, 'SHELL COLLECTOR', 'All 12 Golden Shells found');
       }
     });
   }
@@ -67,7 +67,7 @@ export class WorldEvents {
     const g = this.game, p = g.player;
     for (const r of [...this.respawns]) { r.t -= dt; if (r.t <= 0) { this.placeSupply(r.supply); this.respawns.splice(this.respawns.indexOf(r), 1); } }
     const inTurf = districtAt(p.pos.x, p.pos.z) === 'kawasan-industri' && g.missions.completed.has('ikan-busuk');
-    if (inTurf && !this.wasInTurf) g.hud.notify('Wilayah Hiu Merah — hati-hati!', 'bad');
+    if (inTurf && !this.wasInTurf) g.hud.notify('Hiu Merah turf — watch out!', 'bad');
     this.wasInTurf = inTurf;
     for (const c of this.gang) c.update(dt, g, p.alive ? { pos: p.pos, chestY: p.body.chestY, vehicle: p.vehicle, body: p.body } : null);
     for (const c of [...this.gang]) {
@@ -91,7 +91,7 @@ export class WorldEvents {
       c.arrow = g.markers.addArrow(c.body, MARKER_COLORS.enemy);
       this.gang.push(c);
     }
-    g.dialogue.say('bayu', rng.pick(['Itu dia orangnya Pak Harun! Tembak!', 'Kau salah masuk wilayah, Raka!', 'Juragan bayar mahal untuk kepalamu!']));
+    g.dialogue.say('bayu', rng.pick(["That is Pak Harun's boy! Shoot him!", 'Wrong neighbourhood, Raka!', 'The boss pays good money for your head!']));
   }
 
   serialize() { return { shells: [...this.shellsFound] }; }

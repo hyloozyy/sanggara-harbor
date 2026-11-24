@@ -4,7 +4,7 @@
 const KEY = 'pelabuhan-sanggara-save-v1';
 const SETTINGS_KEY = 'pelabuhan-sanggara-settings-v1';
 
-export const DEFAULT_SETTINGS = { quality: 'tinggi', master: 0.8, music: 0.6, sfx: 0.9, sensitivity: 1, invertY: false };
+export const DEFAULT_SETTINGS = { quality: 'high', master: 0.8, music: 0.6, sfx: 0.9, sensitivity: 1, invertY: false };
 
 export function hasSave() {
   try { return !!localStorage.getItem(KEY); } catch { return false; }
@@ -51,7 +51,12 @@ export function applySave(game, data) {
 }
 
 export function loadSettings() {
-  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; } catch { return { ...DEFAULT_SETTINGS }; }
+  const legacy = { tinggi: 'high', sedang: 'medium', rendah: 'low' };
+  try {
+    const s = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
+    s.quality = legacy[s.quality] || s.quality;
+    return s;
+  } catch { return { ...DEFAULT_SETTINGS }; }
 }
 
 export function saveSettings(s) {

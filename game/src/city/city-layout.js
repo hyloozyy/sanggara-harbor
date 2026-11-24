@@ -17,11 +17,11 @@ export const EW_STREETS = ['Jl. Bukit Raya', 'Jl. Cendana', 'Jl. Merdeka Lama', 
 export const NS_STREETS = ['Jl. Pabrik', 'Jl. Gudang Tua', 'Jl. Rel Kereta', 'Jl. Benteng', 'Jl. Raya Sanggara', 'Jl. Kenari', 'Jl. Teluk', 'Jl. Nelayan', 'Jl. Dermaga'];
 
 export const DISTRICTS = {
-  'bukit-hijau': { name: 'Bukit Hijau', tagline: 'Vila di lereng hijau', color: '#7fc77a' },
-  'pusat-niaga': { name: 'Pusat Niaga', tagline: 'Menara kaca dan lampu kota', color: '#7fb2ff' },
-  'kota-lama': { name: 'Kota Lama', tagline: 'Gedung tua zaman kolonial', color: '#ffd27a' },
-  'pasar-ikan': { name: 'Pasar Ikan', tagline: 'Bau garam, derek dan kontainer', color: '#5fe0d0' },
-  'pantai-senja': { name: 'Pantai Senja', tagline: 'Boulevard pohon kelapa', color: '#ff9a6a' },
+  'bukit-hijau': { name: 'Bukit Hijau', tagline: 'Hillside villas', color: '#7fc77a' },
+  'pusat-niaga': { name: 'Pusat Niaga', tagline: 'Glass towers and city lights', color: '#7fb2ff' },
+  'kota-lama': { name: 'Kota Lama', tagline: 'Colonial old town', color: '#ffd27a' },
+  'pasar-ikan': { name: 'Pasar Ikan', tagline: 'Salt air, cranes and containers', color: '#5fe0d0' },
+  'pantai-senja': { name: 'Pantai Senja', tagline: 'Palm-lined beach boulevard', color: '#ff9a6a' },
   'kawasan-industri': { name: 'Kawasan Industri', tagline: 'Gudang, cerobong, rahasia', color: '#c0a0a0' },
 };
 
@@ -44,7 +44,7 @@ export function streetAt(x, z) {
     if (dx < bestD && z > GRID[0] - 10 && z < GRID[8] + 10) { bestD = dx; best = NS_STREETS[i]; }
   });
   if (z > BEACH_START_Z) return 'Pantai Senja';
-  if (x > 330) return 'Dermaga Peti Kemas';
+  if (x > 330) return 'Container Wharf';
   return best;
 }
 
@@ -85,17 +85,17 @@ export function isWater(x, z) {
 
 // Points of interest used by missions, the map legend and the safehouse.
 export const PLACES = {
-  safehouse: { x: -40, z: 87.5, name: 'Kos Raka (Simpan)' },
-  lastriWarung: { x: 34, z: 166.8, name: 'Warung Bu Lastri' },
-  fishMarket: { x: 233, z: 196, name: 'Pasar Ikan Pak Harun' },
-  hiuGarage: { x: -233, z: -40, name: 'Garasi Hiu Merah' },
-  hillVilla: { x: 40, z: -313, name: 'Vila Juragan Rusdi' },
-  containerYard: { x: 352, z: -120, name: 'Lapangan Peti Kemas' },
-  finalPier: { x: 352, z: 300, name: 'Dermaga Kapal Pesiar' },
-  beachHouse: { x: -205, z: 345, name: 'Rumah Pantai' },
-  paintShop: { x: -152.5, z: -40, name: 'Bengkel Cat Pak Darto' },
-  gunShop: { x: 120, z: -7.2, name: 'Toko Besi Om Beni' },
-  raceStart: { x: -120, z: 317.4, name: 'Balap Liar Senja' },
-  deliveryDepot: { x: 200, z: 87.2, name: 'Martabak Bulan (Antar)' },
-  station: { x: 7.5, z: -7.5, name: 'Stasiun Sanggara' },
+  safehouse: { x: -40, z: 87.5, name: "Raka's Room (Safehouse)" },
+  lastriWarung: { x: 34, z: 166.8, name: "Bu Lastri's Warung" },
+  fishMarket: { x: 233, z: 196, name: "Pak Harun's Fish Market" },
+  hiuGarage: { x: -233, z: -40, name: 'Hiu Merah Garage' },
+  hillVilla: { x: 40, z: -313, name: "Juragan Rusdi's Villa" },
+  containerYard: { x: 352, z: -120, name: 'Container Yard' },
+  finalPier: { x: 352, z: 300, name: 'Yacht Pier' },
+  beachHouse: { x: -205, z: 345, name: 'Beach House' },
+  paintShop: { x: -152.5, z: -40, name: "Pak Darto's Paint Shop" },
+  gunShop: { x: 120, z: -7.2, name: "Om Beni's Gun Shop" },
+  raceStart: { x: -120, z: 317.4, name: 'Sunset Street Race' },
+  deliveryDepot: { x: 200, z: 87.2, name: 'Martabak Bulan (Delivery)' },
+  station: { x: 7.5, z: -7.5, name: 'Sanggara Station' },
 };

@@ -23,7 +23,7 @@ export function wireGameEvents(game) {
     if (character === P()) { self.hud.damageFlash(amount); self.cameraRig.addShake(0.25); }
     if (attacker === P() && character !== P()) {
       self.hud.hitMarker();
-      if (character.faction === 'civilian' && character.alive && rng.chance(0.3)) self.dialogue.say('warga', rng.pick(['Aduh! Kenapa saya?!', 'Ampun, Bang!', 'Tolong! Ada orang gila!']));
+      if (character.faction === 'civilian' && character.alive && rng.chance(0.3)) self.dialogue.say('warga', rng.pick(['Ow! Why me?!', 'Mercy, mister!', 'Help! There is a maniac!']));
       if (character.faction === 'police') self.crime('cop-assault', character.pos.x, character.pos.z);
       else if (character.faction === 'civilian') {
         self.peds.scare(character.pos.x, character.pos.z, 25, 1, true);
@@ -36,8 +36,8 @@ export function wireGameEvents(game) {
     const byPlayer = attacker === P() || (cause === 'vehicle' && attacker === self.player);
     if (byPlayer) {
       self.progression.stats.kills++;
-      if (character.faction === 'police') { self.crime('cop-killed', character.pos.x, character.pos.z); self.progression.addXp(15, 'Polisi'); }
-      else if (character.faction === 'gang') self.progression.addXp(25, 'Anggota Hiu Merah');
+      if (character.faction === 'police') { self.crime('cop-killed', character.pos.x, character.pos.z); self.progression.addXp(15, 'Police'); }
+      else if (character.faction === 'gang') self.progression.addXp(25, 'Hiu Merah member');
       else self.crime(cause === 'vehicle' ? 'hit-and-run' : 'murder', character.pos.x, character.pos.z, self.policeNear(character.pos.x, character.pos.z, 60) || rng.chance(0.5));
     }
     if (character.faction !== 'player') {
@@ -53,13 +53,13 @@ export function wireGameEvents(game) {
     if (vehicle.isPolice) self.crime('car-theft-seen', x, z);
     else if (carjack) {
       self.peds.scare(x, z, 20, 1, false);
-      self.dialogue.say('warga', rng.pick(['Tolong! Maling! Mobilku dibawa kabur!', 'Woi! Itu mobil saya!', 'Ada pembajakan! Panggil polisi!']));
+      self.dialogue.say('warga', rng.pick(['Help! Thief! He took my car!', 'Hey! That is my car!', 'Carjacking! Call the police!']));
       if (self.policeNear(x, z, 70)) self.crime('carjack', x, z);
       // Someone on the pavement phones it in a moment later.
       else if (rng.chance(0.45)) setTimeout(() => { if (self.wanted.level === 0) self.crime('carjack', x, z, false); }, 3000);
     }
     if (!self.radio.on && !self.radio.silent) self.radio.setOn(true);
-    self.hud.notify(`${vehicle.spec.name}${carjack ? ' — dibajak!' : ''}`);
+    self.hud.notify(`${vehicle.spec.name}${carjack ? ' — carjacked!' : ''}`);
   });
   events.on('vehicle-exited', () => self.radio.setOn(false));
   events.on('vehicle-collision', ({ a, b, impact, x, z }) => {
@@ -104,12 +104,12 @@ export function wireGameEvents(game) {
     self.audio.wantedSting(level > prev);
     self.progression.stats.maxWanted = Math.max(self.progression.stats.maxWanted, level);
     if (level > prev) {
-      self.hud.notify(`${'★'.repeat(level)}  ${reason || 'Polisi mencarimu'}`, 'police');
-      const chatter = ['Unit patroli, tersangka laki-laki, jaket merah marun.', 'Semua unit merapat, tersangka bersenjata!', 'Elang-1 mengudara, lampu sorot menyala.', 'Pasang penghadang di jalan utama!', 'Unit Taktis diberangkatkan. Ulangi, Unit Taktis!'];
+      self.hud.notify(`${'★'.repeat(level)}  ${reason || 'The police want you'}`, 'police');
+      const chatter = ['Patrol units, male suspect, maroon jacket.', 'All units close in, suspect is armed!', 'Elang-1 airborne, searchlight on.', 'Set up roadblocks on the main roads!', 'Tactical Unit dispatched. Repeat, Tactical Unit!'];
       if (level >= 1) self.dialogue.say('radio', chatter[level - 1]);
     } else if (level === 0 && reason !== 'busted' && reason !== 'hospital') {
-      self.hud.notify(reason === 'paint' ? 'Polisi kehilangan jejak (cat baru)' : 'Kamu lolos dari kejaran polisi', 'xp');
-      if (reason === 'escaped') self.progression.addXp(20 * prev, 'Lolos dari polisi');
+      self.hud.notify(reason === 'paint' ? 'Police lost your trail (fresh paint)' : 'You lost the police', 'xp');
+      if (reason === 'escaped') self.progression.addXp(20 * prev, 'Escaped the police');
     }
   });
   events.on('mission-complete', () => { self.audio.missionJingle(true); self.saveGame('Autosave'); });
@@ -117,15 +117,15 @@ export function wireGameEvents(game) {
   events.on('pickup', (p) => {
     self.audio.pickup();
     const b = self.player.body;
-    if (p.type === 'cash') self.progression.addMoney(p.amount || 50000, 'Uang tercecer');
+    if (p.type === 'cash') self.progression.addMoney(p.amount || 50000, 'Dropped cash');
     else if (p.type === 'health') b.health = Math.min(b.maxHealth, b.health + 60);
     else if (p.type === 'armour') b.armour = Math.min(100, b.armour + (p.amount || 50));
-    else if (WEAPONS[p.type]) { self.player.arsenal.give(p.type, p.amount || WEAPONS[p.type].mag * 2); self.hud.notify(`${WEAPONS[p.type].name} +${p.amount || WEAPONS[p.type].mag * 2} peluru`); }
-    else if (p.type === 'ledger') self.hud.notify('Buku besar Juragan Rusdi diambil');
+    else if (WEAPONS[p.type]) { self.player.arsenal.give(p.type, p.amount || WEAPONS[p.type].mag * 2); self.hud.notify(`${WEAPONS[p.type].name} +${p.amount || WEAPONS[p.type].mag * 2} ammo`); }
+    else if (p.type === 'ledger') self.hud.notify("Juragan Rusdi's ledger taken");
   });
   events.on('money-changed', ({ amount, reason }) => { if (Math.abs(amount) >= 50000) self.hud.notify(`${amount > 0 ? '+' : '−'}${formatRupiah(Math.abs(amount))}${reason ? ' · ' + reason : ''}`, amount > 0 ? 'xp' : 'bad'); });
-  events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) self.hud.notify(`+${amount} RESPEK · ${reason}`, 'xp'); });
-  events.on('rank-up', ({ rank }) => { self.hud.activityResult(true, 'NAIK PERINGKAT', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); self.audio.missionJingle(true); });
+  events.on('xp-gained', ({ amount, reason }) => { if (amount >= 40) self.hud.notify(`+${amount} RESPECT · ${reason}`, 'xp'); });
+  events.on('rank-up', ({ rank }) => { self.hud.activityResult(true, 'RANK UP', `${rank.name}${rank.perk ? ' — ' + rank.perk : ''}`); self.audio.missionJingle(true); });
   events.on('dialogue-line', (l) => self.audio.voiceBlip(l.speaker.length));
   events.on('punch', () => self.audio.whoosh());
   events.on('punch-hit', () => { self.audio.punch(); self.cameraRig.addShake(0.15); });
@@ -133,7 +133,7 @@ export function wireGameEvents(game) {
   events.on('checkpoint', () => self.audio.checkpoint());
   events.on('horn', () => self.audio.horn());
   events.on('notify', ({ text, kind }) => self.hud.notify(text, kind));
-  events.on('crew-unlocked', ({ crew }) => self.hud.notify(`Kru baru: ${crew.name} — [${crew.label}] ${crew.ability}`, 'xp'));
-  events.on('weapon-unlocked', ({ id }) => self.hud.notify(`Senjata baru: ${WEAPONS[id].name} [${WEAPONS[id].slot}]`, 'xp'));
+  events.on('crew-unlocked', ({ crew }) => self.hud.notify(`New crew: ${crew.name} — [${crew.label}] ${crew.ability}`, 'xp'));
+  events.on('weapon-unlocked', ({ id }) => self.hud.notify(`New weapon: ${WEAPONS[id].name} [${WEAPONS[id].slot}]`, 'xp'));
   events.on('weapon-switch', () => self.audio.uiBlip());
   }

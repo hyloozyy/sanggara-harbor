@@ -3,13 +3,13 @@ import { makeCanvas, toTexture } from './canvas-tools.js';
 import { createRng } from '../core/rng.js';
 
 export const SHOP_NAMES = [
-  ['TOKO SINAR JAYA', '#c0392b', '#fff3c4'],
+  ['SINAR JAYA STORE', '#c0392b', '#fff3c4'],
   ['WARUNG BU LASTRI', '#1f6f5c', '#ffe08a'],
-  ['APOTEK SEHAT', '#2e7d32', '#ffffff'],
+  ['SEHAT PHARMACY', '#2e7d32', '#ffffff'],
   ['KOPI KAPAL', '#3b2a20', '#ffb35a'],
   ['MARTABAK BULAN', '#f2a516', '#3a1a08'],
   ['SANGGARA CELL', '#1d4fa3', '#9ff3ff'],
-  ['TOKO EMAS MULIA', '#7a1020', '#ffd76a'],
+  ['MULIA GOLD', '#7a1020', '#ffd76a'],
   ['BAKSO PAK GENDUT', '#d35400', '#fffbe8'],
 ];
 
@@ -64,10 +64,10 @@ export function shopfrontTextures() {
 }
 
 export const BILLBOARDS = [
-  { brand: 'KOPI KAPAL', line: 'Pahit di lidah, manis di pelabuhan', bg: ['#2b1a12', '#7a3a1a'], fg: '#ffcf7a' },
-  { brand: 'SANGGARA SELULER', line: 'Sinyal kencang sampai ke tengah laut', bg: ['#0a2a6a', '#1aa0d8'], fg: '#ffffff' },
-  { brand: 'SAMBAL NYALA', line: 'Pedasnya bikin melek', bg: ['#8a0a0a', '#ff5a1a'], fg: '#fff2a0' },
-  { brand: 'MOTOR KILAT 125', line: 'Irit, gesit, anti mogok', bg: ['#101010', '#3a3a3a'], fg: '#ffd400' },
+  { brand: 'KOPI KAPAL', line: 'Bitter on the tongue, sweet in the harbour', bg: ['#2b1a12', '#7a3a1a'], fg: '#ffcf7a' },
+  { brand: 'SANGGARA SELULER', line: 'Full signal all the way out to sea', bg: ['#0a2a6a', '#1aa0d8'], fg: '#ffffff' },
+  { brand: 'SAMBAL NYALA', line: 'Hot enough to wake you up', bg: ['#8a0a0a', '#ff5a1a'], fg: '#fff2a0' },
+  { brand: 'MOTOR KILAT 125', line: 'Thrifty, nimble, never stalls', bg: ['#101010', '#3a3a3a'], fg: '#ffd400' },
 ];
 
 export function billboardTextures() {

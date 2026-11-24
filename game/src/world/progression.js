@@ -2,12 +2,12 @@
 import { events } from '../core/event-bus.js';
 
 export const RANKS = [
-  { xp: 0, name: 'Anak Baru', perk: null },
-  { xp: 400, name: 'Preman Pasar', perk: 'Stamina lari +25%' },
-  { xp: 1100, name: 'Jagoan Kampung', perk: 'Armor maksimum 100' },
-  { xp: 2300, name: 'Tangan Kanan', perk: 'Diskon Toko Besi 20%' },
-  { xp: 4000, name: 'Tokoh Pelabuhan', perk: 'Polisi menyerah 25% lebih cepat' },
-  { xp: 6500, name: 'Raja Sanggara', perk: 'Semua senjata terbuka' },
+  { xp: 0, name: 'New Kid', perk: null },
+  { xp: 400, name: 'Market Tough', perk: 'Sprint stamina +25%' },
+  { xp: 1100, name: 'Neighbourhood Hero', perk: 'Max armour 100' },
+  { xp: 2300, name: 'Right Hand', perk: 'Gun Shop discount 20%' },
+  { xp: 4000, name: 'Harbour Figure', perk: 'Police give up 25% sooner' },
+  { xp: 6500, name: 'King of Sanggara', perk: 'All weapons unlocked' },
 ];
 
 export class Progression {

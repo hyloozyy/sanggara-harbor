@@ -49,26 +49,26 @@ export class MenuScreens {
     this.current = 'title';
     $('title-screen').classList.remove('hidden');
     buttons($('title-menu'), [
-      ...(canContinue ? [{ id: 'continue', label: 'LANJUTKAN', sub: saveLabel }] : []),
-      { id: 'new', label: 'CERITA BARU', sub: 'Bab 1 — Pulang Kampung' },
-      { id: 'free', label: 'JELAJAH BEBAS', sub: 'Kota terbuka, tanpa misi aktif' },
-      { id: 'settings', label: 'PENGATURAN' },
+      ...(canContinue ? [{ id: 'continue', label: 'CONTINUE', sub: saveLabel }] : []),
+      { id: 'new', label: 'NEW STORY', sub: 'Chapter 1 — Homecoming' },
+      { id: 'free', label: 'FREE ROAM', sub: 'Open city, no active mission' },
+      { id: 'settings', label: 'SETTINGS' },
     ], (id) => {
       if (id === 'settings') this.openSettings('title');
       else this.cb.onStart(id);
     });
     $('title-briefing').innerHTML = `
-      <h3>PELABUHAN SANGGARA · SENJA</h3>
-      <h2>Kota pelabuhan yang tidak pernah tidur</h2>
+      <h3>PELABUHAN SANGGARA · DUSK</h3>
+      <h2>The harbour city that never sleeps</h2>
       <div>${STORY_ARC}</div>
-      <div class="quote">"Terang lampunya, gelap urusannya." — Dimas</div>
+      <div class="quote">"Bright lights, dark business." — Dimas</div>
       <ul class="chapters">${MISSIONS.map((m) => {
         const done = completed.includes(m.id);
         const next = !done && MISSIONS.find((x) => !completed.includes(x.id)) === m;
         return `<li class="${done ? 'done' : next ? 'next' : ''}"><b>${m.chapter}</b>${m.title}${done ? ' ✔' : next ? ' ◄' : ''}</li>`;
       }).join('')}</ul>
       <div class="cast">${['dimas', 'lastri', 'harun', 'rusdi'].map((k) => `<div><b>${CAST[k].full}</b>${CAST[k].role}</div>`).join('')}</div>
-      <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} misi cerita · balap liar · antar martabak · narik angkot · 12 kerang emas · 9 kendaraan · 4 stasiun radio · 6 distrik</div>`;
+      <div style="margin-top:8px;font-size:12px;opacity:.75">${MISSIONS.length} story missions · street races · martabak deliveries · angkot fares · 12 golden shells · 9 vehicles · 4 radio stations · 6 districts</div>`;
   }
 
   hideTitle() { $('title-screen').classList.add('hidden'); this.current = null; }
@@ -77,26 +77,26 @@ export class MenuScreens {
     this.current = 'pause';
     $('pause-screen').classList.remove('hidden');
     buttons($('pause-menu'), [
-      { id: 'resume', label: 'LANJUTKAN' },
-      { id: 'save', label: 'SIMPAN PERMAINAN' },
-      { id: 'load', label: 'MUAT SIMPANAN', disabled: !stats.hasSave },
-      { id: 'map', label: 'PETA KOTA' },
-      { id: 'settings', label: 'PENGATURAN' },
-      { id: 'title', label: 'KEMBALI KE JUDUL' },
+      { id: 'resume', label: 'RESUME' },
+      { id: 'save', label: 'SAVE GAME' },
+      { id: 'load', label: 'LOAD GAME', disabled: !stats.hasSave },
+      { id: 'map', label: 'CITY MAP' },
+      { id: 'settings', label: 'SETTINGS' },
+      { id: 'title', label: 'BACK TO TITLE' },
     ], (id) => {
       if (id === 'resume') this.cb.onResume();
       else if (id === 'settings') this.openSettings('pause');
       else this.cb.onPauseAction(id);
     });
     $('pause-stats').innerHTML = `
-      <div>Peringkat <b>${stats.rank}</b></div>
-      <div>Uang <b>${formatRupiah(stats.money)}</b></div>
-      <div>Misi cerita <b>${stats.missions} / ${MISSIONS.length}</b></div>
-      <div>Mobil dicuri <b>${stats.carsStolen}</b></div>
-      <div>Lawan dilumpuhkan <b>${stats.kills}</b></div>
-      <div>Bintang tertinggi <b>${'★'.repeat(stats.maxWanted) || '—'}</b></div>
-      <div>Balap / Antaran <b>${stats.races} / ${stats.deliveries}</b></div>
-      <div>Jarak tempuh <b>${(stats.distance / 1000).toFixed(1)} km</b></div>`;
+      <div>Rank <b>${stats.rank}</b></div>
+      <div>Money <b>${formatRupiah(stats.money)}</b></div>
+      <div>Story missions <b>${stats.missions} / ${MISSIONS.length}</b></div>
+      <div>Cars stolen <b>${stats.carsStolen}</b></div>
+      <div>Enemies down <b>${stats.kills}</b></div>
+      <div>Highest wanted <b>${'★'.repeat(stats.maxWanted) || '—'}</b></div>
+      <div>Races / deliveries <b>${stats.races} / ${stats.deliveries}</b></div>
+      <div>Distance travelled <b>${(stats.distance / 1000).toFixed(1)} km</b></div>`;
   }
 
   hidePause() { $('pause-screen').classList.add('hidden'); if (this.current === 'pause') this.current = null; }
@@ -108,13 +108,13 @@ export class MenuScreens {
     $('settings-screen').classList.remove('hidden');
     const s = this.cb.getSettings();
     $('settings-form').innerHTML = `
-      <label>Kualitas grafis <select id="set-quality">${['rendah', 'sedang', 'tinggi'].map((q) => `<option ${q === s.quality ? 'selected' : ''}>${q}</option>`).join('')}</select></label>
-      <label>Volume utama <input id="set-master" type="range" min="0" max="1" step="0.05" value="${s.master}"></label>
-      <label>Volume radio <input id="set-music" type="range" min="0" max="1" step="0.05" value="${s.music}"></label>
-      <label>Volume efek <input id="set-sfx" type="range" min="0" max="1" step="0.05" value="${s.sfx}"></label>
-      <label>Sensitivitas mouse <input id="set-sens" type="range" min="0.3" max="2.5" step="0.1" value="${s.sensitivity}"></label>
-      <label>Balik sumbu Y <input id="set-invert" type="checkbox" ${s.invertY ? 'checked' : ''}></label>
-      <button id="set-back">KEMBALI</button>`;
+      <label>Graphics quality <select id="set-quality">${['low', 'medium', 'high'].map((q) => `<option ${q === s.quality ? 'selected' : ''}>${q}</option>`).join('')}</select></label>
+      <label>Master volume <input id="set-master" type="range" min="0" max="1" step="0.05" value="${s.master}"></label>
+      <label>Music / radio volume <input id="set-music" type="range" min="0" max="1" step="0.05" value="${s.music}"></label>
+      <label>Effects volume <input id="set-sfx" type="range" min="0" max="1" step="0.05" value="${s.sfx}"></label>
+      <label>Mouse sensitivity <input id="set-sens" type="range" min="0.3" max="2.5" step="0.1" value="${s.sensitivity}"></label>
+      <label>Invert Y axis <input id="set-invert" type="checkbox" ${s.invertY ? 'checked' : ''}></label>
+      <button id="set-back">BACK</button>`;
     const read = () => ({
       quality: $('set-quality').value, master: +$('set-master').value, music: +$('set-music').value, sfx: +$('set-sfx').value,
       sensitivity: +$('set-sens').value, invertY: $('set-invert').checked,

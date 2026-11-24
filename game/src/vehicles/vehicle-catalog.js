@@ -12,7 +12,7 @@ export const VEHICLE_MODELS = {
     colors: [0xe0b020, 0x3a9a5a, 0xe8e8e0, 0xc83a2a, 0x3a7ac8, 0xf08a3a],
   },
   banteng: {
-    name: 'Banteng Pikap', body: 'pickup', length: 4.9, width: 1.85, height: 1.75, wheelbase: 3.0, wheelRadius: 0.38,
+    name: 'Banteng Pickup', body: 'pickup', length: 4.9, width: 1.85, height: 1.75, wheelbase: 3.0, wheelRadius: 0.38,
     maxSpeed: 40, accel: 7.5, grip: 6.5, mass: 1700, health: 1300, value: 38000000,
     colors: [0xe8e8e0, 0x2a2a2e, 0x8a2a1a, 0x4a6a3a, 0x3a4a6a],
   },
@@ -27,17 +27,17 @@ export const VEHICLE_MODELS = {
     colors: [0xd02010, 0xf0c000, 0x101010, 0x1a60e0, 0xf0f0f0, 0x20a050],
   },
   taksi: {
-    name: 'Taksi Ombak', body: 'sedan', length: 4.6, width: 1.8, height: 1.45, wheelbase: 2.7, wheelRadius: 0.33,
+    name: 'Ombak Taxi', body: 'sedan', length: 4.6, width: 1.8, height: 1.45, wheelbase: 2.7, wheelRadius: 0.33,
     maxSpeed: 44, accel: 8.5, grip: 7.5, mass: 1300, health: 1000, value: 42000000,
     colors: [0x2a7ad8], roofSign: 'TAKSI',
   },
   patroli: {
-    name: 'Patroli Polisi Sanggara', body: 'sedan', length: 4.7, width: 1.85, height: 1.48, wheelbase: 2.75, wheelRadius: 0.34,
+    name: 'Sanggara Police Patrol', body: 'sedan', length: 4.7, width: 1.85, height: 1.48, wheelbase: 2.75, wheelRadius: 0.34,
     maxSpeed: 55, accel: 11.5, grip: 8.5, mass: 1450, health: 1300, value: 0, police: true,
     colors: [0xf2f2ee],
   },
   taktis: {
-    name: 'Unit Taktis', body: 'van', length: 5.2, width: 2.0, height: 2.2, wheelbase: 3.2, wheelRadius: 0.4,
+    name: 'Tactical Unit Van', body: 'van', length: 5.2, width: 2.0, height: 2.2, wheelbase: 3.2, wheelRadius: 0.4,
     maxSpeed: 46, accel: 9, grip: 7, mass: 2600, health: 2200, value: 0, police: true,
     colors: [0x1c2024],
   },

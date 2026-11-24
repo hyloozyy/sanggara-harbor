@@ -49,8 +49,8 @@ export class Hud {
 
   missionResult(success, m, reason = '') {
     this.resultHtml(success
-      ? `<div class="big">MISI SELESAI</div><div class="small">${m.title} · +${formatRupiah(m.reward.money)} · +${m.reward.xp} XP</div>`
-      : `<div class="big" style="color:#ff6a5a">MISI GAGAL</div><div class="small">${reason}</div>`, 4.5);
+      ? `<div class="big">MISSION COMPLETE</div><div class="small">${m.title} · +${formatRupiah(m.reward.money)} · +${m.reward.xp} XP</div>`
+      : `<div class="big" style="color:#ff6a5a">MISSION FAILED</div><div class="small">${reason}</div>`, 4.5);
   }
 
   activityResult(success, title, detail) {
@@ -96,7 +96,7 @@ export class Hud {
     this.setText('weapon-name', w.name);
     this.setText('weapon-ammo', w.melee ? '—' : s.reloading ? 'ISI…' : `${s.mag} / ${s.reserve}`);
     this.setHtml('weapon-slots', WEAPON_ORDER.map((id, i) => `<div class="${id === s.weapon ? 'active' : ''} ${s.owned.includes(id) ? '' : 'locked'}">${i + 1} ${WEAPONS[id].short}</div>`).join(''));
-    this.setHtml('crew-abilities', s.crew.map((c) => `<div class="crew ${c.cooldown > 0 ? 'cooldown' : ''}"><b>[${c.label}] ${c.name}</b>${c.cooldown > 0 ? Math.ceil(c.cooldown) + ' dtk' : c.ability}</div>`).join(''));
+    this.setHtml('crew-abilities', s.crew.map((c) => `<div class="crew ${c.cooldown > 0 ? 'cooldown' : ''}"><b>[${c.label}] ${c.name}</b>${c.cooldown > 0 ? Math.ceil(c.cooldown) + ' s' : c.ability}</div>`).join(''));
 
     // Mission panel.
     const mp = s.mission;

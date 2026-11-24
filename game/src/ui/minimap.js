@@ -120,7 +120,7 @@ export class Minimap {
     const n = this.project(0, -1000, yaw, 1);
     const nd = Math.hypot(n.x, n.y);
     ctx.fillStyle = '#ffc35a'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('U', R + n.x / nd * (R - 11), R + n.y / nd * (R - 11));
+    ctx.fillText('N', R + n.x / nd * (R - 11), R + n.y / nd * (R - 11));
   }
 
   // World offset -> minimap pixel offset.

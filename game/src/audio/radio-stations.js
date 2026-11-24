@@ -2,14 +2,14 @@
 // clock: dangdut with kendang and suling, lo-fi beats, keroncong plucks, and fast "funky kota".
 
 const STATIONS = [
-  { id: 'dangdut', name: 'Gelombang Dangdut 98.7', dj: 'DJ Mbak Yuyun', bpm: 128, scale: [0, 1, 4, 5, 7, 8, 10], root: 57,
-    songs: ['Goyang Dermaga', 'Cinta di Ujung Pelabuhan', 'Kapal Tak Kembali', 'Senja Berdua'] },
+  { id: 'dangdut', name: 'Gelombang Dangdut 98.7', dj: 'DJ Yuyun', bpm: 128, scale: [0, 1, 4, 5, 7, 8, 10], root: 57,
+    songs: ['Dockside Sway', 'Love at the End of the Pier', 'The Ship That Never Came Back', 'Dusk for Two'] },
   { id: 'lofi', name: 'Ombak Lo-Fi 101.3', dj: 'Kak Rendra', bpm: 78, scale: [0, 2, 3, 5, 7, 9, 10], root: 52,
-    songs: ['Hujan di Kota Lama', 'Kopi Jam Dua', 'Lampu Jalan Oranye', 'Angin Laut'] },
+    songs: ['Rain in Kota Lama', 'Two AM Coffee', 'Orange Street Lamps', 'Sea Breeze'] },
   { id: 'keroncong', name: 'Keroncong Kota Lama 89.5', dj: 'Pak Sastro', bpm: 104, scale: [0, 2, 4, 5, 7, 9, 11], root: 55,
-    songs: ['Bandar Tua', 'Rindu Pelabuhan', 'Sepeda Ontel', 'Bulan di Atas Menara'] },
+    songs: ['Old Port', 'Missing the Harbour', 'Vintage Bicycle', 'Moon over the Tower'] },
   { id: 'funky', name: 'Pulse Sanggara 105.9', dj: 'MC Kilat', bpm: 150, scale: [0, 3, 5, 7, 10], root: 45,
-    songs: ['Ngebut Sampai Pagi', 'Sirene Remix', 'Gas Pol Senja', 'Lampu Merah Lari'] },
+    songs: ['Speeding till Dawn', 'Siren Remix', 'Full Throttle Dusk', 'Running Red Lights'] },
 ];
 
 const midi = (n) => 440 * 2 ** ((n - 69) / 12);

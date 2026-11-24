@@ -6,15 +6,15 @@ import { clamp } from '../core/math-utils.js';
 const THRESHOLDS = [0, 1, 160, 420, 800, 1300];
 
 export const CRIMES = {
-  carjack: { heat: 60, label: 'Pencurian mobil' },
-  'car-theft-seen': { heat: 40, label: 'Pencurian kendaraan' },
-  'shots-fired': { heat: 25, label: 'Tembakan di tempat umum' },
+  carjack: { heat: 60, label: 'Car theft' },
+  'car-theft-seen': { heat: 40, label: 'Vehicle theft' },
+  'shots-fired': { heat: 25, label: 'Shots fired in public' },
   assault: { heat: 30, label: 'Penganiayaan' },
   murder: { heat: 120, label: 'Pembunuhan' },
-  'cop-assault': { heat: 150, label: 'Menyerang polisi' },
-  'cop-killed': { heat: 320, label: 'Polisi tewas' },
-  'hit-and-run': { heat: 80, label: 'Tabrak lari' },
-  'police-car-damage': { heat: 70, label: 'Merusak mobil polisi' },
+  'cop-assault': { heat: 150, label: 'Assaulting an officer' },
+  'cop-killed': { heat: 320, label: 'Officer killed' },
+  'hit-and-run': { heat: 80, label: 'Hit and run' },
+  'police-car-damage': { heat: 70, label: 'Damaging a police car' },
   'explosion': { heat: 180, label: 'Ledakan' },
 };
 
