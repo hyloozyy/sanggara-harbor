@@ -5,8 +5,9 @@ import * as THREE from 'three';
 import { assets } from '../assets/asset-library.js';
 import { weatherizeMaterial } from '../render/surface-weather.js';
 import { SkinnedPartBuilder } from './skinned-part-builder.js';
-import { B, BONE_NAMES, PARENT, proportions, bindJoints, headShape, facePoint, HEAD_C, addTorso, addArms, addLegs, addHead } from './body-geometry.js';
-import { addHair, addHeadwear, addHijab, addSkirt, addTorsoShell, addCollar, addHood, addApron, addBag, addGlasses } from './wear-geometry.js';
+import { B, BONE_NAMES, PARENT, proportions, bindJoints, headShape, faceLayout, HEAD_C, addTorso, addArms, addLegs, addHead } from './body-geometry.js';
+import { addHair, addHeadwear, addHijab, addHood, addApron, addBag, addGlasses } from './wear-geometry.js';
+import { addSkirt, addTorsoShell, addCollar, addHijabDrape, addSleeves, addShirtHem, addShortsLegs, addHairCards } from './garment-geometry.js';
 import { paintCharacterAtlas } from './character-atlas.js';
 import { normaliseLook, generateLook, SKIN_TONES, HAIR_COLORS } from './character-generator.js';
 
@@ -19,47 +20,75 @@ function geometryKey(L) {
   const hat = L.headwear && L.hair !== 'hijab' ? L.headwear : '-';
   const hair = ['helmet', 'hardhat'].includes(hat) ? 'crop' : L.hair;
   const collar = ['polo', 'shirt', 'batik', 'uniform'].includes(L.top.kind) ? 'c' : '-';
-  return `human:${L.gender}:${L.build}:${hair}:${hat}:${outer}:${collar}:${L.bag || '-'}:${L.glasses ? 'g' : '-'}`;
+  const boot = L.shoes?.kind === 'boot' ? 'b' : '-';
+  const g = garmentPlan(L);
+  return `human:${L.gender}:${L.build}:${hair}:${hat}:${outer}:${collar}:${L.bag || '-'}:${L.glasses ? (L.face?.sunglasses ? 's' : 'g') : '-'}:${boot}:${g.sleeve ?? '-'}:${g.hem ? 'h' : '-'}:${g.shorts ?? '-'}`;
 }
 
-function buildGeometry(L) {
+// Which garment shells a look needs (shared by the geometry key and the builder). Lengths are
+// the painter's fractions along the arm / leg (see character-atlas.js).
+const SLEEVE_V = { tank: null, tshirt: 0.66, vneck: 0.66, polo: 0.68, uniform: 0.62, kebaya: 0.1 };
+function garmentPlan(L) {
+  const t = L.top || {}, o = L.outer;
+  const jacket = o && (o.kind === 'jacket' || o.kind === 'hoodie');
+  let sleeve = jacket ? 0.04 : t.kind in SLEEVE_V ? SLEEVE_V[t.kind] : (t.kind === 'shirt' || t.kind === 'batik' || t.kind === 'dress') ? (t.longSleeves ? 0.04 : t.kind === 'dress' ? 0.7 : 0.62) : 0.66;
+  if (t.longSleeves && !jacket && t.kind !== 'tank') sleeve = 0.04;
+  const hem = !t.tucked && !jacket && t.kind !== 'dress' && t.kind !== 'kebaya' && !(o && (o.kind === 'hivis' || o.kind === 'tactical'));
+  const b = L.bottom || {};
+  const shorts = b.kind === 'shorts' ? 0.58 : b.kind === 'long-shorts' ? 0.5 : null;
+  return { sleeve, hem, shorts };
+}
+
+function buildGeometry(L, lod = 'near') {
   const P = proportions(L.gender, L.build);
+  P.boot = L.shoes?.kind === 'boot';
   const shape = headShape(P);
-  const J = bindJoints(P, shape);
+  const F = faceLayout(P);
+  const J = bindJoints(P);
   const b = new SkinnedPartBuilder();
-  addTorso(b, P, J);
-  addArms(b, P, J);
-  addLegs(b, P, J);
-  addHead(b, P, J, shape);
+  addTorso(b, P, J, lod);
+  addArms(b, P, J, lod);
+  addLegs(b, P, J, lod);
+  addHead(b, P, J, lod);
   const hat = L.headwear && L.hair !== 'hijab' ? L.headwear : null;
   const covered = hat === 'helmet' || hat === 'hardhat';
-  if (L.hair === 'hijab') addHijab(b, shape);
-  else addHair(b, covered ? 'crop' : L.hair, shape, P);
+  if (L.hair === 'hijab') { addHijab(b, shape); addHijabDrape(b, P); }
+  else {
+    addHair(b, covered ? 'crop' : L.hair, shape, P);
+    if (!hat && lod === 'near') addHairCards(b, L.hair, shape, P);
+  }
   addHeadwear(b, hat, shape);
   const o = L.outer;
+  const plan = garmentPlan(L);
+  if (plan.sleeve != null) {
+    const [, y0] = J.armL, yw = J.handL[1] - 0.012, yt = y0 + 0.032;
+    addSleeves(b, P, J, yw + plan.sleeve * (yt - yw) + (plan.sleeve < 0.1 ? 0.03 : 0), o && (o.kind === 'jacket' || o.kind === 'hoodie') ? 1.5 : 1);
+  }
+  if (plan.hem) addShirtHem(b, P, 0.95, L.top.kind === 'batik' || L.top.kind === 'shirt' ? 1.2 : 0.8);
+  if (plan.shorts != null) { const yb = J.footL[1] - 0.012, yt = J.legL[1] + 0.07; addShortsLegs(b, P, J, yb + plan.shorts * (yt - yb)); }
   if (o) {
     if (o.kind === 'skirt' || o.kind === 'sarong') addSkirt(b, P, o.length || 'knee', o.kind === 'sarong' ? 0.6 : 1);
-    if (o.kind === 'jacket' || o.kind === 'hoodie') addTorsoShell(b, P, 1.5, 0.93, 0.012);
-    if (o.kind === 'hivis' || o.kind === 'tactical') addTorsoShell(b, P, 1.47, 1.0, o.kind === 'tactical' ? 0.02 : 0.01);
+    if (o.kind === 'jacket' || o.kind === 'hoodie') addTorsoShell(b, P, 1.5, 0.93, 0.016);
+    if (o.kind === 'hivis' || o.kind === 'tactical') addTorsoShell(b, P, 1.47, 1.0, o.kind === 'tactical' ? 0.024 : 0.012);
     if (o.kind === 'hoodie') addHood(b, P);
     if (o.kind === 'apron') addApron(b, P);
-    if (o.kind === 'jacket') addCollar(b, P, 'outer', true);
+    if (o.kind === 'jacket') addCollar(b, P, 'outer');
   }
-  if (['polo', 'shirt', 'batik', 'uniform'].includes(L.top.kind) && !(o && (o.kind === 'jacket' || o.kind === 'hoodie'))) addCollar(b, P, 'trim', true);
+  if (['polo', 'shirt', 'batik', 'uniform'].includes(L.top.kind) && !(o && (o.kind === 'jacket' || o.kind === 'hoodie'))) addCollar(b, P, 'trim');
   if (L.bag) addBag(b, P, L.bag);
-  if (L.glasses) addGlasses(b, J);
+  if (L.glasses) addGlasses(b, J, !!L.face?.sunglasses);
   const g = b.build();
-  const loc = (p) => [p.x - HEAD_C[0], p.y - HEAD_C[1], p.z - HEAD_C[2]];
+  const H = HEAD_C;
   g.userData = {
-    joints: J, P,
+    joints: J, P, F,
     face: {
-      shape,
-      eyeL: [J.lidL[0] - HEAD_C[0], J.lidL[1] - HEAD_C[1], J.lidL[2] - HEAD_C[2] + 0.004],
-      eyeR: [J.lidR[0] - HEAD_C[0], J.lidR[1] - HEAD_C[1], J.lidR[2] - HEAD_C[2] + 0.004],
-      mouth: loc(facePoint(shape, 0, -0.068)),
-      nose: loc(facePoint(shape, 0, -0.032)),
+      shape, F,
+      eyeL: [F.ex, F.ey, F.eyeSkull], eyeR: [-F.ex, F.ey, F.eyeSkull],
+      mouth: [0, F.ym, F.mz + 0.006],
+      nose: [0, F.ntip, F.eyeSkull + 0.02],
     },
   };
+  void H;
   return g;
 }
 
@@ -99,7 +128,9 @@ export class HumanoidModel {
     const L = normaliseLook(look);
     this.look = L;
     const key = geometryKey(L);
-    const geo = assets.geometry(key, () => buildGeometry(L));
+    const geo = assets.geometry(key, () => buildGeometry(L, 'near'));
+    this.geoKey = key;
+    this.detail = 'near';
     const { joints: J } = geo.userData;
     this.atlas = paintCharacterAtlas(L, geo.userData.face, atlasSize);
     const env = assets.environment;
@@ -117,7 +148,9 @@ export class HumanoidModel {
       bones[B[PARENT[name]]].add(bone);
       bone.userData.rest = bone.position.clone();
     }
-    this.mesh = new THREE.SkinnedMesh(geo, [this.matte, this.gloss]);
+    // Hair cards: the same atlas, alpha-tested, both sides.
+    this.cards = new THREE.MeshStandardMaterial({ map: this.atlas, roughness: 0.62, metalness: 0, envMap: env, envMapIntensity: 0.6, alphaTest: 0.45, side: THREE.DoubleSide });
+    this.mesh = new THREE.SkinnedMesh(geo, [this.matte, this.gloss, this.cards]);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = false;
     this.mesh.frustumCulled = true;
@@ -168,10 +201,19 @@ export class HumanoidModel {
 
   setShadows(on) { this.mesh.castShadow = on; }
 
+  // Level of detail: 'far' swaps in a light version of the same body (same skeleton and atlas).
+  setDetail(level) {
+    if (level === this.detail) return;
+    this.detail = level;
+    const L = this.look;
+    this.mesh.geometry = assets.geometry(this.geoKey + (level === 'far' ? ':far' : ''), () => buildGeometry(L, level));
+  }
+
   dispose() {
     this.atlas.dispose();
     this.matte.dispose();
     this.gloss.dispose();
+    this.cards.dispose();
     this.mesh.skeleton.dispose();
   }
 }

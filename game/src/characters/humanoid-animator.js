@@ -127,6 +127,8 @@ export function animateHumanoid(m, state, speed, dt, extra = {}) {
     if (A.ikArm[s] > 0.002) armIK(m, A, s, A.ikArm[s]);
   }
 
+  handPose(m, A, dt, state, extra);
+
   // Hair and ponytail: a damped spring lagging behind the head.
   const run = smooth(2.2, 4, A.speedS);
   const target = 0.2 + 0.5 * run + 0.25 * smooth(0.1, 1, A.speedS) + (A.air || 0) * 0.4;
@@ -937,17 +939,94 @@ function basisQuat(axis, side, out) {
 function faceUpdate(m, A, dt, extra) {
   // Blinks every few seconds (sometimes a double blink); eyes close when dead.
   A.blink = (A.blink ?? 2) - dt;
-  let lid = 0.28;
-  if (A.blink < 0.14) lid = 0.28 + 1.0 * Math.sin(clamp(1 - A.blink / 0.14, 0, 1) * Math.PI);
-  if (A.blink < 0) A.blink = Math.random() < 0.15 ? 0.3 : 2 + Math.random() * 4;
-  if (extra.dead) lid = 1.2;
-  if (extra.squint) lid = Math.max(lid, 0.6);
+  let close = 0;
+  if (A.blink < 0.15) close = Math.sin(clamp(1 - A.blink / 0.15, 0, 1) * Math.PI);
+  if (A.blink < 0) A.blink = Math.random() < 0.15 ? 0.3 : 2.2 + Math.random() * 4;
+  // Expressions: smile, frown, surprise, fear (extra.expression: a name or { name: weight }).
+  const E = A.expr || (A.expr = { smile: 0, frown: 0, surprise: 0, fear: 0 });
+  const want = extra.expression;
+  for (const k in E) {
+    const tgt = !want ? 0 : typeof want === 'string' ? (want === k ? 1 : 0) : want[k] || 0;
+    E[k] = damp(E[k], tgt, tgt > E[k] ? 7 : 3.5, dt);
+  }
+  if (extra.dead) close = 1;
+  if (extra.squint) close = Math.max(close, 0.35);
+  // Gaze: the eyes lead the head and make small saccades; the upper lids follow them down.
+  A.sacT = (A.sacT ?? 0) - dt;
+  if (A.sacT < 0) { A.sacT = 0.5 + Math.random() * 2.4; A.sacX = (Math.random() - 0.5) * 0.3; A.sacY = (Math.random() - 0.5) * 0.12; }
+  const gy = clamp((extra.lookYaw != null ? (extra.lookYaw - (A.look || 0)) * 0.6 : 0) + (A.sacX || 0), -0.45, 0.45);
+  const gp = clamp((A.sacY || 0) + (extra.lookPitch || 0) * 0.3, -0.25, 0.3);
+  A.gx = damp(A.gx || 0, gy, 30, dt); A.gp = damp(A.gp || 0, gp, 30, dt);
+  if (m.eyeL) { m.eyeL.rotation.set(A.gp, A.gx, 0); m.eyeR.rotation.set(A.gp, A.gx, 0); }
+  const open = -0.53 - 0.14 * E.surprise - 0.1 * E.fear + 0.1 * E.smile + A.gp * 0.5;
+  const lid = lerp(open, 0.26, close);
   m.lidL.rotation.x = lid; m.lidR.rotation.x = lid;
-  // Lip-sync: the mouth opens with the voice level; the jaw follows.
+  // Speech: the jaw opens with the voice level through changing mouth shapes (open A, wide E/I,
+  // round O/U); the brows lift on stressed syllables.
   const talk = extra.talk ?? 0;
   A.talk = damp(A.talk || 0, talk, 18, dt);
-  const open = A.talk;
-  const vowel = 0.5 + 0.5 * Math.sin((A.idleShift || 0) * 11.3); // rounder / wider mouth shapes
-  m.mouth.scale.set(1 - open * (0.1 + 0.25 * vowel), 0.14 + open * 0.95, 1);
-  m.jaw.rotation.x = open * 0.16;
+  const T0 = A.idleShift || 0;
+  const v1 = 0.5 + 0.5 * Math.sin(T0 * 11.3), v2 = 0.5 + 0.5 * Math.sin(T0 * 6.7 + 1.3);
+  const tk = A.talk;
+  m.jaw.rotation.x = tk * (0.07 + 0.1 * v1) + E.surprise * 0.2 + E.fear * 0.07 + (extra.dead ? 0.05 : 0);
+  m.mouth.scale.set(1, 1, 1);
+  const wide = tk * v2 * 0.0022, round = tk * (1 - v2) * 0.0032;
+  const cx = 0.0035 * E.smile + wide - round + 0.0025 * E.fear - 0.001 * E.surprise;
+  const cy = 0.0038 * E.smile - 0.0035 * E.frown - 0.0012 * E.fear;
+  const cz = -0.0018 * E.smile + round * 0.8;
+  const by = 0.0055 * E.surprise + 0.0035 * E.fear - 0.0028 * E.frown + tk * 0.0012 * Math.max(0, Math.sin(T0 * 3.7));
+  const bx = -0.0015 * E.frown - 0.0012 * E.fear;
+  for (const [s, c, b] of [[1, m.cornerL, m.browL], [-1, m.cornerR, m.browR]]) {
+    if (!c) continue;
+    const rc = c.userData.rest, rb = b.userData.rest;
+    c.position.set(rc.x + s * cx, rc.y + cy, rc.z + cz);
+    b.position.set(rb.x + s * bx, rb.y + by, rb.z);
+  }
 }
+
+// Fingers: a relaxed curl at rest, tighter in a jog, a grip round wheels, bars, glasses and
+// guns, flat and open for waves and handshakes; the fingers blend between poses.
+const FING = ['index', 'mid', 'ring', 'pinky'];
+function handPose(m, A, dt, state, extra) {
+  if (!m.indexL1) return;
+  const ge = extra.gesture && extra.gesture.t < 1 ? extra.gesture : null;
+  const relaxed = 0.46 + 0.16 * (A.jog || 0);
+  const want = [relaxed, relaxed], spread = [0.05, 0.05], thumb = [0.3, 0.3];
+  if (state === 'drive' || state === 'ride') { for (let s = 0; s < 2; s++) if (A.ikArmT[s] > 0.3) { want[s] = 0.82; thumb[s] = 0.75; } }
+  if (m.heldItem && m.heldItem.visible !== false) { want[1] = 0.88; thumb[1] = 0.8; if (extra.aiming && extra.twoHanded) { want[0] = 0.8; thumb[0] = 0.7; } }
+  if (state === 'punch' && (extra.melee || 'fists') === 'fists') { want[0] = want[1] = 1; thumb[0] = thumb[1] = 0.95; }
+  if (m.props?.phone?.visible) { want[1] = 0.62; thumb[1] = 0.55; }
+  if (m.props?.umbrella?.visible) { want[0] = 0.9; thumb[0] = 0.85; }
+  if (state === 'hands-up' || state === 'cower') { want[0] = want[1] = 0.12; spread[0] = spread[1] = 0.25; }
+  if (state === 'dead') { want[0] = want[1] = 0.45; }
+  if (ge) {
+    const w = smooth(0, 0.12, ge.t) * (1 - smooth(0.88, 1, ge.t));
+    if (ge.kind === 'wave') { want[1] = lerp(want[1], 0.04, w); spread[1] = 0.2 * w; thumb[1] = lerp(thumb[1], 0.05, w); }
+    if (ge.kind === 'handshake') { want[1] = lerp(want[1], 0.05 + 0.6 * smooth(0.3, 0.42, ge.t) * (1 - smooth(0.75, 0.85, ge.t)), w); thumb[1] = lerp(thumb[1], 0.1, w); }
+    if (ge.kind === 'drink' || ge.kind === 'cheers' || ge.kind === 'serve') { want[1] = lerp(want[1], 0.62, w); thumb[1] = lerp(thumb[1], 0.6, w); }
+    if (ge.kind === 'wipe' || ge.kind === 'pour') { want[0] = lerp(want[0], 0.62, w); want[1] = lerp(want[1], 0.7, w); }
+    if (ge.kind === 'shrug') { want[0] = want[1] = lerp(relaxed, 0.1, w); spread[0] = spread[1] = 0.15 * w; }
+    if (ge.kind === 'type') { want[0] = want[1] = 0.45; }
+  }
+  if (extra.listening && !ge) { want[0] = want[1] = 0.4; }
+  if (!A.fing) A.fing = [want[0], want[1], thumb[0], thumb[1], spread[0], spread[1]];
+  const F = A.fing;
+  const seed = A.seed || 0;
+  for (let s = 0; s < 2; s++) {
+    F[s] = damp(F[s], want[s], 10, dt); F[s + 2] = damp(F[s + 2], thumb[s], 10, dt); F[s + 4] = damp(F[s + 4], spread[s], 10, dt);
+    const side = s === 0 ? 'L' : 'R', sg = s === 0 ? -1 : 1;
+    const c = F[s];
+    for (let k = 0; k < 4; k++) {
+      // Each finger a little more curled than the one before it (the cascade of a real hand).
+      const ck = clamp(c * (1 + k * 0.1) + (seed % 7) * 0.004 * k, 0, 1.1);
+      const sp = (1.5 - k) * F[s + 4] * 0.22;
+      m[FING[k] + side + '1'].rotation.set(sg * -sp * 0, 0, sg * ck * 1.35, 'XYZ');
+      m[FING[k] + side + '1'].rotation.x = -sp;
+      m[FING[k] + side + '2'].rotation.set(0, 0, sg * ck * 1.55);
+    }
+    const t = F[s + 2];
+    m['thumb' + side + '1'].rotation.set(0.08 - 0.3 * t, sg * 0.2 * t, sg * (0.12 + 0.5 * t));
+    m['thumb' + side + '2'].rotation.set(0, 0, sg * (0.2 + 0.7 * t));
+  }
+}
+

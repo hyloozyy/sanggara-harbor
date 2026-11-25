@@ -62,6 +62,7 @@ function aimCamera(c2, aspect) {
     const f = a.focus();
     const part = PART[params.get('part')];
     if (part) { f.y = a.ch.pos.y + part[0] * (a.ch.mesh.scale.y || 1); }
+    if (params.get('part') === 'hands') { const h = a.ch.heading; f.x += Math.cos(h) * 0.19; f.z -= Math.sin(h) * 0.19; f.y = a.ch.pos.y + 0.86; }
     if (params.has('fy')) f.y = num('fy', 1);
     const hd = a.ch ? a.ch.heading : a.v.heading;
     const fixed = params.get('fixed') === '1';

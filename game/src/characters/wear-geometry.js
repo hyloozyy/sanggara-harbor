@@ -30,9 +30,13 @@ export function addHair(b, style, shape, P) {
   if (!style || style === 'bald' || style === 'none') return;
   const cap = (off, vol, opt = {}) => b.ellipsoid({
     lat: 16, lon: 24, uvFn: hairUV, weightFn: () => HEAD,
-    keep: (d) => hairline(d, opt.front ?? 0.42, opt.back ?? -0.5),
+    keep: (d) => hairline(d, (opt.front ?? 0.42) - 0.05, (opt.back ?? -0.5) - 0.05),
     map: (d) => {
-      let o = off + vol * smooth(0.1, 0.95, d.y) + (opt.fringe ? opt.fringe * smooth(0.3, 0.9, d.z) * smooth(0.2, 0.6, d.y) : 0);
+      // The shell thins to nothing at the hairline, where the painted hair takes over (no step).
+      const fr = opt.front ?? 0.42, bk = opt.back ?? -0.5, tt = smooth(-0.9, 0.85, d.z);
+      const thr = bk + (fr - bk) * tt;
+      const thin = smooth(thr - 0.05, thr + 0.16, d.y);
+      let o = (off + vol * smooth(0.1, 0.95, d.y) + (opt.fringe ? opt.fringe * smooth(0.3, 0.9, d.z) * smooth(0.2, 0.6, d.y) : 0)) * (0.15 + 0.85 * thin);
       if (opt.curly) o += opt.curly * (0.6 + 0.4 * noise3(d));
       if (opt.sides) o *= 1 - opt.sides * smooth(0.55, 0.9, Math.abs(d.x)) * smooth(0.5, 0.1, d.y);
       return out(shape, d, o);
@@ -131,17 +135,11 @@ export function addHeadwear(b, kind, shape) {
 }
 
 export function addHijab(b, shape) {
-  const opening = (d) => d.z > 0.42 && d.y < 0.5 && d.y > -0.78 && Math.abs(d.x) < 0.64;
+  const opening = (d) => d.z > 0.3 && (d.x / 0.66) ** 2 + ((d.y + 0.14) / 0.66) ** 2 < 1;
   b.ellipsoid({ lat: 18, lon: 26, weightFn: () => HEAD, keep: (d) => !opening(d),
     uvFn: (d) => regionUV('hat', 0.5 + Math.atan2(d.x, d.z) / (Math.PI * 2), 0.55 + d.y * 0.45),
     map: (d) => { const o = 0.011 + 0.007 * smooth(0.2, -0.8, d.y) + 0.004 * smooth(0.4, 1, d.y); return out(shape, d, o); } });
-  // The drape over the neck, shoulders and upper chest: wrapped close under the chin, then
-  // flowing out over the shoulder slope in a soft curve and tucking in at a rounded hem.
-  const drape = [[1.625, 0.088, 0.098, -0.012], [1.598, 0.098, 0.103, -0.007], [1.565, 0.124, 0.11, -0.004], [1.53, 0.16, 0.121, -0.002],
-    [1.495, 0.19, 0.131, 0.0], [1.46, 0.21, 0.14, 0.003], [1.42, 0.219, 0.147, 0.006], [1.38, 0.214, 0.15, 0.008], [1.348, 0.2, 0.147, 0.009],
-    [1.328, 0.186, 0.14, 0.009], [1.318, 0.17, 0.13, 0.008]];
-  const rings = drape.map(([y, rx, rz, z]) => ({ c: [0, y, z], rx, rz }));
-  b.sweep(rings, { segments: 22, uvFn: (u, v) => regionUV('hat', u, v * 0.5), weightFn: (p) => neckBlend(p.y, 1.62, 1.42) });
+  // The drape over the shoulders is built by garment-geometry.js (addHijabDrape).
 }
 
 // ----------------------------------------------------------------- clothing
@@ -222,8 +220,9 @@ export function addBag(b, P, kind) {
     map: (d) => { const e = (q) => Math.sign(q) * Math.abs(q) ** 0.4; return V(x + e(d.x) * 0.03, 0.98 + e(d.y) * 0.09, 0.02 + e(d.z) * 0.12); } });
 }
 
-export function addGlasses(b, J) {
-  const [lx, ly, lz] = J.lidL;
+export function addGlasses(b, J, sun = true) {
+  const [lx, ly, lz0] = J.lidL;
+  const lz = lz0 + 0.0125;
   for (const s of [1, -1]) {
     const x = lx * s;
     // Frame ring and a lens disc.
@@ -233,10 +232,10 @@ export function addGlasses(b, J) {
       rings.push({ c: [x + Math.cos(a) * 0.021, ly + Math.sin(a) * 0.016, lz + 0.016], rx: 0.0022, rz: 0.0022 });
     }
     b.sweep(rings, { segments: 5, uvFn: () => regionUV('dark', 0.5, 0.5), weightFn: () => HEAD, group: 1 });
-    b.ellipsoid({ lat: 4, lon: 10, group: 1, uvFn: () => regionUV('lens', 0.5, 0.5), weightFn: () => HEAD,
+    if (sun) b.ellipsoid({ lat: 4, lon: 10, group: 1, uvFn: () => regionUV('lens', 0.5, 0.5), weightFn: () => HEAD,
       map: (d) => V(x + d.x * 0.02, ly + d.y * 0.015, lz + 0.016 + d.z * 0.002) });
     // Arm to the ear.
-    b.sweep([{ c: [x + s * 0.021, ly + 0.004, lz + 0.014], rx: 0.002, rz: 0.002 }, { c: [s * 0.078, ly + 0.006, lz - 0.05], rx: 0.002, rz: 0.002 }, { c: [s * 0.079, ly - 0.01, lz - 0.085], rx: 0.002, rz: 0.002 }],
+    b.sweep([{ c: [x + s * 0.021, ly + 0.004, lz + 0.014], rx: 0.002, rz: 0.002 }, { c: [s * 0.083, ly + 0.006, lz - 0.05], rx: 0.002, rz: 0.002 }, { c: [s * 0.084, ly - 0.01, lz - 0.085], rx: 0.002, rz: 0.002 }],
       { segments: 4, uvFn: () => regionUV('dark', 0.5, 0.5), weightFn: () => HEAD, group: 1 });
   }
   b.sweep([{ c: [lx - 0.021, ly + 0.004, lz + 0.016], rx: 0.002, rz: 0.002 }, { c: [0, ly + 0.008, lz + 0.022], rx: 0.002, rz: 0.002 }, { c: [-lx + 0.021, ly + 0.004, lz + 0.016], rx: 0.002, rz: 0.002 }],

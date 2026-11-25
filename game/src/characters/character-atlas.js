@@ -3,7 +3,7 @@
 // scalp hair, irises, and every garment (prints, necklines, plackets, buttons, pockets, seams,
 // belts, hems, cuffs), shoes, hats and bags.
 import * as THREE from 'three';
-import { ATLAS_SIZE, REGIONS, regionPx, headU, headV } from './atlas-layout.js';
+import { ATLAS_SIZE, REGIONS, regionPx, headU, headV, HEAD_V0, HEAD_V1 } from './atlas-layout.js';
 import { paintFabric, shade, css, grain } from './fabric-patterns.js';
 import { createRng } from '../core/rng.js';
 import { HEAD_C } from './body-geometry.js';
@@ -107,8 +107,7 @@ function paintHead(ctx, look, info, rng, R) {
   // Mottled skin.
   grain(ctx, x0, y0, w, h, 0.7);
   // Nose: side shading and nostrils.
-  ctx.fillStyle = rgba(dark, 0.22);
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(nx + s * 6, ny - 10, 2.5, 11, 0, 0, Math.PI * 2); ctx.fill(); }
+
   ctx.fillStyle = rgba(mix(skin, 0x140804, 0.7), 0.75);
   for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(nx + s * 4.2, ny + 3, 2.6, 1.5, s * 0.3, 0, Math.PI * 2); ctx.fill(); }
 
@@ -166,24 +165,17 @@ function paintHead(ctx, look, info, rng, R) {
   if (face.mole) { ctx.fillStyle = rgba(0x2a1408, 0.8); ctx.beginPath(); ctx.arc(mx + R(-20, 20), my + R(-18, -6), 1.4, 0, Math.PI * 2); ctx.fill(); }
 }
 
-// Hair, beard, stubble and moustache masks are drawn once per head shape (dabs over a grid of
-// scalp points) and then tinted per person with a single composite.
-function scalpPoints(info) {
-  if (info.scalp) return info.scalp;
-  info.scalp = [];
-  for (let i = 0; i <= 60; i++) {
-    const th = (i / 60) * Math.PI;
-    for (let j = 0; j <= 90; j++) {
-      const ph = (j / 90) * Math.PI * 2;
-      const d = { x: Math.sin(th) * Math.sin(ph), y: Math.cos(th), z: Math.sin(th) * Math.cos(ph) };
-      const p = info.shape(d);
-      const lx = p.x - HEAD_C[0], ly = p.y - HEAD_C[1], lz = p.z - HEAD_C[2];
-      const [px, py] = hp(lx, ly, lz);
-      info.scalp.push({ d, lx, ly, lz, px, py });
-    }
-  }
-  return info.scalp;
+// Hair, beard, stubble and moustache masks: evaluated per texel of the head region (the head
+// UV mapping is inverted back to a direction on the skull), with soft, slightly ragged edges and
+// fine hair-grain noise; built once per head shape and tinted per person with one composite.
+const hash2 = (x, y) => { const h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); };
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
+const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 function scalpMask(info, kind) {
   info.masks ||= {};
@@ -191,20 +183,52 @@ function scalpMask(info, kind) {
   const [, , w, h] = REGIONS.head;
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const g = c.getContext('2d', { willReadFrequently: true });
-  const rng = createRng(17);
-  for (const { d, lx, ly, lz, px, py } of scalpPoints(info)) {
-    const t = (d.z + 0.9) / 1.75;
-    const thr = -0.5 + 0.92 * Math.min(1, Math.max(0, t * t * (3 - 2 * t)));
-    const jaw = d.z > -0.2 && ((d.y < -0.5) || (d.y < -0.3 && Math.abs(d.x) > 0.55)) && !(Math.abs(d.x) > 0.85 && d.y > -0.45);
-    const nearMouth = Math.abs(lx) < 0.024 && ly > -0.078 && ly < -0.058 && lz > 0;
-    let a = 0;
-    if (kind === 'hair' || kind === 'undercut') { a = d.y > thr ? 1 : d.y > thr - 0.12 ? (d.y - thr + 0.12) / 0.12 * 0.6 : 0; if (kind === 'undercut' && d.y < 0.45) a *= 0.45; }
-    else if (kind === 'bald') a = d.y > thr - 0.05 ? 0.12 : 0;
-    else if (kind === 'beard-full' || kind === 'beard-short') { if (jaw && !nearMouth) { g.fillStyle = `rgba(255,255,255,${kind === 'beard-full' ? 0.32 : 0.18})`; g.beginPath(); g.arc(px, py, 3.2, 0, Math.PI * 2); g.fill(); } continue; }
-    else if (kind === 'stubble') a = jaw && !nearMouth && rng.chance(0.6) ? 0.22 : 0;
-    else if (kind === 'moustache') a = d.z > 0.6 && ly > -0.063 && ly < -0.051 && Math.abs(lx) < 0.026 ? 0.9 : 0;
-    if (a > 0) { g.fillStyle = `rgba(255,255,255,${a})`; g.fillRect(px - 2, py - 2, kind === 'stubble' ? 2 : 5, kind === 'stubble' ? 2 : 5); }
+  const img = g.createImageData(w, h), D = img.data;
+  const F = info.F || { ym: -0.0665, lipW: 0.024, nb: -0.046, ey: 0.006 };
+  const ry = F.ry || 0.12, PAD = 3;
+  for (let py = 0; py < h; py++) {
+    const v = 1 - (py - PAD) / (h - 2 * PAD);
+    const ly = HEAD_V0 + v * (HEAD_V1 - HEAD_V0);
+    const dy = Math.max(-1, Math.min(1, ly / ry)), rr = Math.sqrt(Math.max(0, 1 - dy * dy));
+    for (let px = 0; px < w; px++) {
+      const u = (px - PAD) / (w - 2 * PAD), k = Math.abs(u - 0.5), sg = Math.sign(u - 0.5) || 1;
+      const ang = sg * (k < 0.35 ? k / 0.35 * Math.PI / 2 : Math.PI / 2 + Math.min(1, (k - 0.35) / 0.15) * Math.PI / 2);
+      const dx = Math.sin(ang) * rr, dz = Math.cos(ang) * rr;
+      const lx = dx * 0.08;
+      const n1 = vnoise(ang * 9 + 3, dy * 9), grain = vnoise(ang * 70, dy * 220);
+      let a = 0;
+      if (kind === 'hair' || kind === 'undercut' || kind === 'bald') {
+        // Hairline: high on the forehead with a soft widow's peak, temples, round the ears to the nape.
+        const t = sm(-0.9, 0.85, dz);
+        let thr = -0.52 + 0.93 * t + 0.05 * Math.exp(-((dx / 0.25) ** 2)) * t;
+        if (Math.abs(dx) > 0.72 && dz > -0.15 && dz < 0.55) thr = Math.max(thr, 0.1 + 0.08 * sm(0.72, 0.95, Math.abs(dx)));
+        thr += (n1 - 0.5) * 0.06;
+        const edge = sm(thr - 0.07, thr + 0.03, dy);
+        a = edge * (0.82 + 0.18 * grain);
+        if (kind === 'undercut') a *= dy < 0.42 ? 0.35 + 0.1 * grain : 1;
+        if (kind === 'bald') a = sm(thr - 0.05, thr, dy) * sm(0.25, 0.1, dy) * 0.18 * (0.6 + 0.4 * grain);
+      } else {
+        const front = sm(-0.25, 0.15, dz);
+        const jaw = front * sm(-0.2, -0.42, dy) * (1 - sm(0.82, 0.95, Math.abs(dx)) * sm(-0.5, -0.3, dy));
+        const cheekTop = sm(F.ym + 0.03, F.ym + 0.012, ly + (Math.abs(lx) > 0.04 ? 0.01 : 0));
+        const lipsK = sm(1.0, 0.7, Math.hypot(lx / (F.lipW + 0.006), (ly - F.ym) / 0.011)) * sm(0.4, 0.7, dz);
+        const lips = false;
+        if (kind === 'beard-full' || kind === 'beard-short') {
+          a = jaw * cheekTop * (1 - lipsK * (kind === 'beard-full' ? 0.85 : 1)) * (kind === 'beard-full' ? 0.92 : 0.55) * (0.6 + 0.4 * grain) * (0.85 + 0.3 * (n1 - 0.5));
+        } else if (kind === 'stubble') {
+          a = jaw * cheekTop * (1 - lipsK) * (hash2(px, py) > 0.55 ? 0.42 : 0.12);
+        } else if (kind === 'moustache') {
+          // Follows the upper lip: thick under the nose, thinning and drooping to the corners.
+          const ax = Math.abs(lx) / (F.lipW + 0.004);
+          const bottom = F.ym + 0.0058 - 0.003 * ax * ax, top = F.nb - 0.002 - 0.007 * ax * ax;
+          a = dz > 0.5 ? sm(1, 0.8, ax) * sm(bottom - 0.0008, bottom + 0.0008, ly) * sm(top + 0.001, top - 0.001, ly) * (0.55 + 0.45 * grain) * (Math.abs(lx) < 0.0025 ? 0.75 : 1) : 0;
+        }
+      }
+      const o = (py * w + px) * 4;
+      D[o] = D[o + 1] = D[o + 2] = 255; D[o + 3] = Math.round(Math.max(0, Math.min(1, a)) * 255);
+    }
   }
+  g.putImageData(img, 0, 0);
   info.masks[kind] = c;
   return c;
 }
@@ -411,10 +435,31 @@ function paintSmall(ctx, look) {
   if (look.headwear === 'cap' || look.headwear === 'cap-back') { ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(look.capText || 'SGR', hx + hw * 0.5, hy + hh * 0.35); }
   if (look.headwear === 'police-cap') { ctx.fillStyle = '#d8b040'; ctx.beginPath(); ctx.arc(hx + hw * 0.5, hy + hh * 0.5, 4, 0, Math.PI * 2); ctx.fill(); }
   if (look.headwear === 'straw') { ctx.strokeStyle = 'rgba(80,50,20,0.4)'; for (let i = 0; i < hw; i += 4) { ctx.beginPath(); ctx.moveTo(hx + i, hy); ctx.lineTo(hx + i + 6, hy + hh); ctx.stroke(); } }
+  // Hair cards (no hat, no headscarf): four columns of strand clumps on a transparent ground,
+  // dense at the root (top) and thinning to ragged tips.
+  if (!look.headwear && look.hair !== 'hijab' && look.hair !== 'bald') {
+    const col = look.hairColor ?? 0x15110e;
+    ctx.clearRect(hx, hy, hw, hh);
+    const rng = createRng((look.seed || 3) + 77);
+    const cw = hw / 4;
+    for (let c = 0; c < 4; c++) {
+      const x0 = hx + c * cw;
+      for (let k = 0; k < 170; k++) {
+        const x = x0 + 2 + rng.next() * (cw - 4), len = hh * (0.6 + 0.4 * rng.next());
+        const shade = rng.next();
+        ctx.strokeStyle = shade < 0.22 ? css(mix(col, 0x000000, 0.25)) : shade > 0.9 ? css(mix(col, 0xffffff, 0.16)) : css(col);
+        ctx.lineWidth = 1.2 + rng.next() * 1.6;
+        ctx.beginPath(); ctx.moveTo(x, hy); ctx.quadraticCurveTo(x + rng.range(-1.5, 1.5), hy + len * 0.5, x + rng.range(-3, 3), hy + len); ctx.stroke();
+      }
+      // A solid root band so the card meets the scalp without gaps.
+      ctx.fillStyle = css(col); ctx.fillRect(x0 + 2, hy, cw - 4, hh * 0.18);
+    }
+  }
   fill('bag', look.bagColor ?? 0x4a3020);
   fill('trim', look.outer?.kind === 'jacket' ? look.outer.color : look.top.color);
-  fill('dark', 0x0c0806);
-  const [lx, ly, lw, lh] = fill('lens', look.face?.sunglasses ? 0x101418 : 0x8a9aa0);
+  const [dx, dy, dw, dh] = fill('dark', 0x0c0806);
+  ctx.fillStyle = '#e8e0cc'; ctx.fillRect(dx, dy + dh * 0.78, dw, dh * 0.22);   // teeth
+  const [lx, ly, lw, lh] = fill('lens', look.face?.sunglasses || look.headwear === 'helmet' ? 0x101418 : 0x8a9aa0);
   const g = ctx.createLinearGradient(lx, ly, lx + lw, ly + lh);
   g.addColorStop(0, 'rgba(255,255,255,0.4)'); g.addColorStop(0.5, 'rgba(255,255,255,0)');
   ctx.fillStyle = g; ctx.fillRect(lx, ly, lw, lh);
