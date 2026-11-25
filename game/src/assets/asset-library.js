@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { weatherizeMaterial } from '../render/surface-weather.js';
 import { addWindSway } from '../render/wind-sway.js';
+import { carPaint } from '../vehicles/car-paint.js';
 
 // Texture generators register themselves here (see texture-catalog.js), keeping this registry
 // free of the painting code.
@@ -95,9 +96,9 @@ export const assets = {
         case 'crane-yellow': return std({ color: 0xe3a21a, roughness: 0.5, metalness: 0.4 });
         case 'lamp-pole': return std({ color: 0x3b4046, roughness: 0.5, metalness: 0.8 });
         case 'lamp-glow': return std({ color: 0xffe2b0, emissive: 0xffc27a, emissiveIntensity: 9 });
-        case 'headlight': return std({ color: 0xffffff, emissive: 0xfff2d0, emissiveIntensity: 7 });
-        case 'taillight': return std({ color: 0x550000, emissive: 0xff1a10, emissiveIntensity: 4 });
-        case 'brakelight': return std({ color: 0x550000, emissive: 0xff2010, emissiveIntensity: 12 });
+        case 'headlight': return std({ color: 0xffffff, emissive: 0xf4f6ff, emissiveIntensity: 4.5 });
+        case 'taillight': return std({ color: 0x550000, emissive: 0xff1208, emissiveIntensity: 1.8 });
+        case 'brakelight': return std({ color: 0x660000, emissive: 0xff2010, emissiveIntensity: 9 });
         case 'siren-red': return std({ color: 0x330000, emissive: 0xff1020, emissiveIntensity: 0 });
         case 'siren-blue': return std({ color: 0x000033, emissive: 0x1050ff, emissiveIntensity: 0 });
         case 'trunk': return std({ map: T('bark'), color: 0xb0a090, roughness: 0.95 });
@@ -130,13 +131,7 @@ export const assets = {
   },
 
   // Metallic car paint with clearcoat, cached per colour.
-  carPaint(hex) {
-    return cached(materialCache, `paint:${hex}`, () => {
-      const m = new THREE.MeshPhysicalMaterial({ color: hex, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.3 });
-      m.userData.paint = true;
-      return weatherizeMaterial(m, { wet: 0.35, snow: 1 });
-    });
-  },
+  carPaint(hex) { return carPaint(hex); },
 
   // Matte cloth/skin colours for people, cached per colour.
   cloth(hex) {

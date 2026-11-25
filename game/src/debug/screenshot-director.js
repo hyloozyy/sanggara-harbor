@@ -362,21 +362,39 @@ const SCENES = {
     await finish(s, gfx);
   },
 
-  // Every vehicle model side by side (for checking the models).
-  async garage(session, gfx) {
+  // Every vehicle model lined up along Jl. Bandar (for checking the models): ?shot=garage.
+  // &close=<model> frames one model in the street, &angle=<deg> (0 = front) orbits it,
+  // &color=<n> picks the n-th catalog colour, &brake=1 lights the brake lamps.
+  async garage(session, gfx, ctx) {
     const s = session;
     s.hud.show(false);
-    const keys = Object.keys(VEHICLE_MODELS);
-    // Two rows parked along Jl. Bandar (z = 160), noses towards the camera side.
-    for (const v of [...s.vehicles.list]) if (Math.abs(v.pos.z - 160) < 40 && Math.abs(v.pos.x) < 80) s.vehicles.remove(v);
+    const p = ctx?.params;
+    const close = p?.get('close');
+    const colorIdx = Number(p?.get('color') || 0);
+    const keys = close ? [close] : Object.keys(VEHICLE_MODELS);
+    for (const v of [...s.vehicles.list]) if (Math.abs(v.pos.z - 160) < 50 && Math.abs(v.pos.x) < 90) s.vehicles.remove(v);
+    for (const ped of [...s.peds.list]) if (Math.abs(ped.pos.z - 160) < 40 && Math.abs(ped.pos.x) < 60) s.peds.remove(ped);
+    const spawned = [];
     keys.forEach((k, i) => {
+      const spec = VEHICLE_MODELS[k];
       const row = i % 2, col = Math.floor(i / 2);
-      const v = s.vehicles.spawn(k, -30 + col * 8.2 + row * 4, 157.2 + row * 5.6, Math.PI / 2 + 0.5); v.ai = { kind: 'parked' }; v.syncMesh();
+      const x = close ? 0 : -27 + col * 6.6 + row * 3.3, z = close ? 158.5 : 156.8 + row * 5.2;
+      const v = s.vehicles.spawn(k, x, z, close ? Math.PI / 2 : Math.PI / 2 + 0.62, { color: spec.colors[colorIdx % spec.colors.length] });
+      v.ai = { kind: 'parked' };
+      if (p?.get('brake') === '1') v.braking = true;
+      v.syncMesh();
       v.mesh.updateMatrixWorld(true);
+      spawned.push(v);
     });
-    s.cameraRig.override = { x: 4, y: 8.5, z: 147, tx: 2, ty: 0.3, tz: 160, fov: 76 };
+    if (close) {
+      const v = spawned[0], a = (Number(p.get('angle') ?? 35) * Math.PI) / 180 + v.heading;
+      const d = Number(p.get('dist') || Math.max(4.2, v.spec.length * 1.25));
+      s.cameraRig.override = { x: v.pos.x + Math.sin(a) * d, y: Number(p.get('h') || 1.45), z: v.pos.z + Math.cos(a) * d, tx: v.pos.x, ty: v.spec.height * 0.42, tz: v.pos.z, fov: 42 };
+    } else {
+      s.cameraRig.override = { x: 0.5, y: 6.2, z: 144.5, tx: -0.5, ty: 0.6, tz: 159.5, fov: 64 };
+    }
     s.cameraRig.update(DT, s.player, s.input);
-    s.gfx.lighting.follow(4, 160);
+    s.gfx.lighting.follow(0, 159);
     await finish(s, gfx);
   },
 

@@ -1,6 +1,7 @@
 // Things to do between story missions: the "Balap Liar Senja" street race against the clock,
 // martabak deliveries on a scooter, the paint shop that clears the wanted level, the hardware
 // store that sells guns and ammo, and the safehouse where the game is saved.
+import { paints } from '../vehicles/car-paint.js';
 import { PLACES } from '../city/city-layout.js';
 import { MARKER_COLORS } from '../world/world-markers.js';
 import { formatMoney } from '../core/math-utils.js';
@@ -158,9 +159,9 @@ export class SideActivities {
     g.progression.addMoney(-price, 'Paint Shop');
     g.wanted.clear('paint');
     const v = g.player.vehicle;
-    const colors = [0x1a60e0, 0xf0c000, 0x101010, 0xf0f0f0, 0x20a050, 0x8a1a1a];
-    const color = rng.pick(colors);
-    v.body.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.userData.paint) o.material = g.assets.carPaint(color); });
+    const colors = paints('pearlWhite', 'silver', 'gunmetal', 'black', 'deepRed', 'navy', 'champagne', 'steelBlue', 'forest');
+    const color = rng.pick(colors.filter((c) => c !== v.color));
+    v.repaint(color);
     v.health = v.spec.health;
     events.emit('notify', { text: `Pak Darto's Paint Shop: car resprayed, the police lost your trail (−${formatMoney(price)})` });
   }

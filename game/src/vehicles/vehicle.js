@@ -1,7 +1,8 @@
 // A drivable vehicle: arcade bicycle-model physics with weight transfer, handbrake drifting,
 // collisions against the city, damage with smoke, fire and explosions, lights and sirens.
 import * as THREE from 'three';
-import { buildVehicleMesh } from './car-mesh-factory.js';
+import { buildVehicleMesh, dentVehicleBody } from './car-mesh-factory.js';
+import { carPaint } from './car-paint.js';
 import { assets } from '../assets/asset-library.js';
 import { clamp, damp, wrapAngle } from '../core/math-utils.js';
 import { groundHeightAt } from '../city/city-layout.js';
@@ -186,8 +187,10 @@ export class Vehicle {
     const nx = -local.x / len, nz = -local.z / len;        // push toward the middle of the car
     const radius = 0.9, depth = Math.min(0.16, 0.03 + severity * 0.008);
     const maxY = this.spec.height * 0.72;                  // panels below the windows only
+    if (!this.spec.twoWheel && this.spec.body !== 'bajaj') { dentVehicleBody(this, local, nx, nz, radius, depth, maxY); return; }
     this.body.traverse((o) => {
       if (!o.isMesh || !o.material || Array.isArray(o.material) || !o.material.userData.paint) return;
+      if (!o.userData.ownGeometry) { o.geometry = o.geometry.clone(); o.userData.ownGeometry = true; (this.ownGeometries ||= []).push(o.geometry); }
       const pos = o.geometry.attributes.position;
       let moved = false;
       for (let i = 0; i < pos.count; i++) {
@@ -204,6 +207,19 @@ export class Vehicle {
       }
       if (moved) { pos.needsUpdate = true; o.geometry.computeVertexNormals(); }
     });
+  }
+
+  // Respray the bodywork (paint shop).
+  repaint(color) {
+    this.color = color;
+    const m = carPaint(color);
+    this.body.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && o.material.userData.paint) o.material = m; });
+  }
+
+  // Free the geometry this car copied for its dents.
+  dispose() {
+    for (const g of this.ownGeometries || []) g.dispose();
+    this.ownGeometries = null;
   }
 
   damage(amount, cause = 'hit', at = null) {

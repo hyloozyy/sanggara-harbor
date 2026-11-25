@@ -40,6 +40,7 @@ export class VehicleManager {
   remove(v) {
     this.removeDriverModel(v);
     this.scene.remove(v.mesh);
+    v.dispose?.();
     const i = this.list.indexOf(v);
     if (i >= 0) this.list.splice(i, 1);
     events.emit('vehicle-removed', v);
