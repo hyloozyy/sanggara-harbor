@@ -158,7 +158,7 @@ export class Conversations {
     const story = c === g.missions.giverNpc;
     // Greeting: story people offer a handshake when close enough, townspeople wave or nod.
     const d0 = Math.hypot(c.pos.x - g.player.body.pos.x, c.pos.z - g.player.body.pos.z);
-    if (story && d0 < 1.6) { c.playGesture?.('handshake', 1.9, g.player.body); g.player.body.playGesture('handshake', 1.9, c); }
+    if ((story && d0 < 1.6) || (!story && d0 < 1.3 && Math.random() < 0.4)) { c.playGesture?.('handshake', 1.9, g.player.body); g.player.body.playGesture('handshake', 1.9, c); }
     else { c.playGesture?.(Math.random() < 0.5 ? 'wave' : 'nod', 1.3); g.player.body.playGesture('nod', 1.1); }
     const name = this.displayName(c);
     if (story) {

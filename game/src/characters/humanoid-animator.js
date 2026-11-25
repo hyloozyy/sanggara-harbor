@@ -46,7 +46,7 @@ function initState(m) {
   A.odo = { x: 0, z: 0 };
   A.phase = 0; A.gaitOn = false; A.stepCool = 0;
   A.ikLeg = 1; A.ikLegT = 1;
-  A.ikArm = [0, 0]; A.armT = [new THREE.Vector3(), new THREE.Vector3()]; A.armPole = [new THREE.Vector3(), new THREE.Vector3()]; A.handRot = [null, null];
+  A.ikArm = [0, 0]; A.armT = [new THREE.Vector3(), new THREE.Vector3()]; A.armPole = [new THREE.Vector3(), new THREE.Vector3()]; A.handRot = [null, null]; A.handQ = [new THREE.Quaternion(), new THREE.Quaternion()];
   A.legT = [new THREE.Vector3(), new THREE.Vector3()]; A.legPole = [new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 1)]; A.footQ = [new THREE.Quaternion(), new THREE.Quaternion()];
   A.accF = 0; A.accS = 0; A.prevV = null; A.speedS = 0; A.look = 0; A.lookP = 0;
   A.bank = 0; A.gest = 0; A.air = 0; A.land = 0; A.prep = 0;
@@ -153,7 +153,7 @@ function locomotion(m, A, state, speedIn, dt, extra) {
     A.accF = damp(A.accF, clamp((lvz - A.prevV[1]) / Math.max(dt, 1e-3), -12, 12), 5, dt);
     A.accS = damp(A.accS, clamp((lvx - A.prevV[0]) / Math.max(dt, 1e-3), -12, 12), 5, dt);
   }
-  A.prevV = [lvx, lvz];
+  if (A.prevV) { A.prevV[0] = lvx; A.prevV[1] = lvz; } else A.prevV = [lvx, lvz];
   A.speedS = damp(A.speedS, s0, 9, dt);
   const s = A.speedS;
   const walk = smooth(0.12, 1.1, s), jog = smooth(2.2, 3.9, s), sprint = smooth(5.0, 6.8, s);
@@ -477,7 +477,7 @@ function layers(m, A, state, dt, extra) {
       const p = extra.handTarget;
       A.armT[1].set(p.x, p.y + Math.sin(ge.t * TAU * 2.5) * 0.035 * smooth(0.3, 0.5, ge.t) * (1 - smooth(0.7, 0.85, ge.t)), p.z);
       A.armPole[1].set(-0.6, -0.7, -0.4);
-      eu.set(-Math.PI / 2 + 0.25, -0.2, -Math.PI / 2 * 0.15, 'YXZ'); A.handRot[1] = qd.setFromEuler(eu).clone();
+      eu.set(-Math.PI / 2 + 0.25, -0.2, -Math.PI / 2 * 0.15, 'YXZ'); A.handRot[1] = A.handQ[1].setFromEuler(eu);
       Tadd(A, B.chest, 0.06 * w, 0.12 * w, 0);
       A.headPitch = (A.headPitch || 0) + w * Math.max(0, Math.sin(ge.t * TAU * 1.5)) * 0.12;
     }
@@ -681,7 +681,7 @@ function seatedPose(m, A, ride, dt, extra) {
         A.armT[s].set(...rig.grips[s]);
         A.armPole[s].set(s === 0 ? 0.6 : -0.6, -0.5, -0.6);
         eu.set(-Math.PI / 2 + 0.1, s === 0 ? -0.15 : 0.15, s === 0 ? Math.PI / 2 : -Math.PI / 2, 'ZXY');
-        A.handRot[s] = (A.handRot[s] || new THREE.Quaternion()).setFromEuler(eu);
+        A.handRot[s] = A.handQ[s].setFromEuler(eu);
       }
     } else {
       T(A, B.legL, -1.25, 0, 0.28, 12); T(A, B.legR, -1.25, 0, -0.28, 12);
@@ -716,7 +716,7 @@ function seatedPose(m, A, ride, dt, extra) {
         A.armT[s].set(w.c[0] + w.x[0] * ax * w.r + w.u[0] * ay * w.r, w.c[1] + w.x[1] * ax * w.r + w.u[1] * ay * w.r, w.c[2] + w.x[2] * ax * w.r + w.u[2] * ay * w.r - 0.02);
         A.armPole[s].set(s === 0 ? 0.7 : -0.7, -0.7, -0.2);
         eu.set(-Math.PI / 2 + 0.6, s === 0 ? -0.3 : 0.3, (s === 0 ? 1 : -1) * (Math.PI / 2 - 0.35) - rot * 0.6, 'ZXY');
-        A.handRot[s] = (A.handRot[s] || new THREE.Quaternion()).setFromEuler(eu);
+        A.handRot[s] = A.handQ[s].setFromEuler(eu);
       }
       A.ikArmRate = 14;
     }

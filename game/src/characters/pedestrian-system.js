@@ -147,7 +147,8 @@ export class PedestrianSystem {
       } else if (ai.mode === 'talk') {
         // In a conversation: walk up to a comfortable distance, then stay put.
         const dx = px - p.pos.x, dz = pz - p.pos.z, dd = Math.hypot(dx, dz) || 1;
-        if (dd > 1.45) { wx = dx / dd * 1.2; wz = dz / dd * 1.2; }
+        const comfy = p.gesture?.kind === 'handshake' ? 0.95 : 1.45; // close enough to shake hands
+        if (dd > comfy) { wx = dx / dd * 1.2; wz = dz / dd * 1.2; }
         p.anim = 'idle';
         faceTo = Math.atan2(dx, dz);
       }

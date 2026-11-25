@@ -59,15 +59,27 @@ changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pau
   for that car only. Sirens, a headlight beam on the player's car, contact shadows. Arcade physics
   with weight transfer, grip-limited cornering, handbrake drifts, tyre smoke, collisions, dents,
   broken headlights, smoke, fire and explosions.
-- **Character animation**: one continuous gait blended by a smoothed speed (idle, walk, jog,
-  sprint) with stride-matched foot planting, pelvis bob/sway/twist, counter-rotating shoulders,
-  arm swing and relaxed elbows; idle breathing, weight shifts and glances; a tucked jump pose and a
-  crouching landing; holster/draw when switching weapons (the new gun appears once the hand has
-  been to the hip); a two-handed reload where the support hand fetches a magazine from the belt;
-  recoil kick in the arms and chest; Raka walks to the driver's door and reaches for the handle
-  before getting in (F again cancels), steps out and straightens up, crouches to pick things up.
-  In conversations both people turn smoothly to face each other, keep eye contact and gesture
-  with their hands and nod while they speak.
+- **Character animation** (`characters/humanoid-animator.js`): every frame a target pose is
+  built and the bones follow it through critically damped springs, so state changes cross-fade
+  (~0.2-0.3 s) and nothing snaps. Legs use analytic two-bone IK driven by a footstep planner:
+  a planted foot is pinned to the ground in world space (no sliding, also when turning), a
+  swinging foot travels on an arc from lift-off to the gait's landing spot; heel strike, roll
+  over the ball and toe-off; stride length and cadence follow speed through walk, jog and
+  sprint; little shuffle steps settle the feet after stopping or turning on the spot. The
+  pelvis rides on the legs (as high as the planted feet allow) with bob, sway over the standing
+  leg, swing-side drop and twist; shoulders counter-rotate, arms swing with bending elbows,
+  the head stays level and looks at things; lean from acceleration and into turns; crouch
+  before a jump, tuck in the air, an absorbing landing. Layers: aiming (strafing legs), punch
+  with wind-up/strike/recover, two-handed bat/golok swing, reload, holster/draw, recoil,
+  reaching for door handles, picking up, umbrella, phone, cower, hands-up, panic run, talking
+  gestures with lip-sync, listening poses, wave/nod/shrug and a handshake whose hands meet by
+  IK. Hits kick the torso away from the blow, heavy blows stagger, knock-downs throw the body
+  over and it gets up again, deaths buckle the knees and topple with a rebound before the limbs
+  settle. Riders hold the grips (IK, following the bars), feet on the pegs or floorboard with a
+  foot down when stopped, tuck at speed and lean with the bike; they climb on and off (Raka
+  too). Drivers keep their hands on a steering wheel that turns with the front wheels.
+  Townspeople greet Raka, walk up to a comfortable distance to talk, step aside when walked
+  at, flinch at gunfire, raise their hands when a gun is pointed at them and panic-run.
 - **Traffic & people**: left-hand-drive traffic AI on the road graph obeying signals, keeping
   distance and overtaking stalled cars, parked cars, scooters; articulated pedestrians (some in
   headscarves) who walk the sidewalks, phone, cower,
@@ -128,6 +140,13 @@ simulate it on a fixed time step. `?shot=stress` exercises every mission and sys
 `game/debug/cars.html` is a vehicle lab with only the cars on a lot, in the game's renderer
 (`?view=lineup|sheet|close&model=..&angle=..`, `&side=1|top=1|front=1`, `&only=paint|glass|multi`);
 `node tools/carshot.mjs "<query>" out.png` renders it in about 20 s.
+`game/debug/motion.html` is the motion lab: the `debug/motion-stage.js` cast (walker who stops
+and turns, jogger, sprinter, handshake and chat, strafing gunman, brawl, collapse, scooter,
+sport bike, driver, people climbing on/off) on a plain lot. `node tools/motionshot.mjs
+"?focus=<actor>&t=<s>&n=<frames>&step=<s>&cols=<c>&angle=<deg>" out.png` renders a contact
+sheet of frames (about 30 s) to judge motion; `&ghost=1` hides car bodies to see the driver.
+In the game, `?shot=motion[&focus=..&t=..]` stages the same cast on Jl. Bandar and exposes
+`window.__motion.advance(seconds)` for frame sequences.
 `tools/touchtest.mjs` plays the game on a phone-sized touch viewport with real touch events (CDP)
 and checks every on-screen control: stick, camera drag, jump/sprint, punch, D-pad weapons, aim and
 shoot, reload, enter/drive/leave a car, map, pause menu, layout editor (drag, reset, save) and TALK.

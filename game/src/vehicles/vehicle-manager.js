@@ -88,8 +88,10 @@ export class VehicleManager {
   }
 
   removeDriverModel(v) {
+    const cb = v.onDismounted;
     if (v.driverModel) { v.body.remove(v.driverModel.root); v.driverModel.dispose(); v.driverModel = null; }
     v.mountDir = 1; v.onDismounted = null;
+    cb?.(standSpot(v)); // a dismount cut short still puts the person on their feet
   }
 
   remove(v) {
@@ -138,7 +140,7 @@ export class VehicleManager {
         const dur = v.spec.twoWheel ? 0.95 : 1.1;
         if (v.mountDir < 0) {
           v.mount = Math.max(0, (v.mount ?? 1) - dt / dur);
-          if (v.mount <= 0) { const cb = v.onDismounted, spot = standSpot(v); this.removeDriverModel(v); cb?.(spot); continue; }
+          if (v.mount <= 0) { this.removeDriverModel(v); continue; }
         } else if (v.mount < 1) v.mount = Math.min(1, v.mount + dt / dur);
         animateDriver(v, v.driverModel, dt);
       }

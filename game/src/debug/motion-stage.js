@@ -28,7 +28,7 @@ export function createMotionStage(scene, ox = 0, oz = 0) {
   const J = add('jogger', 23, 0, -4, 0, { gender: 'f' });
   const S = add('sprinter', 37, 0, -4, 0, { gender: 'm' });
   const T1 = add('talkA', 41, -12, 6, Math.PI / 2, { gender: 'f' });
-  const T2 = add('talkB', 52, -10.9, 6, -Math.PI / 2, { gender: 'm', age: 'old' });
+  const T2 = add('talkB', 52, -11.05, 6, -Math.PI / 2, { gender: 'm', age: 'old' });
   const G = add('gunman', 63, 8, 6, 0, { role: 'gang' });
   G.model.hold(buildWeaponMesh('rifle')); G.twoHanded = true;
   const P = add('puncher', 74, 14, 0, Math.PI / 2);

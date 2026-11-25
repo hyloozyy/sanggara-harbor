@@ -172,7 +172,7 @@ export class Character {
       const o = this.gesture.with;
       const mx = (this.pos.x + o.pos.x) / 2, mz = (this.pos.z + o.pos.z) / 2;
       const ex = mx - this.pos.x, ez = mz - this.pos.z, c = Math.cos(this.heading), s = Math.sin(this.heading);
-      handTarget = { x: (ex * c - ez * s) / sc - 0.08, y: 1.02, z: (ex * s + ez * c) / sc };
+      handTarget = { x: (ex * c - ez * s) / sc, y: 1.06, z: (ex * s + ez * c) / sc };
     }
     animateHumanoid(this.model, anim, speed, dt, {
       vel: this.vel, heading: this.heading, scale: sc,
