@@ -80,10 +80,35 @@ changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pau
   too). Drivers keep their hands on a steering wheel that turns with the front wheels.
   Townspeople greet Raka, walk up to a comfortable distance to talk, step aside when walked
   at, flinch at gunfire, raise their hands when a gun is pointed at them and panic-run.
+- **People** (`characters/body-geometry.js`, `garment-geometry.js`, `wear-geometry.js`,
+  `character-atlas.js`): every person is generated from a seed (`character-generator.js`) as one
+  skinned mesh on a 51-bone skeleton with a painted 512² atlas, three draw calls (matte, gloss,
+  alpha-tested hair cards). Bodies are built from anatomy on grid surfaces: superellipse torso
+  sections (pelvis, glutes, waist, ribcage, pectorals or bust, shoulder blades, trapezius slope,
+  clavicles, Adam's apple), muscled arm and leg tubes, hands with a palm and two bones per
+  finger (relaxed curl, grips on wheels/bars/glasses/guns, fists, open hands for waves and
+  handshakes), lofted shoes. Heads are sculpted on a grid packed around the eyes, nose and lips:
+  nose bridge/tip/wings, lips on a doubled mouth row so they part with the jaw, eyeballs with
+  iris and pupil behind almond lids, blinking upper lids and lash lines, ears, teeth; bones for
+  gaze, brows and mouth corners drive saccades, visemes and expressions (smile, frown, surprise,
+  fear — from state: panic, flinch, waves). Hairlines, stubble, beards and moustaches are
+  evaluated per texel; hair is a shell that thins into the hairline plus strand cards (long hair
+  and ponytails swing on the hair bone). Garments are shells on the body surface with the same
+  weights: sleeves with hems, loose shirt hems, shorts legs, folded collars, jackets and vests,
+  skirts whose front/back panels are pushed by the leading knee (spring follow-through),
+  headscarf drapes; watches, earrings and necklaces; a shared fold normal map (waist, armpit,
+  elbow, knee and ankle creases, skirt folds, hair strands). Near/far geometry switches by camera
+  distance (`view-point.js`). Drivers sit back against the seat, hands on the wheel at a bent-arm
+  reach, feet on the pedals by IK; some traffic carries pillion riders (hands at the rider's
+  waist, feet on the rear pegs), bajaj and front-seat car passengers. Close-ups: the motion lab
+  `?people=<n>&part=face|head|torso|body|hands|feet&who=<i>&n=<tiles>` (tile i = person i,
+  `&seq=1` for a time sequence of one person, `&fps=20` for low frame rates) and
+  `?shot=people[&part=..&who=..&talk=1&expr=smile]` in the game.
 - **Interiors** (`game/src/interiors/`): four buildings you can walk into — **Kafe Jangkar**
   (harbour bar, Pasar Ikan), **Raka's Room** (the safehouse flat, Kota Lama), **Toko Berkah**
-  (corner shop) and **Klinik Sehat** (clinic, Pusat Niaga), marked on the minimap (B/S/W/K) and
-  the city map. Each has a real door on a building facade (frame, hinged leaf, step, awning, sign,
+  (corner shop) and **Klinik Sehat** (clinic, Pusat Niaga), marked on the minimap and
+  the city map (house badges, an Interiors / Masuk legend entry, a pinned note in the Controls
+  screen), with a glowing beacon over each door and a MASUK blade sign on the pavement. Each has a real door on a building facade (frame, hinged leaf, step, awning, sign,
   lamp). Walk up and press E / TALK (the touch button reads ENTER) / D-pad up: Raka steps to the
   door, takes the handle, the door swings open, he walks in under a fade; inside, the room's door
   closes behind him. Leaving works the same way. While inside only the room is simulated and drawn

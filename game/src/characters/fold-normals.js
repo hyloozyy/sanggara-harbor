@@ -28,7 +28,7 @@ export function foldNormalMap() {
   const weave = (x, y) => 0.06 * (Math.sin(x * 2.1) * Math.sin(y * 2.1));
   region('torso', (u, v, x, y) => {
     // Horizontal waist folds (wavy), diagonal pulls from the armpits, a weave; skin above the neckline.
-    const waist = sm(0.05, 0.2, v) * sm(0.48, 0.25, v) * Math.sin(v * 120 + Math.sin(u * 25) * 2.2) * 0.55;
+    const waist = sm(0.05, 0.2, v) * sm(0.48, 0.25, v) * Math.sin(v * 120 + Math.sin(u * 25) * 2.2) * 0.32;
     let pit = 0;
     for (const c of [0.25, 0.75]) { const d = Math.abs(u - c); pit += sm(0.12, 0.0, d) * sm(0.55, 0.68, v) * sm(0.85, 0.7, v) * Math.sin((u - c) * 90 + v * 60) * 0.45; }
     return (waist + pit) * (1 - sm(0.84, 0.9, v)) + weave(x, y) + noise(u * 14, v * 14) * 0.25;
