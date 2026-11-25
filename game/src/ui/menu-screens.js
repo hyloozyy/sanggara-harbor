@@ -4,6 +4,7 @@ import { WEATHER_STATES } from '../world/weather-system.js';
 import { CAST } from '../missions/story-cast.js';
 import { STORY_ARC, MISSIONS } from '../missions/mission-scripts.js';
 import { formatMoney } from '../core/math-utils.js';
+import { ENTERABLE, enterableDistrict, enterableLegendIcon } from '../interiors/enterable-places.js';
 import { CONTROL_MAP, KEYBOARD_HELP, PAD_SHOULDERS } from '../core/control-router.js';
 
 const $ = (id) => document.getElementById(id);
@@ -195,7 +196,11 @@ export class MenuScreens {
       ...(ctx === 'vehicle' ? [['RT / LT', 'Gas / brake (analog)']] : []),
       ...ids.filter((id) => ctx === 'foot' || (id !== 'l' && id !== 'r')).map((id) => [padName[id], CONTROL_MAP[id][ctx][1]]),
       ['LB', PAD_SHOULDERS[ctx][4][1]], ['RB', PAD_SHOULDERS[ctx][5][1]]]);
-    $('help-body').innerHTML = `<div class="help-cols">
+    const places = ENTERABLE.map((e) => `<span class="help-place"><b style="color:${e.color}">${e.glyph} · ${e.label}</b> ${e.kind.toLowerCase()} in ${enterableDistrict(e)} — ${e.what}</span>`).join('');
+    $('help-body').innerHTML = `<div class="help-pin"><img src="${enterableLegendIcon()}" alt=""><div><h3>📌 PLACES YOU CAN ENTER · MASUK</h3>
+      ${places}
+      <p>Find them by the <b>house icons</b> on the minimap (they wait on the rim when far away) and the city map (M), the <b>glowing beacon</b> over each door and the <b>MASUK</b> sign on the pavement. Walk up to the door and press <b>E</b> · <b>ENTER</b> button · <b>D-pad ▲</b>. The door stays shut while the police are after you.</p></div></div>
+      <div class="help-cols">
       <div class="help-col"><h3>KEYBOARD & MOUSE</h3><h4>ON FOOT</h4>${rows(KEYBOARD_HELP.foot)}<h4>IN A VEHICLE</h4>${rows(KEYBOARD_HELP.vehicle)}</div>
       <div class="help-col"><h3>TOUCH SCREEN</h3><h4>ON FOOT</h4>${touch('foot')}<h4>IN A VEHICLE</h4>${touch('vehicle')}<h4>LAYOUT</h4>Settings → Touch controls layout: drag, pinch to resize, fade or hide any control.</div>
       <div class="help-col"><h3>GAMEPAD</h3><h4>ON FOOT</h4>${pad('foot')}<h4>IN A VEHICLE</h4>${pad('vehicle')}<h4>MENUS & MAP</h4>D-pad / stick navigate · A confirm · B back · stick moves the map cursor</div>

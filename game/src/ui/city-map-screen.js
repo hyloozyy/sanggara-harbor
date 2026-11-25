@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { GRID, BLOCKS, DISTRICTS, PLACES, EW_STREETS, NS_STREETS, districtAt } from '../city/city-layout.js';
 import { DISTRICT_LORE, PLACE_INFO, DANGER, POLICE_PRESENCE } from '../city/district-lore.js';
+import { ENTERABLE_BY_PLACE, enterablePoint, drawEnterableIcon } from '../interiors/enterable-places.js';
 import { MISSIONS } from '../missions/mission-scripts.js';
 import { WEATHER_STATES } from '../world/weather-system.js';
 
@@ -149,7 +150,11 @@ export class CityMapScreen {
 
   blips() {
     const out = [];
-    for (const [key, p] of Object.entries(PLACES)) out.push({ key, x: p.x, z: p.z, name: p.name, color: PLACE_INFO[key]?.kind === 'Gang' ? '#ff5a5a' : PLACE_INFO[key]?.kind === 'Activity' ? '#40ffc0' : PLACE_INFO[key]?.kind === 'Story' ? '#ffc35a' : '#e8e2d4' });
+    for (const [key, p0] of Object.entries(PLACES)) {
+      const ent = ENTERABLE_BY_PLACE[key];
+      const p = ent ? enterablePoint(ent, this.s) : p0;
+      if (ent) { out.push({ key, x: p.x, z: p.z, name: ent.label, color: ent.color, enter: ent }); continue; }
+      out.push({ key, x: p.x, z: p.z, name: p0.name, color: PLACE_INFO[key]?.kind === 'Gang' ? '#ff5a5a' : PLACE_INFO[key]?.kind === 'Activity' ? '#40ffc0' : PLACE_INFO[key]?.kind === 'Story' ? '#ffc35a' : '#e8e2d4' }); }
     const hospital = this.s.hospital;
     if (hospital) out.push({ key: 'hospital', x: hospital.x, z: hospital.z, name: hospital.name, color: '#ffffff' });
     const m = this.s.missions.nextMission;
@@ -213,6 +218,7 @@ export class CityMapScreen {
       <div class="mc-head"><b>${b.name}</b><span>${info.kind} · ${DISTRICTS[did].name}</span></div>
       <canvas class="mc-thumb" width="320" height="170"></canvas>
       <p class="mc-lore">${info.text}</p>
+      ${b.enter ? `<p class="mc-lore"><b style="color:${b.color}">⌂ You can go inside</b> — ${b.enter.what}. Walk to the door under the glowing marker and press E / ENTER / D-pad up.</p>` : ''}
       <table class="mc-facts"><tr><td>Distance</td><td>${dist < 1000 ? Math.round(dist) + ' m' : (dist / 1000).toFixed(1) + ' km'}</td></tr></table>
       <div class="mc-buttons"><button id="mc-way">SET WAYPOINT</button><button id="mc-close">CLOSE</button></div>`;
     this.card.classList.remove('hidden');
@@ -319,6 +325,11 @@ export class CityMapScreen {
     for (const b of this.blips()) {
       const [x, y] = this.toScreen(b.x, b.z);
       const hot = this.hover?.type === 'place' && this.hover.key === b.key;
+      if (b.enter) {
+        drawEnterableIcon(g, x, y, hot ? 12 : 10, b.color, b.enter.glyph);
+        g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,0.85)'; g.strokeText(b.enter.label, x, y - 13); g.fillStyle = b.color; g.fillText(b.enter.label, x, y - 13);
+        continue;
+      }
       g.fillStyle = b.color; g.strokeStyle = '#000'; g.lineWidth = 2;
       g.beginPath();
       if (b.key === 'mission') { g.arc(x, y, hot ? 11 : 9, 0, Math.PI * 2); } else g.rect(x - (hot ? 8 : 6), y - (hot ? 8 : 6), hot ? 16 : 12, hot ? 16 : 12);

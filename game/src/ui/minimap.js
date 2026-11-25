@@ -1,6 +1,7 @@
 // The radar: a pre-painted map of Sanggara (sea, beach, hills, districts, roads, quay) drawn into a
 // circular minimap that rotates with the camera, with blips for police, the helicopter, enemies,
 // the objective (clamped to the rim), activities and the wanted search zone; plus the full map.
+import { drawEnterableIcon } from '../interiors/enterable-places.js';
 import { GRID, ROAD_HALF, BLOCKS, DISTRICTS, SEA_SOUTH_Z, HARBOR_EDGE_X, PLACES } from '../city/city-layout.js';
 
 const WORLD = 840, ORIGIN = -420, PX = 1.6; // map canvas pixels per metre
@@ -114,6 +115,14 @@ export class Minimap {
       ctx.fillStyle = '#000'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(glyph, x, y + 0.5);
     };
+    // Enterable buildings: house badges, upright; when off the map they wait on the rim.
+    for (const e of state.interiors || []) {
+      const rel = this.project(e.x - px, e.z - pz, yaw, zoom);
+      const d = Math.hypot(rel.x, rel.y), lim = R - 11;
+      const far = d > lim;
+      const k = far ? lim / d : 1;
+      drawEnterableIcon(ctx, R + rel.x * k, R + rel.y * k, far ? 6 : 8.5, e.color, e.glyph, far ? 0.8 : 1);
+    }
     if (state.objective) { const o = state.objective; marker(o, o.kind === 'enemy' ? '#ff4a3a' : o.kind === 'vehicle' ? '#40c0ff' : '#ffc040', o.kind === 'mission' ? '!' : '★'); }
     if (state.waypoint) marker(state.waypoint, '#e65aff', '⚑');
     // Player arrow (points along the player's heading relative to the camera).
@@ -157,6 +166,7 @@ export class Minimap {
       ctx.fillStyle = a.color; ctx.fillRect(x - 6, y - 6, 12, 12);
       ctx.fillStyle = '#fff'; ctx.fillText(a.name, x, y - 10);
     }
+    for (const e of state.interiors || []) { const [x, y] = P(e.x, e.z); drawEnterableIcon(ctx, x, y, 9, e.color, e.glyph); ctx.fillStyle = '#fff'; ctx.fillText(e.name, x, y - 14); }
     if (state.objective) { const [x, y] = P(state.objective.x, state.objective.z); ctx.fillStyle = '#ffc040'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); }
     const [x, y] = P(state.px, state.pz);
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();

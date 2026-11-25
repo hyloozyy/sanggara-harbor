@@ -605,6 +605,17 @@ const SCENES = {
     s.cameraRig.yaw = door.heading + Math.PI; s.cameraRig.pitch = 0.12;
     s.cameraRig.current.set(0, 0, 0);
     simulate(s, 0.6);
+    if (p.get('phase') === 'street') {
+      // Look at the door from down the street: beacon, pavement sign and minimap badge.
+      const D = Number(p.get('dist') || 22), tx = -door.nz, tz = door.nx;
+      s.player.body.pos.set(door.x + door.nx * 2.6 + tx * D, door.y, door.z + door.nz * 2.6 + tz * D);
+      const yaw = Math.atan2(door.x - s.player.body.pos.x, door.z - s.player.body.pos.z);
+      s.player.body.heading = yaw; s.cameraRig.yaw = yaw + Number(p.get('yawoff') || 0); s.cameraRig.pitch = Number(p.get('pitch') || 0.05);
+      simulate(s, 1.0);
+      s.cameraRig.update(DT, s.player, s.input);
+      await finish(s, gfx);
+      return;
+    }
     I.beginEnter(door);
     if (p.get('phase') === 'door') {
       for (let i = 0; i < 200 && !(I.trans?.phase === 'in' && I.trans.t > Number(p.get('dt') || 0.25)); i++) simulate(s, DT);

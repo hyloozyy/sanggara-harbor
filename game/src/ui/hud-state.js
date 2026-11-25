@@ -1,5 +1,6 @@
 // Gathers, once per frame, everything the HUD and the minimap draw: wanted level, money and rank,
 // weapon and ammo, mission panel, police units, vehicle gauges, radio, hints and blips.
+import { ENTERABLE, enterablePoint } from '../interiors/enterable-places.js';
 import { PLACES } from '../city/city-layout.js';
 
 export function buildHudState(game, HOSPITAL) {
@@ -61,10 +62,10 @@ const self = game;
   const acts = [
     { ...PLACES.raceStart, color: '#40ffc0', name: 'Race', icon: 'R' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Delivery', icon: 'D' },
     { ...PLACES.paintShop, color: '#8080ff', name: 'Paint Shop', icon: 'P' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Gun Shop', icon: 'G' },
-    { ...PLACES.safehouse, color: '#60ff80', name: 'Safehouse', icon: 'S' }, { ...HOSPITAL, color: '#ffffff', name: 'Hospital', icon: '+' },
-    { ...PLACES.bar, color: '#ff5aa0', name: 'Kafe Jangkar', icon: 'B' }, { ...PLACES.tokoBerkah, color: '#ffe060', name: 'Toko Berkah', icon: 'W' },
-    { ...PLACES.clinic, color: '#5affc8', name: 'Klinik Sehat', icon: 'K' },
+    { ...HOSPITAL, color: '#ffffff', name: 'Hospital', icon: '+' },
   ];
+  // Buildings you can walk into: house badges at their doors (kept on the rim when far).
+  const interiors = ENTERABLE.map((e) => ({ ...enterablePoint(e, self), color: e.color, glyph: e.glyph, name: e.label }));
   const inPos = self.interiors?.inside ? self.interiors.savePosition() : null;
   const enemies = [...self.missions.enemies, ...self.worldEvents.gang].filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
   return {
@@ -72,7 +73,7 @@ const self = game;
     speed: p.vehicle ? Math.abs(p.vehicle.speed) : 0,
     police: self.police.policeCars.filter((v) => !v.wrecked).map((v) => ({ x: v.pos.x, z: v.pos.z })).concat(self.police.officers.filter((o) => o.alive).map((o) => ({ x: o.body.pos.x, z: o.body.pos.z }))),
     heli: self.police.heliActive ? { x: self.police.heli.pos.x, z: self.police.heli.pos.z } : null,
-    enemies, activities: acts,
+    enemies, activities: acts, interiors,
     objective: self.missions.objectivePoint(self.angkotJob.objective()) || (self.side.markers[0] ? { x: self.side.markers[0].x, z: self.side.markers[0].z, kind: 'objective' } : null),
     route: self.gpsRoute, waypoint: self.waypoint, gps: self.gpsRoute ? { dist: self.gpsDistance, label: self.waypoint ? self.waypoint.label : 'Objective' } : null,
     searchZone: self.wanted.level > 0 && self.wanted.unseen > 2 ? { x: self.wanted.lastKnown.x, z: self.wanted.lastKnown.z, r: self.wanted.searchRadius } : null,

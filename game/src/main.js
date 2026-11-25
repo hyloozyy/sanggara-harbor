@@ -1,5 +1,6 @@
 // Boot: renderer, input and audio, the loading screen, the title flyover behind the menu, then the
 // game loop with pause, settings, map and save/load. ?shot=... stages a screenshot scene.
+import { enterableLegendIcon } from './interiors/enterable-places.js';
 import { GameSession } from './game-session.js';
 import { MenuScreens } from './ui/menu-screens.js';
 import { hasSave, readSave, applySave, loadSettings, saveSettings } from './save/save-system.js';
@@ -97,7 +98,7 @@ function openMap() {
   worldPaused(true);
   input.releaseLock();
   mapScreen.open();
-  document.getElementById('big-map-legend').innerHTML = '<b>MAP OF SANGGARA</b><br><i style="background:#ffd23a;border-radius:50%"></i>Next story mission · <i style="background:#ffc35a"></i>Story place<br><i style="background:#40ffc0"></i>Activity · <i style="background:#ff5a5a"></i>Gang turf · <i style="background:#e8e2d4"></i>Landmark<br><i style="background:#e65aff"></i>Waypoint · <i style="background:#ff3a3a;border-radius:50%"></i>Police<br>Click a district or place for details · right-click: waypoint<br>Drag to pan · wheel / pinch to zoom · M / Esc close';
+  document.getElementById('big-map-legend').innerHTML = `<b>MAP OF SANGGARA</b><br><i style="background:#ffd23a;border-radius:50%"></i>Next story mission · <i style="background:#ffc35a"></i>Story place<br><i style="background:#40ffc0"></i>Activity · <i style="background:#ff5a5a"></i>Gang turf · <i style="background:#e8e2d4"></i>Landmark<br><img src="${enterableLegendIcon()}" style="width:18px;height:18px;vertical-align:-5px;margin-right:4px">Interiors / <b style="letter-spacing:0">Masuk</b> — buildings you can enter (B bar · H home · S shop · K clinic)<br><i style="background:#e65aff"></i>Waypoint · <i style="background:#ff3a3a;border-radius:50%"></i>Police<br>Click a district or place for details · right-click: waypoint<br>Drag to pan · wheel / pinch to zoom · M / Esc close`;
 }
 
 function closeMap() { mapScreen.close(); state = 'playing'; worldPaused(false); if (!touch.wanted()) lockPointer(canvas); }

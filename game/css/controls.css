@@ -52,6 +52,11 @@
 .tc-editor button#tce-done { background: var(--sunset, #ff7a3d); }
 
 #help-screen { background: rgba(6, 8, 16, 0.9); padding: 4vh 4vw; justify-content: flex-start; overflow-y: auto; }
+.help-pin { display: flex; gap: 12px; align-items: flex-start; background: rgba(255,176,112,0.10); border-left: 4px solid #ffb070; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; pointer-events: auto; }
+.help-pin img { width: 40px; height: 40px; flex: none; }
+.help-pin h3 { margin: 0 0 6px; color: #ffb070; letter-spacing: 2px; font-size: 15px; }
+.help-pin p { margin: 6px 0 0; opacity: 0.9; }
+.help-place { display: inline-block; margin: 2px 18px 2px 0; }
 .help-cols { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 18px; pointer-events: auto; }
 .help-col { background: rgba(255,255,255,0.05); border-top: 3px solid var(--teal, #3fd0c0); padding: 10px 14px; font-size: 13.5px; }
 .help-col h3 { margin: 0 0 6px; color: var(--gold, #ffc857); letter-spacing: 2px; font-size: 15px; }

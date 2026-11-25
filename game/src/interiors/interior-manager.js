@@ -22,6 +22,7 @@ import { VoiceDirector } from '../audio/voice-actor.js';
 import { Radio } from '../audio/radio-stations.js';
 import { angleDamp, clamp, damp } from '../core/math-utils.js';
 import { formatMoney } from '../core/math-utils.js';
+import { ENTERABLE_BY_ID, drawEnterableIcon } from './enterable-places.js';
 
 const ease = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -147,10 +148,58 @@ export class InteriorManager {
       k.add(roundedBox(0.12, 0.42, 0.06, 0.02), cross, 1.45, 2.8, 0.08); k.add(roundedBox(0.42, 0.12, 0.06, 0.02), cross, 1.45, 2.8, 0.08);
       k.push(-1.0, 2.05, 0.1); sconce(k, M); k.pop();
     }
+    // A blade sign on the pavement, readable from both directions along the street.
+    const ent = ENTERABLE_BY_ID[door.def.id];
+    const sx = style === 'bar' ? -1.9 : 1.9 + (W - 1) * 0.5;
+    k.push(sx, 0, 2.05);
+    k.add(new THREE.CylinderGeometry(0.035, 0.045, 2.5, 10), M.iron, 0, 1.25, 0);
+    k.add(new THREE.CylinderGeometry(0.16, 0.2, 0.06, 14), M.iron, 0, 0.03, 0);
+    k.add(roundedBox(0.04, 0.62, 0.98, 0.015), M.iron, 0, 2.08, -0.1);
+    k.add(new THREE.PlaneGeometry(0.94, 0.58), streetSignMat(ent, true), 0.022, 2.08, -0.1, Math.PI / 2);
+    k.add(new THREE.PlaneGeometry(0.94, 0.58), streetSignMat(ent, false), -0.022, 2.08, -0.1, -Math.PI / 2);
+    k.pop();
+    this.buildBeacon(door, g, ent);
     const statics = k.build({ name: 'door-' + door.def.id });
     g.add(statics);
     this.game.scene.add(g);
     door.group = g;
+  }
+
+  // A soft light pillar and a floating house badge over the door, seen from blocks away.
+  buildBeacon(door, g, ent) {
+    const col = new THREE.Color(ent.color);
+    const b = new THREE.Group();
+    b.position.set(0, 0, 1.7);
+    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.5, 16, 14, 1, true),
+      new THREE.MeshBasicMaterial({ map: beaconTexture(), color: col, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    pillar.position.y = 4.4 + 8;
+    pillar.renderOrder = 5;
+    const badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTexture(ent), transparent: true, depthWrite: false, fog: false }));
+    badge.scale.set(1.5, 1.5 * 0.75, 1);
+    badge.renderOrder = 6;
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTexture(), color: col, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    halo.scale.set(2.6, 2.6, 1);
+    halo.renderOrder = 4;
+    b.add(pillar, badge, halo);
+    for (const o of [pillar, badge, halo]) { o.castShadow = false; o.receiveShadow = false; }
+    g.add(b);
+    door.beacon = { group: b, pillar, badge, halo, t: Math.random() * 6 };
+  }
+
+  updateBeacon(d, dt, dist) {
+    const bc = d.beacon;
+    if (!bc) return;
+    bc.t += dt;
+    // Fade out right at the door (it would only be in the way), stay bright from afar.
+    const near = clamp((dist - 3) / 6, 0, 1);
+    const y = 4.4 + Math.sin(bc.t * 1.8) * 0.12;
+    bc.badge.position.y = y; bc.halo.position.y = y;
+    bc.badge.material.opacity = 0.25 + 0.75 * near;
+    bc.halo.material.opacity = (0.55 + 0.25 * Math.sin(bc.t * 3.1)) * (0.3 + 0.7 * near);
+    bc.pillar.material.opacity = 0.5 * near;
+    // Keep the badge readable from far away: grow a little with distance.
+    const s = 1.5 * (1 + clamp((dist - 25) / 120, 0, 1.6));
+    bc.badge.scale.set(s, s * 0.75, 1); bc.halo.scale.setScalar(s * 1.7);
   }
 
   // ---------------------------------------------------------------- per frame (outside)
@@ -230,6 +279,7 @@ export class InteriorManager {
   updateDoors(dt) {
     const p = this.game.player.pos;
     for (const d of this.doors) {
+      if (!this.active) this.updateBeacon(d, dt, Math.hypot(p.x - d.x, p.z - d.z));
       if (!this.active && Math.abs(p.x - d.x) + Math.abs(p.z - d.z) > 60 && d.open === 0) continue;
       d.open = damp(d.open, d.target, d.target > d.open ? 5 : 3.2, dt);
       if (Math.abs(d.open - d.target) < 0.002) d.open = d.target;
@@ -650,3 +700,50 @@ function stripes(a, b) {
 }
 
 export { pick, formatMoney, SURFACE_WEATHER };
+
+// The pavement sign: coloured header with the house badge, the place's name and MASUK with an
+// arrow pointing at the door (each face of the blade gets its own, so the arrow is never mirrored).
+function streetSignMat(ent, doorOnRight) {
+  const c = document.createElement('canvas'); c.width = 384; c.height = 236; const x = c.getContext('2d');
+  x.fillStyle = '#10141c'; x.fillRect(0, 0, 384, 236);
+  x.fillStyle = ent.color; x.fillRect(0, 0, 384, 78);
+  x.strokeStyle = '#f4efe0'; x.lineWidth = 6; x.strokeRect(5, 5, 374, 226);
+  drawEnterableIcon(x, doorOnRight ? 44 : 340, 40, 22, '#10141c', ent.glyph);
+  x.fillStyle = '#10141c'; x.font = 'bold 44px Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('MASUK', doorOnRight ? 200 : 184, 42);
+  x.fillStyle = '#f4efe0'; x.font = 'bold 38px Georgia, serif';
+  x.fillText(ent.label, 192, 120, 350);
+  x.fillStyle = ent.color; x.font = 'bold 28px sans-serif';
+  x.fillText(doorOnRight ? `${ent.kind.toUpperCase()}  ➜` : `⟵  ${ent.kind.toUpperCase()}`, 192, 186);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return new THREE.MeshStandardMaterial({ map: t, roughness: 0.5, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.45 });
+}
+
+let beaconTex = null, haloTex = null;
+function beaconTexture() {
+  if (beaconTex) return beaconTex;
+  const c = document.createElement('canvas'); c.width = 4; c.height = 128; const x = c.getContext('2d');
+  const gr = x.createLinearGradient(0, 128, 0, 0);
+  gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.25, 'rgba(255,255,255,0.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 4, 128);
+  beaconTex = new THREE.CanvasTexture(c);
+  return beaconTex;
+}
+function haloTexture() {
+  if (haloTex) return haloTex;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  haloTex = new THREE.CanvasTexture(c);
+  return haloTex;
+}
+function badgeTexture(ent) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 192; const x = c.getContext('2d');
+  drawEnterableIcon(x, 128, 72, 46, ent.color, ent.glyph);
+  x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.lineWidth = 6; x.strokeStyle = 'rgba(0,0,0,0.85)'; x.strokeText(ent.label, 128, 160);
+  x.fillStyle = '#fff'; x.fillText(ent.label, 128, 160);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
