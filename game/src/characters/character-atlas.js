@@ -270,6 +270,12 @@ function paintEye(ctx, look) {
   for (let k = 0; k < 24; k++) { const a = (k / 24) * Math.PI * 2; ctx.strokeStyle = rgba(mix(iris, 0xffffff, 0.3), 0.4); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * w * 0.09, cy + Math.sin(a) * w * 0.09); ctx.lineTo(cx + Math.cos(a) * w * 0.2, cy + Math.sin(a) * w * 0.2); ctx.stroke(); }
   ctx.fillStyle = '#050302'; ctx.beginPath(); ctx.arc(cx, cy, w * 0.095, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(cx + w * 0.07, cy - w * 0.07, w * 0.04, 0, Math.PI * 2); ctx.fill();
+  // Corners the round eyeball never samples hold small swatches for jewellery and watches.
+  const sw = (u, v, col) => { ctx.fillStyle = col; ctx.fillRect(x + u * (w - 8) , y + (1 - v) * (h - 8), 8, 8); };
+  const metal = { gold: '#d8a838', silver: '#c8ccd0', steel: '#b8bcc0', black: '#1c1e22' };
+  sw(0, 1, metal[look.earrings || look.necklace] || metal.gold);
+  sw(0, 0, look.watch === 'gold' ? metal.gold : look.watch === 'black' ? '#16181c' : look.watch ? metal.steel : '#16181c');
+  sw(1, 0, '#e8ecf0');
 }
 
 function paintHair(ctx, look, rng) {

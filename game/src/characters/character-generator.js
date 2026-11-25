@@ -82,6 +82,10 @@ export function generateLook(seed, role = 'auto', overrides = {}) {
   }
   if (bottom.kind === 'trousers' || bottom.kind === 'jeans') bottom.belt = chance(0.5) ? pick([0x2a1a10, 0x111111, 0x5a3a1a]) : null;
   look.props = { phone: chance(0.3), umbrella: chance(0.55) };
+  // Jewellery and a wristwatch (on the left wrist).
+  look.watch = chance(age === 'young' ? 0.25 : 0.42) ? pick(['steel', 'gold', 'black']) : null;
+  look.earrings = f && look.hair !== 'hijab' && chance(0.55) ? pick(['gold', 'gold', 'silver']) : null;
+  look.necklace = chance(f ? 0.3 : 0.12) && look.hair !== 'hijab' ? pick(['gold', 'silver']) : null;
   look.name = `${pick(f ? NAMES_F : NAMES_M)}${chance(0.5) ? ' ' + pick(SURNAMES) : ''}`;
   applyRole(look, role, r);
   return deepMerge(look, overrides);

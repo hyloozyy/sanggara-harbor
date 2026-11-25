@@ -48,7 +48,7 @@ if (params.has('people')) {
 }
 const PART = { face: [1.63, 0.62, 22], head: [1.6, 0.9, 26], hands: [0.95, 0.9, 30], body: [1.0, 3.2, 32], feet: [0.15, 1.1, 30], torso: [1.3, 1.5, 30] };
 const focus = params.get('focus') || (lineup.length ? 'p' + num('who', 0) : 'all');
-const DT = 1 / 60;
+const DT = 1 / num('fps', 60);   // &fps=20 steps the simulation at a low frame rate
 const simTo = (t) => { while (stage.time < t - 1e-6) stage.step(DT); };
 
 const cam = gfx.camera;

@@ -275,3 +275,58 @@ export function addHairCards(b, style, shape, P) {
   }
 }
 void sgnPow;
+
+// ------------------------------------------------------------------ accessories
+// UVs of the swatches painted in the corners of the eye region (see character-atlas.js).
+const SWATCH = { jewel: [0.03, 0.97], band: [0.03, 0.03], face: [0.97, 0.03] };
+const sw = (k) => regionUV('eye', SWATCH[k][0], SWATCH[k][1]);
+
+// A wristwatch on the left wrist: a band round the forearm just above the hand and a face.
+export function addWatch(b, P, J, kind) {
+  const [x, , z0] = J.foreL, yw = J.handL[1];
+  const L = P.limb;
+  const y = yw + 0.032;
+  const band = 'band';
+  const rows = [], uvs = [], ws = [];
+  for (let i = 0; i < 2; i++) {
+    const r = [], u = [], w = [];
+    for (let j = 0; j <= 14; j++) {
+      const a = (j / 14) * Math.PI * 2;
+      r.push(V(x + Math.sin(a) * 0.0235 * L, y + (i ? -0.011 : 0.011), z0 + 0.006 + Math.cos(a) * 0.029 * L));
+      u.push(sw(band)); w.push([[B.foreL, 0.85], [B.handL, 0.15]]);
+    }
+    rows.push(r); uvs.push(u); ws.push(w);
+  }
+  b.surface(rows, uvs, ws, { seam: true, group: 1 });
+  // The face on the back of the wrist (outside, +x for the left arm).
+  b.ellipsoid({ lat: 4, lon: 10, group: 1, uvFn: (d) => (d.x > 0.5 ? sw('face') : sw(band)), weightFn: () => [[B.foreL, 0.85], [B.handL, 0.15]],
+    map: (d) => V(x + 0.0235 * L + 0.003 + d.x * 0.0035, y + d.y * 0.016, z0 + 0.006 + d.z * 0.016) });
+}
+
+// Earrings: small studs with a drop at each lobe.
+export function addEarrings(b, P, kind) {
+  const ex = (P.f ? 0.073 : 0.077) + 0.004;
+  for (const s of [1, -1]) {
+    b.ellipsoid({ lat: 5, lon: 8, group: 1, uvFn: () => sw('jewel'), weightFn: () => [[B.head, 1]],
+      map: (d) => V(s * ex + d.x * 0.0035, HEAD_C[1] - 0.04 + d.y * 0.0045, HEAD_C[2] - 0.006 + d.z * 0.0035) });
+  }
+}
+
+// A fine chain round the base of the neck with a small pendant.
+export function addNecklace(b, P, kind) {
+  const rows = [], uvs = [], ws = [];
+  for (let i = 0; i < 2; i++) {
+    const r = [], u = [], w = [];
+    for (let j = 0; j <= 24; j++) {
+      const phi = (j / 24 - 0.5) * Math.PI * 2;
+      const front = Math.max(0, Math.cos(phi));
+      const y = 1.515 - 0.045 * front ** 2 + (i ? -0.003 : 0);
+      const p = torsoPoint(P, y, phi, 0.004 + (i ? 0.001 : 0));
+      r.push(p); u.push(sw('jewel')); w.push([[B.chest, 0.7], [B.neck, 0.3]]);
+    }
+    rows.push(r); uvs.push(u); ws.push(w);
+  }
+  b.surface(rows, uvs, ws, { seam: true, group: 1 });
+  const c = torsoPoint(P, 1.462, 0, 0.007);
+  b.ellipsoid({ lat: 4, lon: 8, group: 1, uvFn: () => sw('jewel'), weightFn: () => [[B.chest, 1]], map: (d) => V(c.x + d.x * 0.005, c.y + d.y * 0.007, c.z + d.z * 0.003) });
+}

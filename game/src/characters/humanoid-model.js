@@ -7,8 +7,9 @@ import { weatherizeMaterial } from '../render/surface-weather.js';
 import { SkinnedPartBuilder } from './skinned-part-builder.js';
 import { B, BONE_NAMES, PARENT, proportions, bindJoints, headShape, faceLayout, HEAD_C, addTorso, addArms, addLegs, addHead } from './body-geometry.js';
 import { addHair, addHeadwear, addHijab, addHood, addApron, addBag, addGlasses } from './wear-geometry.js';
-import { addSkirt, addTorsoShell, addCollar, addHijabDrape, addSleeves, addShirtHem, addShortsLegs, addHairCards } from './garment-geometry.js';
+import { addSkirt, addTorsoShell, addCollar, addHijabDrape, addSleeves, addShirtHem, addShortsLegs, addHairCards, addWatch, addEarrings, addNecklace } from './garment-geometry.js';
 import { paintCharacterAtlas } from './character-atlas.js';
+import { foldNormalMap } from './fold-normals.js';
 import { normaliseLook, generateLook, SKIN_TONES, HAIR_COLORS } from './character-generator.js';
 
 export { SKIN_TONES, HAIR_COLORS };
@@ -22,7 +23,7 @@ function geometryKey(L) {
   const collar = ['polo', 'shirt', 'batik', 'uniform'].includes(L.top.kind) ? 'c' : '-';
   const boot = L.shoes?.kind === 'boot' ? 'b' : '-';
   const g = garmentPlan(L);
-  return `human:${L.gender}:${L.build}:${hair}:${hat}:${outer}:${collar}:${L.bag || '-'}:${L.glasses ? (L.face?.sunglasses ? 's' : 'g') : '-'}:${boot}:${g.sleeve ?? '-'}:${g.hem ? 'h' : '-'}:${g.shorts ?? '-'}`;
+  return `human:${L.gender}:${L.build}:${hair}:${hat}:${outer}:${collar}:${L.bag || '-'}:${L.glasses ? (L.face?.sunglasses ? 's' : 'g') : '-'}:${boot}:${g.sleeve ?? '-'}:${g.hem ? 'h' : '-'}:${g.shorts ?? '-'}:${L.watch ? 'w' : '-'}:${L.earrings ? 'e' : '-'}:${L.necklace ? 'n' : '-'}`;
 }
 
 // Which garment shells a look needs (shared by the geometry key and the builder). Lengths are
@@ -76,6 +77,10 @@ function buildGeometry(L, lod = 'near') {
   }
   if (['polo', 'shirt', 'batik', 'uniform'].includes(L.top.kind) && !(o && (o.kind === 'jacket' || o.kind === 'hoodie'))) addCollar(b, P, 'trim');
   if (L.bag) addBag(b, P, L.bag);
+  const jacket = o && (o.kind === 'jacket' || o.kind === 'hoodie');
+  if (L.watch && lod === 'near' && !(L.top?.longSleeves || jacket)) addWatch(b, P, J, L.watch);
+  if (L.earrings && lod === 'near') addEarrings(b, P, L.earrings);
+  if (L.necklace && lod === 'near' && !jacket && !['polo', 'shirt', 'batik', 'uniform'].includes(L.top?.kind)) addNecklace(b, P, L.necklace);
   if (L.glasses) addGlasses(b, J, !!L.face?.sunglasses);
   const g = b.build();
   const H = HEAD_C;
@@ -134,7 +139,7 @@ export class HumanoidModel {
     const { joints: J } = geo.userData;
     this.atlas = paintCharacterAtlas(L, geo.userData.face, atlasSize);
     const env = assets.environment;
-    this.matte = new THREE.MeshStandardMaterial({ map: this.atlas, roughness: 0.8, metalness: 0, envMap: env, envMapIntensity: 0.55 });
+    this.matte = new THREE.MeshStandardMaterial({ map: this.atlas, normalMap: foldNormalMap(), normalScale: new THREE.Vector2(0.7, 0.7), roughness: 0.8, metalness: 0, envMap: env, envMapIntensity: 0.55 });
     this.gloss = new THREE.MeshStandardMaterial({ map: this.atlas, roughness: 0.16, metalness: 0, envMap: env, envMapIntensity: 1.1 });
     weatherizeMaterial(this.matte, { wet: 0.5, snow: 0.35 });
 
@@ -149,7 +154,7 @@ export class HumanoidModel {
       bone.userData.rest = bone.position.clone();
     }
     // Hair cards: the same atlas, alpha-tested, both sides.
-    this.cards = new THREE.MeshStandardMaterial({ map: this.atlas, roughness: 0.62, metalness: 0, envMap: env, envMapIntensity: 0.6, alphaTest: 0.45, side: THREE.DoubleSide });
+    this.cards = new THREE.MeshStandardMaterial({ map: this.atlas, normalMap: foldNormalMap(), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.62, metalness: 0, envMap: env, envMapIntensity: 0.6, alphaTest: 0.45, side: THREE.DoubleSide });
     this.mesh = new THREE.SkinnedMesh(geo, [this.matte, this.gloss, this.cards]);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = false;
