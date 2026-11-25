@@ -23,7 +23,7 @@ try {
   await page.goto(`http://localhost:${port}/${query}`, { waitUntil: 'commit', timeout: 120000 });
   await page.waitForFunction(() => window.__shotReady === true, null, { timeout: Number(timeoutSec) * 1000, polling: 500 });
   console.log('ready after', ((Date.now() - t) / 1000).toFixed(1), 's');
-  await page.screenshot({ path: out, type: 'jpeg', quality: Number(quality), timeout: 300000 });
+  await page.screenshot({ path: out, ...(out.endsWith('.png') ? { type: 'png' } : { type: 'jpeg', quality: Number(quality) }), timeout: 300000 });
   console.log('saved', out);
 } catch (e) {
   console.log('capture failed:', e.message);
