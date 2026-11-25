@@ -91,7 +91,9 @@ export class Conversations {
     const g = this.game, b = g.player.body;
     if (g.player.vehicle || !b.alive || g.wastedTimer > 0 || g.interiors?.trans) return null;
     if (g.interiors?.inside) {
-      // Inside: the bartender (preferred when seated at his counter) and the regulars.
+      // Inside: the bartender (always, when seated at his counter) and the regulars.
+      const seat = g.interiors.seat;
+      if (seat?.kind === 'stool') { const bt = g.interiors.active.bartender?.body; if (bt && Math.hypot(bt.pos.x - b.pos.x, bt.pos.z - b.pos.z) < 6) return bt; }
       let best = null, bd = 2.6;
       for (const c of g.interiors.active.talkers()) {
         const d = Math.hypot(c.pos.x - b.pos.x, c.pos.z - b.pos.z) - (c.interiorNpc.talkScript !== 'patron' ? 0.8 : 0);

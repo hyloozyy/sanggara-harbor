@@ -90,12 +90,12 @@ export class ShopInterior extends Interior {
     k.pop();
         // Sachet strips hanging from a wire across the front.
     const strip = new THREE.MeshStandardMaterial({ map: (() => { const t = M.goods.map.clone(); t.needsUpdate = true; return t; })(), roughness: 0.5, side: THREE.DoubleSide });
-    k.add(CYL(0.003, 0.003, 4.5, 4), M.black, 0.2, 2.45, 1.6, 0, 0, Math.PI / 2);
+    k.add(CYL(0.003, 0.003, 4.5, 4), M.black, 0.2, 2.7, 1.6, 0, 0, Math.PI / 2);
     for (let i = 0; i < 14; i++) {
-      const g = new THREE.PlaneGeometry(0.1, 0.85, 1, 6); const p = g.attributes.position;
+      const g = new THREE.PlaneGeometry(0.1, 0.55, 1, 6); const p = g.attributes.position;
       for (let j = 0; j < p.count; j++) p.setZ(j, Math.sin(p.getY(j) * 9 + i) * 0.01);
       const uv = g.attributes.uv; const cell = i % 32; for (let j = 0; j < uv.count; j++) uv.setXY(j, ((cell % 8) + uv.getX(j)) / 8, 1 - (Math.floor(cell / 8) + 1 - uv.getY(j)) / 4);
-      k.add(g, strip, -1.9 + i * 0.3, 2.0, 1.6, 0.2 * Math.sin(i));
+      k.add(g, strip, -1.9 + i * 0.3, 2.42, 1.6, 0.2 * Math.sin(i));
     }
     k.push(-3.45, 1.9, -1.6, Math.PI / 2); poster(k, M, 'dangdut', 0.45, 0.63); k.pop();
     k.push(-1.6, 1.85, -2.95); poster(k, M, 'football', 0.4, 0.56); k.pop();

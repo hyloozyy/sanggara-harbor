@@ -32,6 +32,8 @@ const game = {
 let seat = null;
 if (params.has('sit')) { seat = room.seats[num('sit', 0)]; seat.occupant = 'player'; raka.pos.set(seat.x, 0, seat.z); raka.heading = seat.heading; }
 if (params.has('px')) { raka.pos.set(num('px', 0), 0, num('pz', 0)); raka.heading = num('ph', 0); }
+if (params.has('trip')) { const n = room.npcs[num('trip', 1)]; n.clear(); room.restroomTrip(n); }
+if (params.has('gest')) { const n = room.npcs[num('npc', 0)]; n.clear(); n.planFn = null; for (let i = 0; i < 6; i++) n.gesture(params.get('gest'), num('gdur', 2.6)); }
 const DT = 1 / 60;
 let time = 0;
 function step(dt) {

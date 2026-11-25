@@ -616,9 +616,16 @@ const SCENES = {
       if (p.get('order')) { const r = I.active; r.pendingOrder = { kind: p.get('order'), x: s.player.pos.x, done: () => I.serveDrink(p.get('order'), 10) }; r.bartender.clear(); }
       if (p.get('juke')) I.playJukebox(p.get('juke'));
       simulate(s, Number(p.get('t') || 1));
-      const v = I.active.views?.[p.get('view')];
-      if (v) s.cameraRig.override = { x: v[0], y: v[1], z: v[2], tx: v[3], ty: v[4], tz: v[5], fov: Number(p.get('fov') || 55) };
-      log('npcs', I.active.npcs.map((n) => `${n.body.name || n.role}:${n.task?.type || '-'}`).join(' '));
+      log('state', 'money', s.progression.money, 'held', I.held, 'health', Math.round(s.player.body.health), 'juke', I.jukeboxOn);
+      if (p.get('leave')) {
+        if (I.seat) { I.sitting.phase = 'up'; I.sitting.k = 1; I.sitting.to = { x: I.seat.x, z: I.seat.z + 0.5 }; simulate(s, 1.2); }
+        I.beginLeave();
+        for (let i = 0; i < 600 && (I.inside || I.trans); i++) simulate(s, DT);
+        log('left', !I.inside, 'pos', s.player.pos.toArray().map((v) => v.toFixed(2)).join(','), 'door', I.doors.find((d) => d.def.id === id).open.toFixed(2));
+      }
+      const v = I.active?.views?.[p.get('view')];
+      if (v && I.inside) s.cameraRig.override = { x: v[0], y: v[1], z: v[2], tx: v[3], ty: v[4], tz: v[5], fov: Number(p.get('fov') || 55) };
+      if (I.active) log('npcs', I.active.npcs.map((n) => `${n.body.name || n.role}:${n.task?.type || '-'}`).join(' '));
     }
     window.__interior = { advance: (sec) => { simulate(s, sec); s.cameraRig.update(DT, s.player, s.input); gfx.render(12.5); } };
     s.cameraRig.update(DT, s.player, s.input);

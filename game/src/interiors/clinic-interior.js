@@ -92,7 +92,11 @@ export class ClinicInterior extends Interior {
     k.add(cg, curtainMat, 2.75, 0, -0.4, 0, 0, 0);
     // Glass medicine cabinet on the north wall.
     k.push(-0.2, 0, -2.78);
-    k.add(roundedBox(1.2, 1.9, 0.4, 0.02), M.white, 0, 0.95, 0);
+    // Open carcass (back, sides, top, plinth) so the shelves show through the glass.
+    k.add(roundedBox(1.2, 1.9, 0.03, 0.01), M.white, 0, 0.95, -0.185);
+    for (const x of [-0.585, 0.585]) k.add(roundedBox(0.03, 1.9, 0.4, 0.01), M.white, x, 0.95, 0);
+    k.add(roundedBox(1.2, 0.04, 0.4, 0.01), M.white, 0, 1.88, 0);
+    k.add(roundedBox(1.2, 0.5, 0.4, 0.015), M.white, 0, 0.25, 0);
     for (let lv = 0; lv < 4; lv++) {
       k.add(roundedBox(1.1, 0.015, 0.34, 0.005), M.glassClear, 0, 0.6 + lv * 0.35, 0);
       for (let i = 0; i < 8; i++) k.add(lathe([[0, 0], [0.03, 0], [0.03, 0.09], [0.015, 0.11], [0.015, 0.13], [0, 0.13]], 10, 'medjar'), [M.glassBrown, M.glassClear, M.glassBlue][(i + lv) % 3], -0.45 + i * 0.13, 0.61 + lv * 0.35, 0.02);

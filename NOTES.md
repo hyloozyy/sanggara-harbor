@@ -14,7 +14,7 @@ No network requests at runtime, no build step: serve `game/` with any static ser
 | F | enter, carjack or leave a vehicle |
 | Left / right mouse | shoot or punch / aim over the shoulder |
 | 1-9, mouse wheel, hold Tab | weapons: fists, bat, machete, pistol, revolver, SMG, rifle, shotgun, sniper (weapon wheel) |
-| E | talk to the person in front of you (dialogue choices with 1-4 / arrows / click) |
+| E | talk to the person in front of you (dialogue choices with 1-4 / arrows / click); enter or leave a building, sit, use things inside |
 | R | reload on foot, change radio station in a car |
 | H / G | horn / siren (in a police car) |
 | Z / X | crew favours: Dimas brings a getaway car, Bu Lastri calls off a star |
@@ -80,6 +80,31 @@ changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pau
   too). Drivers keep their hands on a steering wheel that turns with the front wheels.
   Townspeople greet Raka, walk up to a comfortable distance to talk, step aside when walked
   at, flinch at gunfire, raise their hands when a gun is pointed at them and panic-run.
+- **Interiors** (`game/src/interiors/`): four buildings you can walk into — **Kafe Jangkar**
+  (harbour bar, Pasar Ikan), **Raka's Room** (the safehouse flat, Kota Lama), **Toko Berkah**
+  (corner shop) and **Klinik Sehat** (clinic, Pusat Niaga), marked on the minimap (B/S/W/K) and
+  the city map. Each has a real door on a building facade (frame, hinged leaf, step, awning, sign,
+  lamp). Walk up and press E / TALK (the touch button reads ENTER) / D-pad up: Raka steps to the
+  door, takes the handle, the door swings open, he walks in under a fade; inside, the room's door
+  closes behind him. Leaving works the same way. While inside only the room is simulated and drawn
+  (own `THREE.Scene`, collision world and environment map baked from the room itself), the city
+  pauses, the street is muffled. The camera pulls in, stays below the ceiling and never leaves the
+  room. Rooms are built on first entry from bevelled (`roundedBox`) and turned (`lathe`) parts
+  batched per material (`shapes.js`, `furniture.js`), with canvas textures for planks, wood grain,
+  ubin tegel, terrazzo, glazed tiles, brick, felt, fabrics, batik, posters, labels and neon
+  (`interior-textures.js`). People inside (`interior-npc.js`) run task queues — walk, sit down,
+  stand up, drink, polish glasses, pour, serve, shoot pool, chat (babble with lip-sync), laugh —
+  on the shared motion system (new `sit` blend with IK legs and gestures in the animator; the sip
+  drives the wrist to the mouth by IK). Things to do: sit on any stool, chair, sofa or bed (E);
+  order Bir Jangkar / es teh / kopi from Bang Togar (he comes over when you sit at the counter),
+  buy a regular a drink, play the jukebox (five songs, positional, muffled outside the bar door);
+  at home sleep until morning (saves the game, restores health), cook mie goreng, grab a drink from
+  the fridge, watch the football on TV; buy food and drink from Bu Sari; get patched up by Suster
+  Ratih. Saving inside stores the pavement outside the door; loading always starts outside.
+  Debug: `game/debug/interior.html?room=bar|home|shop|clinic&view=<name>` (interior lab, ~30 s via
+  `node tools/interiorshot.mjs "<query>" out.png`, `&npc=<i>&n=12&step=0.3` contact sheets,
+  `&trip=<i>` restroom walk, `&gest=<kind>`), and `?shot=interior&room=..&sit=..&order=beer&leave=1`
+  in the game.
 - **Traffic & people**: left-hand-drive traffic AI on the road graph obeying signals, keeping
   distance and overtaking stalled cars, parked cars, scooters; articulated pedestrians (some in
   headscarves) who walk the sidewalks, phone, cower,

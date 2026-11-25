@@ -449,8 +449,8 @@ function layers(m, A, state, dt, extra) {
     const k = smooth(0.2, 1, sit.k);
     if (sit.arms === 'counter' || sit.arms === 'table') {
       const hi = sit.arms === 'counter' ? 1 : 0;
-      aL = mixArm(aL, { x: -0.5 - 0.15 * hi, z: 0.18, fx: -1.25 - 0.2 * hi, fy: -0.6 }, k);
-      aR = mixArm(aR, { x: -0.48 - 0.15 * hi, z: -0.14, fx: -1.35 - 0.2 * hi, fy: 0.5 }, k);
+      aL = mixArm(aL, { x: -0.5 - 0.15 * hi, z: 0.16, fx: -1.25 - 0.2 * hi, fy: -0.1 }, k);
+      aR = mixArm(aR, { x: -0.48 - 0.15 * hi, z: -0.12, fx: -1.35 - 0.2 * hi, fy: 0.15 }, k);
     } else {
       aL = mixArm(aL, { x: -0.62, z: 0.08, fx: -0.85, fy: -0.4 }, k);
       aR = mixArm(aR, { x: -0.6, z: -0.08, fx: -0.85, fy: 0.4 }, k);
@@ -502,7 +502,15 @@ function layers(m, A, state, dt, extra) {
       // Glass up to the lips, a sip with the head tipped back, glass down again.
       const lift = smooth(0, 0.28, ge.t) * (1 - smooth(0.72, 1, ge.t));
       const sip = smooth(0.3, 0.42, ge.t) * (1 - smooth(0.58, 0.7, ge.t));
-      aR = mixArm(aR, { x: -0.62 - 0.12 * sip, z: -0.05, fx: -2.25 - 0.15 * sip, fy: 0.85 }, lift);
+      aR = mixArm(aR, { x: -0.7, z: 0.05, fx: -2.0, fy: 0.3 }, lift);
+      // The wrist goes to a point just below and in front of the mouth (read from the head
+      // bone, so it works seated or standing); the glass in the palm meets the lips.
+      m.head.updateWorldMatrix(true, false);
+      ve.set(0.01, -0.13 + 0.03 * sip, 0.13).applyMatrix4(m.head.matrixWorld);
+      m.root.worldToLocal(ve);
+      A.ikArmT[1] = lift; A.armT[1].copy(ve);
+      A.armPole[1].set(-0.9, -0.7, -0.1);
+      A.ikArmRate = 8;
       A.headPitch = (A.headPitch || 0) - 0.32 * sip;
       Tadd(A, B.chest, -0.05 * sip, 0, 0);
       rate = 10;

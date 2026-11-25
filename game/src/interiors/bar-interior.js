@@ -329,7 +329,7 @@ export class BarInterior extends Interior {
       bottom: { kind: 'trousers', color: 0x1a1a1a, pattern: 'plain', belt: 0x111111 },
       outer: { kind: 'apron', color: 0x2a1a12 },
       face: { stubble: false, beard: null, moustache: true, sunglasses: false, browThick: 5, browArch: 2, eyeColor: 0x2a1608, mole: false, freckles: false },
-    }), 2.0, -3.45, 0, { name: 'Bang Togar', role: 'bartender', plan: (n, room) => this.planBartender(n, room) });
+    }), 2.0, -3.45, 0, { name: 'Bang Togar', role: 'bartender', plan: (n, room, game) => this.planBartender(n, room, game) });
     togar.talkScript = 'bartender';
     togar.body.model.hold(beerGlassMesh(M));
     this.bartender = this.addNpc(togar);
@@ -376,10 +376,18 @@ export class BarInterior extends Interior {
   }
 
   // Bang Togar's round: polish a glass, pour one, top somebody up, ring the till, lean on the bar.
-  planBartender(n) {
+  planBartender(n, room, game) {
     const S = this.barStations;
     const order = this.pendingOrder;
     if (order) { this.pendingOrder = null; this.serveOrder(n, order); return; }
+    // Raka just sat down at the counter: come over and ask.
+    const seat = game?.interiors?.seat;
+    if (seat?.kind === 'stool' && this.greeted !== seat) {
+      this.greeted = seat;
+      n.walk([[Math.max(-0.2, Math.min(4.9, seat.x)), -3.3]]).face(Math.PI, 0.4).chat(pick(['What\'ll it be, Raka?', 'Evening! What are you drinking?', 'The usual?']), null).wait(4, { x: seat.x, z: seat.z, y: 1.4 });
+      return;
+    }
+    if (!seat) this.greeted = null;
     const r = Math.random();
     if (r < 0.32) n.walk([S.center]).face(Math.PI, 0.5).gesture('wipe', 3.2).gesture('wipe', 2.6);
     else if (r < 0.5) n.walk([S.taps]).face(Math.PI, 0.4).gesture('pour', 2.6).walk([pick([S.east, S.west, S.center])]).face(Math.PI, 0.3).gesture('serve', 1.1);
