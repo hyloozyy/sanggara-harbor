@@ -16,8 +16,8 @@
   width: var(--u); height: var(--u); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.32), rgba(30,34,44,0.55) 70%); border: 2px solid rgba(255,255,255,0.55);
   box-shadow: 0 3px 10px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.35); color: #fff; }
-.tc-sym { font-size: calc(var(--u) * 0.42); line-height: 1; font-weight: bold; }
-.tc-cap { font-size: calc(var(--u) * 0.15); letter-spacing: 0.5px; opacity: 0.9; white-space: nowrap; margin-top: 2px; text-transform: uppercase; }
+.tc-sym { font-family: var(--font-cond); font-size: calc(var(--u) * 0.42); line-height: 1; font-weight: 700; }
+.tc-cap { font-family: var(--font-cond); font-weight: 600; font-size: calc(var(--u) * 0.17); letter-spacing: 0.8px; opacity: 0.9; white-space: nowrap; margin-top: 2px; text-transform: uppercase; }
 .tc-triangle .tc-sym { color: #6ff0c8; } .tc-circle .tc-sym { color: #ff7a8a; } .tc-cross .tc-sym { color: #8ab8ff; } .tc-square .tc-sym { color: #f0a8ff; }
 .tc-talk { width: calc(var(--u) * 1.1); height: calc(var(--u) * 0.62); border-radius: 18px; background: linear-gradient(#ffb04a, #e0702a); border-color: #ffe0a0; }
 .tc-talk .tc-sym { font-size: calc(var(--u) * 0.24); letter-spacing: 1px; }
@@ -43,7 +43,7 @@
 
 .tc-editor { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, 60vw); background: rgba(10,14,24,0.95); border-top: 3px solid var(--gold, #ffc857);
   padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #fff; pointer-events: auto; }
-.tc-ed-title { color: var(--gold, #ffc857); letter-spacing: 2px; font-weight: bold; }
+.tc-ed-title { font-family: var(--font-display); font-size: 22px; color: var(--gold, #ffc857); letter-spacing: 2px; font-weight: normal; }
 .tc-ed-title small { display: block; color: #ccc; letter-spacing: 0; font-weight: normal; font-size: 12px; }
 .tc-editor label { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .tc-editor input[type=range] { width: 55%; }

@@ -52,7 +52,8 @@ const self = game;
     aiming: b.aiming && !v, aimTarget,
     hint, activity,
     gps: self.gpsRoute ? `${self.waypoint ? '⚑ ' + self.waypoint.label : '★ Objective'} · ${self.gpsDistance < 1000 ? Math.round(self.gpsDistance) + ' m' : (self.gpsDistance / 1000).toFixed(1) + ' km'}` : '',
-    wasted: self.wastedTimer > 0 ? (self.busted ? 'BUSTED' : 'WASTED') : null,
+    wasted: self.wastedTimer > 0 ? (self.busted ? 'BUSTED' : 'WASTED') : null, wastedT: self.wastedTimer,
+    talkPartner: self.talk?.partner || null,
   };
 }
 

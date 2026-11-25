@@ -1,5 +1,6 @@
 // Analogue speedometer drawn on a canvas: arc gauge, ticks, needle, km/h readout, gear and a
 // drift indicator.
+import { FONT } from './fonts.js';
 
 export function drawSpeedometer(canvas, kmh, maxKmh, gear, drifting) {
   const ctx = canvas.getContext('2d');
@@ -25,11 +26,11 @@ export function drawSpeedometer(canvas, kmh, maxKmh, gear, drifting) {
   ctx.strokeStyle = '#ff6a3d'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(na) * (r - 14), cy + Math.sin(na) * (r - 14)); ctx.stroke();
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 34px "Trebuchet MS", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = `36px ${FONT.num}`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillText(String(Math.round(kmh)), cx, cy - 18);
-  ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = `600 12px ${FONT.cond}`; ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.fillText('KM/H', cx, cy - 4);
-  ctx.font = 'bold 14px sans-serif'; ctx.fillStyle = '#ffc35a';
+  ctx.font = `16px ${FONT.num}`; ctx.fillStyle = '#ffc35a';
   ctx.fillText(gear, cx + r - 6, cy - 2);
   if (drifting) { ctx.fillStyle = '#3fd6c6'; ctx.fillText('DRIFT!', cx - r + 14, cy - 2); }
 }

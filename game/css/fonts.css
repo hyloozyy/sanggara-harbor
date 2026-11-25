@@ -1,0 +1,17 @@
+/* Local, open-licensed fonts (SIL OFL 1.1, see fonts/README.md). No network requests. */
+@font-face { font-family: 'Bebas Neue'; src: url('../fonts/bebasneue/BebasNeue-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Barlow'; src: url('../fonts/barlow/Barlow-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Barlow'; src: url('../fonts/barlow/Barlow-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Barlow'; src: url('../fonts/barlow/Barlow-SemiBold.ttf') format('truetype'); font-weight: 500 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Barlow'; src: url('../fonts/barlow/Barlow-SemiBoldItalic.ttf') format('truetype'); font-weight: 500 700; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Barlow'; src: url('../fonts/barlow/Barlow-Bold.ttf') format('truetype'); font-weight: 700 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; src: url('../fonts/barlowcondensed/BarlowCondensed-SemiBold.ttf') format('truetype'); font-weight: 400 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Barlow Condensed'; src: url('../fonts/barlowcondensed/BarlowCondensed-Bold.ttf') format('truetype'); font-weight: 700 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Saira Stencil One'; src: url('../fonts/sairastencilone/SairaStencilOne-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+
+:root {
+  --font-display: 'Bebas Neue', 'Barlow Condensed', Impact, 'Arial Narrow', sans-serif;
+  --font-ui: 'Barlow', 'Segoe UI', 'DejaVu Sans', Arial, sans-serif;
+  --font-cond: 'Barlow Condensed', 'Barlow', 'Arial Narrow', sans-serif;
+  --font-num: 'Saira Stencil One', 'Barlow Condensed', Impact, sans-serif;
+}

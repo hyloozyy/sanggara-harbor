@@ -14,6 +14,7 @@ import { ControlRouter } from './core/control-router.js';
 import { GamepadInput } from './core/gamepad.js';
 import { TouchController } from './ui/touch-controller.js';
 import { CityMapScreen } from './ui/city-map-screen.js';
+import { loadFonts } from './ui/fonts.js';
 
 registerProceduralTextures();
 
@@ -171,7 +172,7 @@ function frame(now) {
     mapScreen.update(dt, gamepad.mapCursor);
     gamepad.mapCursor = null;
   } else if (state === 'playing') {
-    session.update(dt);
+    session.update(dt * (session.timeScale ?? 1));
     session.hud.update(dt, session.hudState());
     session.minimap.draw(dt, session.minimapState());
   }
@@ -183,6 +184,7 @@ function frame(now) {
 async function boot() {
   const step = (p) => { fill.style.width = `${Math.round(p * 100)}%`; return new Promise((r) => setTimeout(r, 0)); };
   await step(0.05);
+  await Promise.race([loadFonts(), new Promise((r) => setTimeout(r, 1500))]);
   session = new GameSession(gfx, input, audio, radio, (p) => { fill.style.width = `${Math.round(p * 100)}%`; });
   session.onTalkAvailable = (on, label) => { touch.setTalkAvailable(on); touch.setTalkLabel?.(label || 'TALK'); };
   mapScreen = new CityMapScreen(session, session.minimap);

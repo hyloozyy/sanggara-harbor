@@ -27,7 +27,7 @@ try {
   await clickText('#title-menu', 'NEW STORY');
   console.log('started');
   await wait(20000);
-  const state = async () => page.evaluate(() => [document.getElementById('mission-title').textContent, document.getElementById('mission-objective').textContent, document.getElementById('dialogue-text').textContent].join(' | '));
+  const state = async () => page.evaluate(() => [document.getElementById('mission-title').textContent, document.getElementById('mission-objective').textContent, (document.querySelector('#dialogue-box .dlg-text')?.textContent || '')].join(' | '));
   console.log('state', await state());
   await page.mouse.click(640, 400); await wait(1000);
   await page.keyboard.down('KeyW'); await wait(15000); await page.keyboard.up('KeyW');

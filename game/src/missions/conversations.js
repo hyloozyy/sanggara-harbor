@@ -128,7 +128,7 @@ export class Conversations {
       this.candidate = null;
       const p = this.partner, b = g.player.body;
       const d = Math.hypot(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
-      if (!p.alive || p.knock > 0 || d > 6 || g.player.vehicle || (p.ai && p.ai.mode !== 'talk')) { this.end(false); return; }
+      if (!p.alive || !b.alive || p.knock > 0 || d > 6 || g.player.vehicle || (p.ai && p.ai.mode !== 'talk')) { this.end(false); return; }
       // Face each other; the townsperson stays put while talking.
       // Both turn smoothly (not snapping) and keep eye contact.
       if (!p.sit) p.heading = angleDamp(p.heading, Math.atan2(b.pos.x - p.pos.x, b.pos.z - p.pos.z), 4, dt);
@@ -165,6 +165,7 @@ export class Conversations {
     const g = this.game;
     this.partner = c;
     g.dialogue.clear();
+    g.hud.dialogueBox?.newConversation();
     g.cameraRig.talkFocus = { a: g.player.body, b: c };
     g.cameraRig.talkLook = null;
     if (c.ai) { c.ai.prevMode = c.ai.mode; c.ai.mode = 'talk'; if (!c.interiorNpc) c.anim = 'idle'; }

@@ -5,6 +5,7 @@
 // a district highlights it; clicking a district or a landmark opens a detail card (lore, a
 // thumbnail rendered once from the 3D city, what is there, who controls it, police presence,
 // the weather, Raka's progress) with a "Set waypoint" button; right-click drops a waypoint.
+import { FONT } from './fonts.js';
 import * as THREE from 'three';
 import { GRID, BLOCKS, DISTRICTS, PLACES, EW_STREETS, NS_STREETS, districtAt } from '../city/city-layout.js';
 import { DISTRICT_LORE, PLACE_INFO, DANGER, POLICE_PRESENCE } from '../city/district-lore.js';
@@ -234,7 +235,7 @@ export class CityMapScreen {
     if (this.thumbs[key]) { paint(); return; }
     const g = target.getContext('2d');
     g.fillStyle = '#0c1220'; g.fillRect(0, 0, 320, 170);
-    g.fillStyle = '#ffc35a'; g.font = '14px sans-serif'; g.textAlign = 'center'; g.fillText('Rendering view…', 160, 90);
+    g.fillStyle = '#ffc35a'; g.font = `600 15px ${FONT.cond}`; g.textAlign = 'center'; g.fillText('Rendering view…', 160, 90);
     setTimeout(() => {
       try {
         const gfx = this.s.gfx, cam = gfx.camera;
@@ -298,17 +299,17 @@ export class CityMapScreen {
     g.setLineDash([]);
     // Street names once zoomed in.
     if (v.k > 1.7) {
-      g.font = `${Math.min(13, 4 + v.k * 2)}px sans-serif`; g.fillStyle = 'rgba(20,24,32,0.9)'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = `600 ${Math.min(14, 5 + v.k * 2)}px ${FONT.cond}`; g.fillStyle = 'rgba(20,24,32,0.9)'; g.textAlign = 'center'; g.textBaseline = 'middle';
       GRID.forEach((gz, i) => { for (let j = 0; j < 8; j += 3) { const [x, y] = this.toScreen((GRID[j] + GRID[j + 1]) / 2, gz); g.fillText(EW_STREETS[i], x, y); } });
       GRID.forEach((gx, i) => { for (let j = 1; j < 8; j += 3) { const [x, y] = this.toScreen(gx, (GRID[j] + GRID[j + 1]) / 2); g.save(); g.translate(x, y); g.rotate(-Math.PI / 2); g.fillText(NS_STREETS[i], 0, 0); g.restore(); } });
     }
     for (const [id, d] of Object.entries(DISTRICTS)) {
       const c = this.centres[id], [x, y] = this.toScreen(c.x, c.z);
       g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = `bold ${Math.round(Math.max(14, Math.min(26, 10 + v.k * 6)))}px "Trebuchet MS", sans-serif`;
+      g.font = `${Math.round(Math.max(18, Math.min(34, 13 + v.k * 8)))}px ${FONT.display}`;
       g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,0.75)'; g.strokeText(d.name.toUpperCase(), x, y - 8);
       g.fillStyle = d.color; g.fillText(d.name.toUpperCase(), x, y - 8);
-      g.font = `italic ${Math.round(Math.max(11, Math.min(15, 8 + v.k * 3)))}px sans-serif`;
+      g.font = `italic ${Math.round(Math.max(11, Math.min(15, 8 + v.k * 3)))}px ${FONT.ui}`;
       g.lineWidth = 3; g.strokeText(DISTRICT_LORE[id].subtitle, x, y + 12);
       g.fillStyle = '#f0ece0'; g.fillText(DISTRICT_LORE[id].subtitle, x, y + 12);
     }
@@ -321,7 +322,7 @@ export class CityMapScreen {
       g.stroke(); g.setLineDash([]);
     }
     // Landmarks and activities.
-    g.font = '12px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom';
+    g.font = `600 13px ${FONT.cond}`; g.textAlign = 'center'; g.textBaseline = 'bottom';
     for (const b of this.blips()) {
       const [x, y] = this.toScreen(b.x, b.z);
       const hot = this.hover?.type === 'place' && this.hover.key === b.key;
@@ -334,7 +335,7 @@ export class CityMapScreen {
       g.beginPath();
       if (b.key === 'mission') { g.arc(x, y, hot ? 11 : 9, 0, Math.PI * 2); } else g.rect(x - (hot ? 8 : 6), y - (hot ? 8 : 6), hot ? 16 : 12, hot ? 16 : 12);
       g.fill(); g.stroke();
-      if (b.key === 'mission') { g.fillStyle = '#000'; g.font = 'bold 12px sans-serif'; g.textBaseline = 'middle'; g.fillText('!', x, y + 1); g.font = '12px sans-serif'; g.textBaseline = 'bottom'; }
+      if (b.key === 'mission') { g.fillStyle = '#000'; g.font = `700 13px ${FONT.cond}`; g.textBaseline = 'middle'; g.fillText('!', x, y + 1); g.font = `600 13px ${FONT.cond}`; g.textBaseline = 'bottom'; }
       if (v.k > 1.1 || hot) { g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,0.8)'; g.strokeText(b.name, x, y - 10); g.fillStyle = '#fff'; g.fillText(b.name, x, y - 10); }
     }
     // Police, objective, waypoint, player.

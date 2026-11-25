@@ -41,6 +41,7 @@ import { roadRoute, routeLength } from './world/gps-route.js';
 import { GUNS, WEAPON_ORDER } from './combat/weapon-catalog.js';
 import { InteriorManager } from './interiors/interior-manager.js';
 import { SURFACE_WEATHER } from './render/surface-weather.js';
+import { DialogueBox } from './ui/dialogue-box.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'Sanggara Sehat Hospital' };
 const POLICE_STATION = { x: 86.5, z: 120, name: 'Kota Lama Police Station' };
@@ -80,6 +81,7 @@ export class GameSession {
     this.dialogue.findSpeaker = (key) => this.findSpeaker(key);
     this.dialogue.onSpeaking = (on) => audio.duckMusic?.(on);
     this.hud = new Hud();
+    this.hud.dialogueBox = new DialogueBox(this);
     this.minimap = new Minimap(document.getElementById('minimap'), document.getElementById('big-map-canvas'));
     this.leftoverCombatants = [];
     this.weapons = new WeaponSystem({ world: this.world, particles: this.particles, lights: this.lights, vehicles: this.vehicles, getCharacters: () => this.allCharacters() });
@@ -96,6 +98,7 @@ export class GameSession {
     this.gpsTimer = 0;
     this.time = 0;
     this.wastedTimer = 0;
+    this.timeScale = 1; // slow motion while WASTED plays
     this.crimeCooldown = {};
     this.lastPos = this.player.pos.clone();
     this.wheelOpen = false;
@@ -271,6 +274,8 @@ export class GameSession {
     }
     this.hud.showWeaponWheel(tab, [...player.arsenal.owned], player.arsenal.current);
 
+    // WASTED: the world slows right down, then eases back to speed before the respawn.
+    this.timeScale = this.wastedTimer > 0 && !this.busted ? 0.28 + 0.72 * Math.min(1, Math.max(0, (4.2 - this.wastedTimer) / 1.2)) ** 2 : 1;
     if (this.wastedTimer > 0) {
       this.wastedTimer -= dt;
       if (this.wastedTimer <= 0) this.respawn(this.busted ? POLICE_STATION : HOSPITAL);

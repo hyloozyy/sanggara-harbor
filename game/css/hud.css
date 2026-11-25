@@ -7,7 +7,7 @@
   --text: #f6efe2;
   --red: #ff4b4b;
   --blue: #4fa3ff;
-  font-family: "Trebuchet MS", "Segoe UI", "DejaVu Sans", Arial, sans-serif;
+  font-family: var(--font-ui);
 }
 
 * { box-sizing: border-box; }
@@ -17,22 +17,22 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 
 #hud { position: fixed; inset: 0; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.85); }
 .panel { background: var(--ink); border-left: 3px solid var(--gold); padding: 8px 12px; border-radius: 3px; backdrop-filter: blur(2px); }
-.panel-head { font-size: 11px; letter-spacing: 2px; color: var(--blue); font-weight: bold; margin-bottom: 4px; }
+.panel-head { font-family: var(--font-cond); font-size: 12px; letter-spacing: 2px; color: var(--blue); font-weight: bold; margin-bottom: 4px; }
 
 /* ---------- mission + police panels ---------- */
 #hud-top-left { position: absolute; top: 18px; left: 18px; width: 300px; display: flex; flex-direction: column; gap: 10px; }
-#mission-chapter { font-size: 10px; letter-spacing: 3px; color: var(--gold); }
-#mission-title { font-size: 19px; font-weight: bold; letter-spacing: 1px; margin: 2px 0 6px; }
-#mission-stages { margin: 0; padding: 0; list-style: none; font-size: 12px; }
+#mission-chapter { font-family: var(--font-cond); font-weight: 700; font-size: 12px; letter-spacing: 3px; color: var(--gold); }
+#mission-title { font-family: var(--font-display); font-size: 28px; font-weight: normal; letter-spacing: 1.5px; line-height: 1; margin: 2px 0 6px; }
+#mission-stages { margin: 0; padding: 0; list-style: none; font-size: 13px; }
 #mission-stages li { padding: 2px 0 2px 20px; position: relative; color: rgba(246,239,226,0.55); }
 #mission-stages li::before { content: "○"; position: absolute; left: 2px; }
 #mission-stages li.done { color: rgba(160, 230, 160, 0.8); text-decoration: line-through; }
 #mission-stages li.done::before { content: "✔"; color: #7fe07f; }
-#mission-stages li.active { color: #fff; font-weight: bold; }
+#mission-stages li.active { color: #fff; font-weight: 600; }
 #mission-stages li.active::before { content: "►"; color: var(--gold); }
-#mission-objective { margin-top: 6px; font-size: 13px; color: var(--gold); }
+#mission-objective { margin-top: 6px; font-size: 14px; font-weight: 600; color: var(--gold); }
 #police-panel { border-left-color: var(--blue); }
-#police-units { margin: 0; padding: 0; list-style: none; font-size: 12px; }
+#police-units { margin: 0; padding: 0; list-style: none; font-family: var(--font-cond); font-size: 14px; }
 #police-units li { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
 #police-units li .state { color: #ffb4b4; font-size: 11px; }
 #police-units li.heli .state { color: #9fd0ff; }
@@ -43,38 +43,35 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 #wanted-stars .on { color: #fff; text-shadow: 0 0 8px var(--gold), 0 1px 2px #000; }
 #wanted-stars.blink .on { animation: starblink 0.6s steps(2) infinite; }
 @keyframes starblink { 50% { color: rgba(255,255,255,0.25); text-shadow: none; } }
-#money-display { font-size: 28px; font-weight: bold; color: #8ff0a4; letter-spacing: 1px; }
-#rank-display { font-size: 12px; color: var(--gold); width: 220px; }
+#money-display { font-family: var(--font-num); font-size: 32px; color: #8ff0a4; letter-spacing: 1px; line-height: 1.05; -webkit-text-stroke: 1px rgba(0,30,10,0.6); paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0,0,0,0.9); }
+#rank-display { font-family: var(--font-cond); font-weight: 600; font-size: 14px; letter-spacing: 1px; color: var(--gold); width: 220px; }
 #xp-bar { height: 5px; background: rgba(255,255,255,0.15); margin-top: 3px; border-radius: 3px; overflow: hidden; }
 #xp-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--sunset), var(--gold)); }
 #weapon-display { display: flex; align-items: center; gap: 10px; margin-top: 8px; background: var(--ink); padding: 6px 10px; border-radius: 3px; }
 #weapon-icon { width: 64px; height: 30px; }
 #weapon-icon canvas { width: 64px; height: 30px; }
-#weapon-name { font-size: 14px; font-weight: bold; }
-#weapon-ammo { font-size: 18px; color: var(--gold); min-width: 64px; }
+#weapon-name { font-family: var(--font-cond); font-size: 17px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+#weapon-ammo { font-family: var(--font-num); font-size: 20px; color: var(--gold); min-width: 64px; }
 #weapon-slots { display: flex; gap: 4px; }
-#weapon-slots div { min-width: 46px; padding-left: 3px !important; padding-right: 3px !important; font-size: 10px; text-align: center; padding: 3px 0; background: var(--ink); border-bottom: 2px solid transparent; color: rgba(255,255,255,0.6); }
+#weapon-slots div { min-width: 46px; padding-left: 3px !important; padding-right: 3px !important; font-family: var(--font-cond); font-size: 12px; letter-spacing: 0.5px; text-align: center; padding: 3px 0; background: var(--ink); border-bottom: 2px solid transparent; color: rgba(255,255,255,0.6); }
 #weapon-slots div.active { border-bottom-color: var(--gold); color: #fff; }
 #weapon-slots div.locked { opacity: 0.3; }
 #crew-abilities { display: flex; gap: 6px; margin-top: 4px; }
-#crew-abilities .crew { background: var(--ink); padding: 4px 8px; font-size: 11px; border-radius: 3px; border-top: 2px solid var(--teal); text-align: left; }
-#crew-abilities .crew b { display: block; font-size: 12px; color: var(--teal); }
+#crew-abilities .crew { background: var(--ink); padding: 4px 8px; font-family: var(--font-cond); font-size: 13px; border-radius: 3px; border-top: 2px solid var(--teal); text-align: left; }
+#crew-abilities .crew b { display: block; font-size: 14px; color: var(--teal); letter-spacing: 0.5px; }
 #crew-abilities .crew.cooldown { opacity: 0.5; border-top-color: #777; }
 
 /* ---------- centre ---------- */
 #notifications { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; width: 520px; }
-.note { background: var(--ink-strong); padding: 7px 16px; border-radius: 3px; font-size: 14px; border-bottom: 2px solid var(--gold); animation: notein 0.3s ease-out; }
+.note { background: linear-gradient(90deg, rgba(8,10,18,0.55), var(--ink-strong) 20%, var(--ink-strong) 80%, rgba(8,10,18,0.55)); padding: 7px 20px; border-radius: 3px; font-size: 15px; font-weight: 600; letter-spacing: 0.3px; border-bottom: 2px solid var(--gold); animation: notein 0.3s ease-out; }
 .note.police { border-bottom-color: var(--blue); }
 .note.bad { border-bottom-color: var(--red); }
 .note.xp { border-bottom-color: #8ff0a4; color: #c9ffd4; }
 @keyframes notein { from { opacity: 0; transform: translateY(-8px); } }
 #district-banner { position: absolute; right: 22px; bottom: 236px; text-align: right; opacity: 0; transition: opacity 0.6s; }
 #district-banner.show { opacity: 1; }
-#district-name { font-size: 34px; font-weight: bold; font-style: italic; color: #fff; letter-spacing: 1px; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 18px rgba(255,140,60,0.6); }
-#street-name { font-size: 14px; color: var(--gold); letter-spacing: 2px; }
-#dialogue-line { position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%); max-width: 760px; text-align: center; font-size: 19px; opacity: 0; transition: opacity 0.3s; background: rgba(0,0,0,0.35); padding: 6px 14px; border-radius: 4px; }
-#dialogue-line.show { opacity: 1; }
-#dialogue-speaker { color: var(--gold); font-weight: bold; margin-right: 8px; }
+#district-name { font-family: var(--font-display); font-size: 42px; font-weight: normal; color: #fff; letter-spacing: 2px; line-height: 1; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 18px rgba(255,140,60,0.6); }
+#street-name { font-family: var(--font-cond); font-weight: 700; font-size: 15px; color: var(--gold); letter-spacing: 3px; }
 #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; opacity: 0; }
 #crosshair::before, #crosshair::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 2px #000; }
 #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; }
@@ -84,7 +81,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 #hit-marker { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border: 2px solid #fff; transform: rotate(45deg) scale(0.6); opacity: 0; transition: opacity 0.15s; }
 #hit-marker.show { opacity: 1; }
 #damage-flash { position: absolute; inset: 0; box-shadow: inset 0 0 160px rgba(220, 0, 0, 0.0); transition: box-shadow 0.25s; }
-#interaction-hint { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); background: var(--ink-strong); padding: 6px 14px; font-size: 14px; border-radius: 3px; opacity: 0; }
+#interaction-hint { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); background: var(--ink-strong); padding: 6px 14px; font-family: var(--font-cond); font-weight: 600; font-size: 17px; letter-spacing: 0.5px; border-radius: 3px; opacity: 0; }
 #interaction-hint.show { opacity: 1; }
 #interaction-hint kbd { background: var(--gold); color: #000; padding: 1px 6px; border-radius: 2px; font-weight: bold; margin-right: 6px; }
 
@@ -99,35 +96,31 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 
 /* ---------- bottom right ---------- */
 #hud-bottom-right { position: absolute; right: 22px; bottom: 18px; width: 220px; text-align: right; }
-#vehicle-name { font-size: 13px; color: var(--gold); letter-spacing: 1px; }
+#vehicle-name { font-family: var(--font-display); font-size: 22px; color: var(--gold); letter-spacing: 2px; }
 #speedometer { width: 200px; height: 120px; }
-#car-damage { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 1px; justify-content: flex-end; }
+#car-damage { display: flex; align-items: center; gap: 6px; font-family: var(--font-cond); font-size: 11px; letter-spacing: 1px; justify-content: flex-end; }
 #car-damage .bar { width: 120px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; }
 #car-damage .fill { height: 100%; background: linear-gradient(90deg, #ff5a3c, #ffc35a, #8ff0a4); background-size: 120px 6px; }
-#radio-display { margin-top: 6px; font-size: 14px; background: var(--ink); padding: 5px 10px; border-radius: 3px; display: inline-block; text-align: left; }
+#radio-display { margin-top: 6px; font-family: var(--font-cond); font-weight: 600; font-size: 16px; letter-spacing: 0.5px; background: var(--ink); padding: 5px 10px; border-radius: 3px; display: inline-block; text-align: left; }
 .radio-icon { color: var(--sunset); }
-#radio-song { font-size: 11px; color: rgba(255,255,255,0.65); }
+#radio-song { font-family: var(--font-ui); font-weight: 400; font-size: 12px; letter-spacing: 0; color: rgba(255,255,255,0.65); }
 
 /* ---------- overlays ---------- */
 #weapon-wheel { position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin: -180px 0 0 -180px; transform: scale(1.12); border-radius: 50%; background: radial-gradient(circle, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.7) 31%, rgba(0,0,0,0.7) 70%, transparent 71%); }
-#weapon-wheel .slot { position: absolute; width: 96px; margin-left: -48px; margin-top: -24px; text-align: center; font-size: 11.5px; color: rgba(255,255,255,0.7); }
+#weapon-wheel .slot { position: absolute; width: 96px; margin-left: -48px; margin-top: -24px; text-align: center; font-family: var(--font-cond); font-size: 14px; letter-spacing: 0.5px; color: rgba(255,255,255,0.7); }
 #weapon-wheel .slot.active { color: var(--gold); font-weight: bold; transform: scale(1.15); }
-#race-panel { position: absolute; top: 18px; right: 260px; font-size: 14px; border-left-color: var(--teal); }
-#mission-result { position: absolute; top: 34%; left: 0; right: 0; text-align: center; }
-#mission-result .big { font-size: 52px; font-weight: bold; color: var(--gold); letter-spacing: 4px; text-shadow: 0 0 24px rgba(255,120,40,0.7), 0 3px 4px #000; }
-#mission-result .small { font-size: 18px; margin-top: 6px; }
-#wasted-screen { position: absolute; inset: 0; background: rgba(60, 0, 0, 0.35); display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: bold; letter-spacing: 6px; color: #ff6a5a; }
+#race-panel { position: absolute; top: 18px; right: 260px; font-family: var(--font-cond); font-weight: 600; font-size: 16px; border-left-color: var(--teal); }
 
 #big-map { position: fixed; inset: 0; background: #16303c; z-index: 7; overflow: hidden; touch-action: none; }
 #big-map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
 #big-map-legend { position: absolute; left: 14px; bottom: 14px; font-size: 12.5px; line-height: 1.6; background: rgba(6,10,18,0.78); padding: 8px 12px; border-top: 3px solid var(--gold); pointer-events: none; max-width: 300px; }
-#big-map-legend b { color: var(--gold); letter-spacing: 2px; }
+#big-map-legend b { font-family: var(--font-display); font-size: 18px; font-weight: normal; color: var(--gold); letter-spacing: 2px; }
 #big-map-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; border: 1px solid #000; }
-#map-close { position: absolute; top: 12px; right: 12px; font: inherit; font-size: 14px; letter-spacing: 1px; padding: 8px 14px; background: rgba(6,10,18,0.85); color: #fff; border: 1px solid var(--gold); cursor: pointer; }
+#map-close { position: absolute; top: 12px; right: 12px; font: inherit; font-family: var(--font-cond); font-weight: 700; font-size: 16px; letter-spacing: 1px; padding: 8px 14px; background: rgba(6,10,18,0.85); color: #fff; border: 1px solid var(--gold); cursor: pointer; }
 #map-card { position: absolute; top: 56px; right: 12px; width: min(340px, 44vw); max-height: calc(100% - 70px); overflow-y: auto; background: rgba(8,12,20,0.94); border-top: 4px solid var(--accent, var(--gold)); padding: 10px 12px; font-size: 13px; line-height: 1.45; text-shadow: none; }
 #map-card.hidden { display: none; }
-.mc-head b { display: block; font-size: 22px; color: var(--accent, var(--gold)); letter-spacing: 1px; }
-.mc-head span { font-size: 12px; opacity: 0.8; letter-spacing: 1px; }
+.mc-head b { display: block; font-family: var(--font-display); font-weight: normal; font-size: 30px; line-height: 1; color: var(--accent, var(--gold)); letter-spacing: 1.5px; }
+.mc-head span { font-family: var(--font-cond); font-weight: 600; font-size: 13px; opacity: 0.8; letter-spacing: 1px; }
 .mc-thumb { width: 100%; height: auto; margin: 8px 0 4px; display: block; border: 1px solid rgba(255,255,255,0.2); }
 .mc-lore { margin: 6px 0; color: #e8e2d4; font-style: italic; }
 .mc-facts { width: 100%; border-collapse: collapse; margin: 6px 0; }
@@ -137,17 +130,17 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .mc-mission { background: rgba(255,200,60,0.15); border-left: 3px solid var(--gold); padding: 4px 8px; margin: 6px 0; }
 .mc-list { margin: 6px 0; } .mc-list b { display: block; color: var(--gold); margin-bottom: 2px; } .mc-list i { opacity: 0.6; font-size: 11px; }
 .mc-buttons { display: flex; gap: 8px; margin-top: 8px; }
-.mc-buttons button { flex: 1; font: inherit; font-size: 13px; padding: 8px; border: none; color: #fff; background: #3a4458; cursor: pointer; }
+.mc-buttons button { flex: 1; font: inherit; font-family: var(--font-cond); font-weight: 700; letter-spacing: 1px; font-size: 15px; padding: 8px; border: none; color: #fff; background: #3a4458; cursor: pointer; }
 .mc-buttons button#mc-way { background: #b03ad0; }
-#gps-readout { font-size: 12px; margin-top: 6px; color: #f0c8ff; text-align: center; min-height: 14px; }
+#gps-readout { font-family: var(--font-cond); font-weight: 600; font-size: 14px; letter-spacing: 0.5px; margin-top: 6px; color: #f0c8ff; text-align: center; min-height: 14px; }
 
 /* Conversations: name tag over the speaker's head and the dialogue choice list. */
 #talk-nametag { position: fixed; z-index: 3; transform: translate(-50%, -100%); pointer-events: none; padding: 3px 10px; border-radius: 12px;
-  background: rgba(8, 10, 18, 0.72); border: 1px solid rgba(255, 200, 90, 0.6); color: #fff; font-size: 13px; letter-spacing: 1px; white-space: nowrap; text-shadow: none; }
+  background: rgba(8, 10, 18, 0.72); border: 1px solid rgba(255, 200, 90, 0.6); color: #fff; font-family: var(--font-cond); font-weight: 600; font-size: 15px; letter-spacing: 1px; white-space: nowrap; text-shadow: none; }
 #talk-nametag.hidden, #talk-choices.hidden { display: none; }
 #talk-nametag b { color: var(--gold); }
 #talk-nametag kbd { background: var(--gold); color: #111; border-radius: 3px; padding: 0 5px; margin-right: 4px; font-family: inherit; font-weight: bold; }
-#talk-choices { position: fixed; z-index: 6; left: 50%; bottom: 168px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; min-width: 300px; }
-#talk-choices button { font: inherit; font-size: 15px; text-align: left; padding: 8px 14px; color: #f6efe2; background: rgba(8, 10, 18, 0.78); border: none; border-left: 4px solid transparent; cursor: pointer; }
+#talk-choices { position: fixed; z-index: 6; left: 50%; bottom: 158px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; min-width: 300px; }
+#talk-choices button { font: inherit; font-weight: 600; font-size: 16px; text-align: left; padding: 8px 16px; color: #f6efe2; background: rgba(8, 10, 18, 0.84); border: none; border-radius: 3px; border-left: 4px solid transparent; cursor: pointer; }
 #talk-choices button.focus, #talk-choices button:hover { background: linear-gradient(90deg, rgba(255,122,61,0.85), rgba(8,10,18,0.78)); border-left-color: var(--gold); }
 #talk-choices kbd { display: inline-block; min-width: 18px; text-align: center; margin-right: 10px; background: rgba(255,255,255,0.15); border-radius: 3px; font-family: inherit; }

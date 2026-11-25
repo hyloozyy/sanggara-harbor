@@ -128,7 +128,7 @@ export function wireGameEvents(game) {
     self.audio.wantedSting(level > prev);
     self.progression.stats.maxWanted = Math.max(self.progression.stats.maxWanted, level);
     if (level > prev) {
-      self.hud.notify(`${'★'.repeat(level)}  ${reason || 'The police want you'}`, 'police');
+      self.hud.wantedUp(level, reason || 'The police want you');
       const chatter = ['Patrol units, male suspect, maroon jacket.', 'All units close in, suspect is armed!', 'Elang-1 airborne, searchlight on.', 'Set up roadblocks on the main roads!', 'Tactical Unit dispatched. Repeat, Tactical Unit!'];
       if (level >= 1) self.dialogue.say('radio', chatter[level - 1]);
     } else if (level === 0 && reason !== 'busted' && reason !== 'hospital') {

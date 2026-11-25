@@ -55,14 +55,16 @@ export function addHijabDrape(b, P) {
       const u = j / cols, phi = (u - 0.5) * Math.PI * 2;
       const front = Math.max(0, Math.cos(phi));
       const hem = 1.37 - 0.06 * front ** 2;            // a curved hem, lowest at the front
-      const y = 1.63 + (hem - 1.63) * t;
+      // The top edge tucks under the chin at the front (the face stays clear) and rises behind.
+      const top = 1.63 - 0.085 * front ** 1.3;
+      const y = top + (hem - top) * t;
       // Close round the neck at the top, then out over the shoulders.
       const body = torsoPoint(P, Math.max(y, 1.3), phi, 0.008 + 0.007 * smooth(1.5, 1.35, y));
-      const neck = smooth(1.6, 1.5, y);
-      const nr = (P.neckR + 0.016) * (1 + 0.12 * smooth(1.63, 1.56, y));
+      const neck = smooth(top - 0.03, top - 0.13, y);
+      const nr = (P.neckR + 0.016) * (1 + 0.12 * smooth(top, top - 0.07, y));
       const nx = Math.sin(phi) * nr, nz = Math.cos(phi) * nr * 1.05 - 0.004;
       const p = V(nx + (body.x - nx) * neck, y, nz + (body.z - nz) * neck);
-      if (y > 1.565) p.z += 0.012 * front * smooth(1.565, 1.62, y);   // wraps under the chin
+      p.z += 0.01 * front * smooth(top - 0.05, top, y);   // wraps under the chin
       row.push(p); ur.push(regionUV('hat', u, 0.5 * (1 - t)));
       const k = smooth(1.62, 1.45, y);
       wr.push([[B.head, (1 - k) * 0.7], [B.neck, (1 - k) * 0.3], [B.chest, k]]);

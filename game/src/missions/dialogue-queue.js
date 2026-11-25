@@ -34,7 +34,9 @@ export class DialogueQueue {
       const character = line.character || this.findSpeaker(line.speaker);
       let profile = line.profile || CAST_VOICES[line.speaker] || CAST_VOICES.warga;
       // A cast member who is not standing here is on the phone.
-      line.phone = !character && CAST[line.speaker]?.look && line.speaker !== 'raka';
+      line.phone = !character && !!CAST[line.speaker]?.look && line.speaker !== 'raka';
+      line.resolved = character || null;
+      line.id = (this.lineId = (this.lineId || 0) + 1);
       if (line.phone) profile = { ...profile, phone: true };
       let voiced = 0;
       if (this.voices) voiced = this.voices.speak(line.text, profile, character, character ? character.pos : null);
@@ -45,10 +47,11 @@ export class DialogueQueue {
     this.onSpeaking?.(!!this.current);
   }
 
-  // { name, color, text } for the HUD, or null.
+  // { id, speaker, name, color, text, character, phone } for the HUD, or null.
   get line() {
-    if (!this.current) return null;
-    const c = CAST[this.current.speaker] || { name: this.current.speaker, color: '#fff' };
-    return { name: (this.current.phone ? '📱 ' : '') + (this.current.name || c.name), color: this.current.color || c.color, text: this.current.text };
+    const cur = this.current;
+    if (!cur) return null;
+    const c = CAST[cur.speaker] || { name: cur.speaker, color: '#fff' };
+    return { id: cur.id, speaker: cur.speaker, name: cur.name || c.name, color: cur.color || c.color, text: cur.text, character: cur.resolved, phone: !!cur.phone };
   }
 }

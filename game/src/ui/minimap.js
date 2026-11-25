@@ -1,6 +1,7 @@
 // The radar: a pre-painted map of Sanggara (sea, beach, hills, districts, roads, quay) drawn into a
 // circular minimap that rotates with the camera, with blips for police, the helicopter, enemies,
 // the objective (clamped to the rim), activities and the wanted search zone; plus the full map.
+import { FONT } from './fonts.js';
 import { drawEnterableIcon } from '../interiors/enterable-places.js';
 import { GRID, ROAD_HALF, BLOCKS, DISTRICTS, SEA_SOUTH_Z, HARBOR_EDGE_X, PLACES } from '../city/city-layout.js';
 
@@ -87,7 +88,7 @@ export class Minimap {
         ctx.save();
         ctx.translate(toMap(a.x), toMap(a.z));
         ctx.rotate(-(Math.PI + yaw));
-        ctx.fillStyle = '#000'; ctx.font = `bold ${10 * s}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000'; ctx.font = `700 ${11 * s}px ${FONT.cond}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(a.icon, 0, 0.5 * s);
         ctx.restore();
       }
@@ -112,7 +113,7 @@ export class Minimap {
       ctx.fillStyle = color;
       ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#000'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#000'; ctx.font = `700 12px ${FONT.cond}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(glyph, x, y + 0.5);
     };
     // Enterable buildings: house badges, upright; when off the map they wait on the rim.
@@ -135,7 +136,7 @@ export class Minimap {
     // North marker on the rim.
     const n = this.project(0, -1000, yaw, 1);
     const nd = Math.hypot(n.x, n.y);
-    ctx.fillStyle = '#ffc35a'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffc35a'; ctx.font = `16px ${FONT.display}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('N', R + n.x / nd * (R - 11), R + n.y / nd * (R - 11));
   }
 
@@ -151,7 +152,7 @@ export class Minimap {
     ctx.drawImage(this.map, 0, 0, c.width, c.height);
     const k = c.width / this.map.width;
     const P = (x, z) => [toMap(x) * k, toMap(z) * k];
-    ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center';
+    ctx.font = `17px ${FONT.display}`; ctx.textAlign = 'center';
     for (const [id, d] of Object.entries(DISTRICTS)) {
       const b = BLOCKS.filter((bl) => bl.district === id);
       if (!b.length) continue;
@@ -160,7 +161,7 @@ export class Minimap {
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillText(d.name.toUpperCase(), x + 1, y + 1);
       ctx.fillStyle = d.color; ctx.fillText(d.name.toUpperCase(), x, y);
     }
-    ctx.font = '12px sans-serif';
+    ctx.font = `600 13px ${FONT.cond}`;
     for (const a of state.activities || []) {
       const [x, y] = P(a.x, a.z);
       ctx.fillStyle = a.color; ctx.fillRect(x - 6, y - 6, 12, 12);

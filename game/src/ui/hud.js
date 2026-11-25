@@ -6,6 +6,7 @@ import { districtAt, streetAt, DISTRICTS } from '../city/city-layout.js';
 import { WEAPONS, WEAPON_ORDER } from '../combat/weapon-catalog.js';
 import { paintWeaponIcon } from '../combat/weapon-meshes.js';
 import { drawSpeedometer } from './speedometer.js';
+import { EventBanner } from './event-banner.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,17 +16,19 @@ export class Hud {
     this.el = {};
     for (const id of ['wanted-stars', 'money-display', 'rank-name', 'xp-fill', 'weapon-icon', 'weapon-name', 'weapon-ammo', 'weapon-slots', 'crew-abilities',
       'mission-panel', 'mission-chapter', 'mission-title', 'mission-stages', 'mission-objective', 'police-panel', 'police-units', 'notifications',
-      'district-banner', 'district-name', 'street-name', 'dialogue-line', 'dialogue-speaker', 'dialogue-text', 'crosshair', 'hit-marker', 'damage-flash',
+      'district-banner', 'district-name', 'street-name', 'crosshair', 'hit-marker', 'damage-flash',
       'interaction-hint', 'vehicle-panel', 'vehicle-name', 'speedometer', 'car-damage', 'radio-display', 'radio-name', 'radio-song', 'race-panel',
-      'mission-result', 'wasted-screen', 'weapon-wheel']) this.el[id] = $(id);
+      'weapon-wheel']) this.el[id] = $(id);
     this.iconCanvas = document.createElement('canvas');
     this.iconCanvas.width = 128; this.iconCanvas.height = 60;
     this.el['weapon-icon'].appendChild(this.iconCanvas);
     this.cache = {};
     this.district = null;
     this.bannerTimer = 0;
-    this.resultTimer = 0;
     this.moneyShown = null;
+    this.banner = new EventBanner(this.root);
+    this.dialogueBox = null; // set by the session (needs the renderer for portraits)
+    this.wastedShown = null;
   }
 
   show(on) { this.root.classList.toggle('hidden', !on); }
@@ -44,24 +47,19 @@ export class Hud {
   }
 
   missionTitleCard(m) {
-    this.resultHtml(`<div class="small">${m.chapter}</div><div class="big">${m.title.toUpperCase()}</div><div class="small">${m.briefing}</div>`, 4.5);
+    this.banner.show('title', { chapter: m.chapter, title: m.title.toUpperCase(), sub: '', detail: `<span class="eb-brief">${m.briefing}</span>`, seconds: 4.8 });
   }
 
   missionResult(success, m, reason = '') {
-    this.resultHtml(success
-      ? `<div class="big">MISSION COMPLETE</div><div class="small">${m.title} · +${formatMoney(m.reward.money)} · +${m.reward.xp} XP</div>`
-      : `<div class="big" style="color:#ff6a5a">MISSION FAILED</div><div class="small">${reason}</div>`, 4.5);
+    if (success) this.banner.show('passed', { detail: `<span class="eb-num">+${formatMoney(m.reward.money)}</span><span class="eb-dot">·</span><span class="eb-num">+${m.reward.xp} XP</span><span class="eb-small">${m.title}</span>`, seconds: 5 });
+    else this.banner.show('failed', { detail: reason ? `<span class="eb-small">${reason}</span>` : '', seconds: 4.5 });
   }
 
   activityResult(success, title, detail) {
-    this.resultHtml(`<div class="big" style="${success ? '' : 'color:#ff6a5a'}">${title}</div><div class="small">${detail}</div>`, 4);
+    this.banner.show(success ? 'activity-ok' : 'activity-bad', { title, sub: '', detail: `<span class="eb-small">${detail}</span>`, seconds: 4 });
   }
 
-  resultHtml(html, seconds) {
-    this.el['mission-result'].innerHTML = html;
-    this.toggle('mission-result', true);
-    this.resultTimer = seconds;
-  }
+  wantedUp(level, reason) { this.banner.wantedUp(level, reason); }
 
   damageFlash(amount) {
     this.el['damage-flash'].style.boxShadow = `inset 0 0 160px rgba(220,0,0,${Math.min(0.8, amount / 40)})`;
@@ -118,23 +116,19 @@ export class Hud {
     // District banner when entering a new district.
     const d = districtAt(s.px, s.pz);
     if (d !== this.district) {
+      const first = this.district === null;
       this.district = d;
       this.setText('district-name', DISTRICTS[d].name);
-      this.bannerTimer = 4;
+      if (first) this.bannerTimer = 4;
+      else this.banner.district(DISTRICTS[d].name.toUpperCase(), (streetAt(s.px, s.pz) || 'PELABUHAN SANGGARA').toUpperCase());
     }
     this.setText('street-name', (streetAt(s.px, s.pz) || '').toUpperCase());
     if (s.forceBanner) this.bannerTimer = Math.max(this.bannerTimer, 1);
     this.bannerTimer -= dt;
     this.el['district-banner'].classList.toggle('show', this.bannerTimer > 0);
 
-    // Subtitles.
-    const line = s.dialogue;
-    this.el['dialogue-line'].classList.toggle('show', !!line);
-    if (line) {
-      this.setText('dialogue-speaker', line.name + ':');
-      this.el['dialogue-speaker'].style.color = line.color;
-      this.setText('dialogue-text', line.text);
-    }
+    // Dialogue box with portraits (typewriter subtitles).
+    this.dialogueBox?.update(dt, s.dialogue, s.talkPartner);
 
     // Vehicle panel and radio.
     this.toggle('vehicle-panel', !!s.vehicle);
@@ -162,9 +156,14 @@ export class Hud {
     if (s.hint) this.setHtml('interaction-hint', s.hint);
     this.toggle('race-panel', !!s.activity);
     if (s.activity) this.setHtml('race-panel', s.activity);
-    if (this.resultTimer > 0) { this.resultTimer -= dt; if (this.resultTimer <= 0) this.toggle('mission-result', false); }
-    this.toggle('wasted-screen', !!s.wasted);
-    if (s.wasted) this.setText('wasted-screen', s.wasted);
+    // WASTED / BUSTED: banner, grade and a fade to black just before the respawn.
+    if (s.wasted !== this.wastedShown) {
+      this.wastedShown = s.wasted;
+      if (s.wasted) this.banner.show(s.wasted === 'BUSTED' ? 'busted' : 'wasted', { seconds: 99 });
+      else { this.banner.hideBig(); this.banner.setGrade(null); }
+    }
+    this.banner.blackout(s.wasted ? Math.max(0, Math.min(1, (0.75 - s.wastedT) / 0.45)) : Math.max(0, (Number(this.banner.black.dataset.a) || 0) - dt * 2.2));
+    this.banner.update(dt);
   }
 
   showWeaponWheel(on, owned, current) {
