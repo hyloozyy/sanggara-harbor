@@ -76,7 +76,7 @@ export class Radio {
     const a = this.audio;
     if (!a.ctx || !this.on || this.silent) { if (this.talk.current) this.talk.stop(); return; }
     if (this.station.id === 'news') {
-      this.talk.dest = a.music;
+      this.talk.dest = this.dest || a.music;
       if (a.now > this.talkNext) {
         const line = HEADLINES[Math.floor(Math.random() * HEADLINES.length)];
         const host = this.hosts[Math.floor(Math.random() * 2)];
@@ -108,7 +108,7 @@ export class Radio {
   }
 
   playStep(st, step, when, dur) {
-    const a = this.audio, m = a.music;
+    const a = this.audio, m = this.dest || a.music;
     const s16 = step % 16, bar = Math.floor(step / 16) % 4;
     const chordRoot = [0, 3, 4, 2][bar];
     const T = (f, d, o) => a.tone(f, d, { dest: m, when, ...o });

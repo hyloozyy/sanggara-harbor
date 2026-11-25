@@ -39,6 +39,8 @@ import { ROAD } from './vehicles/vehicle.js';
 import { buildHudState, buildMinimapState } from './ui/hud-state.js';
 import { roadRoute, routeLength } from './world/gps-route.js';
 import { GUNS, WEAPON_ORDER } from './combat/weapon-catalog.js';
+import { InteriorManager } from './interiors/interior-manager.js';
+import { SURFACE_WEATHER } from './render/surface-weather.js';
 
 const HOSPITAL = { x: -86.5, z: 40, name: 'Sanggara Sehat Hospital' };
 const POLICE_STATION = { x: 86.5, z: 120, name: 'Kota Lama Police Station' };
@@ -99,6 +101,7 @@ export class GameSession {
     this.wheelOpen = false;
     this.headlight = new THREE.SpotLight(0xfff0d0, 0, 60, 0.5, 0.6, 1.3);
     this.scene.add(this.headlight, this.headlight.target);
+    this.interiors = new InteriorManager(this);
     this.wireEvents();
   }
 
@@ -228,10 +231,28 @@ export class GameSession {
     return null;
   }
 
+  // Inside a building only the room runs: Raka, its people, the camera, talk and sound.
+  updateInside(dt) {
+    const I = this.interiors;
+    I.updateInside(dt);
+    this.talk.update(dt);
+    const cam = this.gfx.camera, fw = this.cameraRig.forward;
+    this.voices.listener = { x: cam.position.x, z: cam.position.z, yaw: Math.atan2(fw.x, fw.z) };
+    for (const v of I.voices) { v.listener = this.voices.listener; v.update(); }
+    this.dialogue.update(dt);
+    this.cameraRig.update(dt, this.player, this.input);
+    this.weather.update(dt, cam);
+    SURFACE_WEATHER.uWet.value = 0; SURFACE_WEATHER.uSnow.value = 0;
+    this.updateAudio(dt);
+    this.progression.stats.playTime += dt;
+  }
+
   update(dt) {
     this.time += dt;
     const input = this.input, player = this.player;
     const camDir = this.cameraRig.forward;
+    this.interiors.update(dt);
+    if (this.interiors.inside) { this.updateInside(dt); return; }
 
     if (input.hit('KeyR') && player.vehicle) {
       const st = this.radio.next();
@@ -256,8 +277,8 @@ export class GameSession {
     }
     this.checkBusted(dt);
     if (this.busted) { player.body.anim = 'cower'; player.body.aiming = false; player.body.move(dt, this.world, 0, 0); player.body.updateVisual(dt); }
-    else player.update(dt, input, this);
-    if (!player.vehicle && player.alive) {
+    else if (!this.interiors.trans) player.update(dt, input, this);
+    if (!player.vehicle && player.alive && !this.interiors.trans) {
       const { hitSpeed, hitBy } = this.vehicles.pushOut(player.body);
       if (hitSpeed > 5 && player.body.knock <= 0) player.body.hit(hitSpeed * hitSpeed * 0.35, { x: hitBy.pos.x, z: hitBy.pos.z }, { knockback: Math.min(12, hitSpeed * 0.7), cause: 'vehicle' });
     }
@@ -323,12 +344,15 @@ export class GameSession {
 
   updateAudio(dt) {
     const pv = this.player.vehicle, snd = this.sound, b = this.player.body;
+    const inside = this.interiors.inside;
     snd.setListener(this.gfx.camera, this.cameraRig.forward, dt);
-    snd.updateVehicles(dt, pv, this.vehicles.list, this.police.policeCars, this.police.heliActive ? this.police.heli : null);
+    snd.room = inside ? this.interiors.active.audioState : null;
+    if (inside) snd.updateVehicles(dt, null, [], [], null);
+    else snd.updateVehicles(dt, pv, this.vehicles.list, this.police.policeCars, this.police.heliActive ? this.police.heli : null);
     const w = this.weather;
     snd.updateAmbience(dt, { x: b.pos.x, z: b.pos.z, night: w.clock.night ?? 0, rain: w.cur.rain, inCar: !!pv && !pv.spec.twoWheel, inCarRain: w.cur.rain });
     // Footsteps: one per stride, by surface and wetness.
-    if (!pv && b.alive && b.grounded && b.knock <= 0) {
+    if (!pv && b.alive && b.grounded && b.knock <= 0 && !inside && !this.interiors.trans) {
       const sp = Math.hypot(b.vel.x, b.vel.z);
       this.strideDist = (this.strideDist || 0) + sp * dt;
       const stride = sp > 4 ? 1.25 : 0.78;

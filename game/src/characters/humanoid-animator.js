@@ -91,7 +91,10 @@ export function animateHumanoid(m, state, speed, dt, extra = {}) {
 
   if (state === 'drive' || state === 'ride') seatedPose(m, A, state === 'ride', dt, extra);
   else if (state === 'dead') downPose(m, A, dt, extra);
-  else { locomotion(m, A, state, speed, dt, extra); layers(m, A, state, dt, extra); }
+  else {
+    locomotion(m, A, state, speed, dt, extra); layers(m, A, state, dt, extra);
+    if (extra.sit && extra.sit.k > 0.001) sitBlend(m, A, extra.sit, extra.scale || m.root.scale.y || 1);
+  }
   if (A.headFree) stabiliseHead(A, extra);
 
   // Springs.
@@ -440,6 +443,21 @@ function layers(m, A, state, dt, extra) {
     rate = 6;
   }
 
+  // Seated: hands rest on the thighs, or forearms on the counter or table edge.
+  const sit = extra.sit;
+  if (sit && sit.k > 0.001 && !aimOn) {
+    const k = smooth(0.2, 1, sit.k);
+    if (sit.arms === 'counter' || sit.arms === 'table') {
+      const hi = sit.arms === 'counter' ? 1 : 0;
+      aL = mixArm(aL, { x: -0.5 - 0.15 * hi, z: 0.18, fx: -1.25 - 0.2 * hi, fy: -0.6 }, k);
+      aR = mixArm(aR, { x: -0.48 - 0.15 * hi, z: -0.14, fx: -1.35 - 0.2 * hi, fy: 0.5 }, k);
+    } else {
+      aL = mixArm(aL, { x: -0.62, z: 0.08, fx: -0.85, fy: -0.4 }, k);
+      aR = mixArm(aR, { x: -0.6, z: -0.08, fx: -0.85, fy: 0.4 }, k);
+    }
+    rate = Math.min(rate, 8);
+  }
+
   // Conversation gestures: open palms and beats on the stressed syllables while speaking.
   const gestOk = (state === 'idle' || state === 'talk' || state === 'listen' || (state === 'walk' && A.speedS < 0.6)) && !aimOn;
   A.gest = damp(A.gest, gestOk && (extra.talk || 0) > 0.04 ? 1 : 0, 2.5, dt);
@@ -480,6 +498,70 @@ function layers(m, A, state, dt, extra) {
       eu.set(-Math.PI / 2 + 0.25, -0.2, -Math.PI / 2 * 0.15, 'YXZ'); A.handRot[1] = A.handQ[1].setFromEuler(eu);
       Tadd(A, B.chest, 0.06 * w, 0.12 * w, 0);
       A.headPitch = (A.headPitch || 0) + w * Math.max(0, Math.sin(ge.t * TAU * 1.5)) * 0.12;
+    } else if (ge.kind === 'drink') {
+      // Glass up to the lips, a sip with the head tipped back, glass down again.
+      const lift = smooth(0, 0.28, ge.t) * (1 - smooth(0.72, 1, ge.t));
+      const sip = smooth(0.3, 0.42, ge.t) * (1 - smooth(0.58, 0.7, ge.t));
+      aR = mixArm(aR, { x: -0.62 - 0.12 * sip, z: -0.05, fx: -2.25 - 0.15 * sip, fy: 0.85 }, lift);
+      A.headPitch = (A.headPitch || 0) - 0.32 * sip;
+      Tadd(A, B.chest, -0.05 * sip, 0, 0);
+      rate = 10;
+    } else if (ge.kind === 'cheers') {
+      const up = smooth(0, 0.3, ge.t) * (1 - smooth(0.7, 1, ge.t));
+      aR = mixArm(aR, { x: -1.45, z: -0.05, fx: -1.05, fy: 0.6 }, up);
+      A.headPitch = (A.headPitch || 0) - 0.1 * up;
+      rate = 11;
+    } else if (ge.kind === 'wipe') {
+      // Polishing a glass with a cloth: left hand holds it, the right circles inside.
+      const c = ge.t * TAU * 4;
+      aL = mixArm(aL, { x: -0.78, z: -0.28, fx: -1.45, fy: -0.4 }, w);
+      aR = mixArm(aR, { x: -0.74 + Math.sin(c) * 0.06, z: 0.16 + Math.cos(c) * 0.08, fx: -1.55 + Math.cos(c) * 0.12, fy: 0.3 }, w);
+      A.headPitch = (A.headPitch || 0) + 0.32 * w;
+      Tadd(A, B.spine, 0.05 * w, 0, 0);
+      rate = 12;
+    } else if (ge.kind === 'pour') {
+      // Right hand pulls the tap handle, left holds the glass tilted under the spout.
+      const pull = smooth(0.15, 0.3, ge.t) * (1 - smooth(0.8, 0.92, ge.t));
+      aR = mixArm(aR, { x: -1.15 - 0.15 * pull, z: 0.02, fx: -0.75 + 0.3 * pull, fy: 0 }, w);
+      aL = mixArm(aL, { x: -0.85, z: -0.12, fx: -1.25, fy: -0.8 }, w);
+      Tadd(A, B.spine, 0.12 * w, 0, 0);
+      A.headPitch = (A.headPitch || 0) + 0.35 * w;
+      rate = 10;
+    } else if (ge.kind === 'serve') {
+      // Leaning over the counter to set something down.
+      const reach = Math.sin(Math.PI * clamp(ge.t, 0, 1));
+      aR = mixArm(aR, { x: -1.2, z: 0.02, fx: -0.35, fy: 0.2 }, reach);
+      Tadd(A, B.spine, 0.28 * reach, 0, 0); Tadd(A, B.chest, 0.1 * reach, 0, 0);
+      A.headPitch = (A.headPitch || 0) + 0.3 * reach;
+      rate = 10;
+    } else if (ge.kind === 'cue') {
+      // Bent over the pool table: bridge hand on the felt, cue arm drawing back and forth,
+      // then the strike.
+      const down = smooth(0, 0.2, ge.t) * (1 - smooth(0.85, 1, ge.t));
+      const stroke = ge.t < 0.75 ? Math.sin((ge.t - 0.2) * TAU * 2.2) * smooth(0.25, 0.35, ge.t) : -smooth(0.75, 0.8, ge.t) * 1.3 + smooth(0.8, 0.9, ge.t) * 0.3;
+      Tadd(A, B.spine, 0.62 * down, 0.12 * down, 0); Tadd(A, B.chest, 0.28 * down, 0.15 * down, 0);
+      aL = mixArm(aL, { x: -1.45, z: -0.32, fx: -0.25, fy: -0.4 }, down);
+      aR = mixArm(aR, { x: 0.15 - stroke * 0.18, z: -0.22, fx: -1.85 + stroke * 0.5, fy: 0.2 }, down);
+      A.headPitch = (A.headPitch || 0) - 0.62 * down;
+      A.ht[1] -= 0.07 * down;
+      rate = 12;
+    } else if (ge.kind === 'laugh') {
+      const k2 = w * (0.6 + 0.4 * Math.sin(ge.t * TAU * 9));
+      A.headPitch = (A.headPitch || 0) - 0.22 * w;
+      Tadd(A, B.chest, -0.06 * w + Math.sin(ge.t * TAU * 9) * 0.025 * w, 0, 0);
+      aL = mixArm(aL, { x: -0.4, z: 0.05, fx: -1.3, fy: -0.5 }, w * 0.6);
+      void k2;
+    } else if (ge.kind === 'type') {
+      const tap = Math.sin(ge.t * TAU * 11) * 0.04;
+      aL = mixArm(aL, { x: -0.72 + tap, z: 0.18, fx: -0.95, fy: -0.9 }, w);
+      aR = mixArm(aR, { x: -0.72 - tap, z: -0.18, fx: -0.95, fy: 0.9 }, w);
+      A.headPitch = (A.headPitch || 0) + 0.25 * w;
+      rate = 12;
+    } else if (ge.kind === 'stretch') {
+      const up = Math.sin(Math.PI * clamp(ge.t, 0, 1));
+      aL = mixArm(aL, { x: -2.8, z: 0.2, fx: -0.6, fy: 0 }, up); aR = mixArm(aR, { x: -2.8, z: -0.2, fx: -0.6, fy: 0 }, up);
+      Tadd(A, B.chest, -0.12 * up, 0, 0); A.headPitch = (A.headPitch || 0) - 0.25 * up;
+      rate = 6;
     }
   }
 
@@ -624,6 +706,38 @@ function downPose(m, A, dt, extra) {
   A.speedS = 0;
   A.feet[0].init = A.feet[1].init = false;
   A.gaitOn = false;
+}
+
+// ===========================================================================================
+// Sitting on a chair, stool, sofa or bed (extra.sit = { k 0..1, seatY, footY, footZ, arms }).
+// The hips lower onto the seat and sit back, the feet go to the floor or the stool's foot
+// ring by IK (the knees bend by themselves), the back settles into a slight slouch; while
+// sitting down or getting up the torso leans forward over the knees, the way people do.
+function sitBlend(m, A, S, sc) {
+  const k = smooth(0, 1, S.k);
+  const hr = m.hips.userData.rest;
+  const seatHip = (S.seatY || 0.46) / sc + 0.085;
+  A.ht[0] = lerp(A.ht[0], hr.x, k);
+  A.ht[1] = lerp(A.ht[1], seatHip, k);
+  A.ht[2] = lerp(A.ht[2], hr.z - 0.07, k);
+  A.hipCap = null; A.hipK = 12;
+  const tr = Math.sin(clamp(S.k, 0, 1) * Math.PI) * (S.k < 0.98 ? 1 : 0);
+  mixT(A, B.hips, -0.06, Ty(A, B.hips) * 0.2, 0, k);
+  Tadd(A, B.spine, 0.42 * tr + 0.06 * k, 0, 0);
+  Tadd(A, B.chest, 0.08 * tr + 0.03 * k, 0, 0);
+  A.headPitch = (A.headPitch || 0) - 0.25 * tr;
+  const footY = (S.footY || 0) / sc + 0.085, footZ = (S.footZ ?? 0.42) / sc;
+  for (let i = 0; i < 2; i++) {
+    const side = i === 0 ? 1 : -1;
+    const sx = side * (0.13 + (S.spread || 0)), sz = footZ + (i === 0 ? -0.025 : 0.02) + (S.relax ? side * 0.04 : 0);
+    va.set(sx, footY, sz);
+    A.legT[i].lerp(va, k);
+    vb.set(side * 0.2, 0.35, 1);
+    A.legPole[i].lerp(vb, k).normalize();
+    eu.set((S.footPitch || 0) * k, side * 0.12 * k, 0, 'YXZ'); qa.setFromEuler(eu);
+    A.footQ[i].slerp(qa, k);
+  }
+  A.ikLegT = 1;
 }
 
 // ===========================================================================================

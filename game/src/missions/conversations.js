@@ -89,7 +89,16 @@ export class Conversations {
 
   nearestPartner() {
     const g = this.game, b = g.player.body;
-    if (g.player.vehicle || !b.alive || g.wastedTimer > 0) return null;
+    if (g.player.vehicle || !b.alive || g.wastedTimer > 0 || g.interiors?.trans) return null;
+    if (g.interiors?.inside) {
+      // Inside: the bartender (preferred when seated at his counter) and the regulars.
+      let best = null, bd = 2.6;
+      for (const c of g.interiors.active.talkers()) {
+        const d = Math.hypot(c.pos.x - b.pos.x, c.pos.z - b.pos.z) - (c.interiorNpc.talkScript !== 'patron' ? 0.8 : 0);
+        if (d < bd && (c.interiorNpc.talkScript !== 'patron' || d < 1.9)) { bd = d; best = c; }
+      }
+      return best;
+    }
     let best = null, bd = 2.8;
     const consider = (c) => {
       if (!c || !c.alive || c.knock > 0) return;
@@ -103,6 +112,7 @@ export class Conversations {
 
   displayName(c) {
     if (c === this.game.missions.giverNpc) return CAST[this.game.missions.nextMission?.giver]?.name || c.name;
+    if (c.interiorNpc && c.name) return c.name;
     if (!c.talkName) c.talkName = townspersonName(c.model.look);
     return c.talkName;
   }
@@ -111,7 +121,7 @@ export class Conversations {
     const g = this.game;
     if (!this.partner) {
       this.candidate = this.nearestPartner();
-      if (this.candidate && g.input.hit('KeyE')) this.begin(this.candidate);
+      if (this.candidate && g.input.hit('KeyE') && !g.eConsumed) this.begin(this.candidate);
     } else {
       this.candidate = null;
       const p = this.partner, b = g.player.body;
@@ -119,19 +129,20 @@ export class Conversations {
       if (!p.alive || p.knock > 0 || d > 6 || g.player.vehicle || (p.ai && p.ai.mode !== 'talk')) { this.end(false); return; }
       // Face each other; the townsperson stays put while talking.
       // Both turn smoothly (not snapping) and keep eye contact.
-      p.heading = angleDamp(p.heading, Math.atan2(b.pos.x - p.pos.x, b.pos.z - p.pos.z), 4, dt);
+      if (!p.sit) p.heading = angleDamp(p.heading, Math.atan2(b.pos.x - p.pos.x, b.pos.z - p.pos.z), 4, dt);
       // Whoever is not speaking listens (weight on one leg, small nods).
       const speaking = (c) => (c.talk || 0) > 0.05;
       p.listening = !speaking(p); b.listening = !speaking(b) && !b.aiming;
       p.lookAt?.(b.pos.x, b.pos.z, b.pos.y + 1.6);
-      if (d < 3.5) b.heading = angleDamp(b.heading, Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z), 5, dt);
+      if (d < 3.5 && !b.sit) b.heading = angleDamp(b.heading, Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z), 5, dt);
       b.lookAt(p.pos.x, p.pos.z, p.pos.y + 1.6);
       if (p === g.missions.giverNpc) p.updateVisual(dt);
       if (this.pendingChoices && g.dialogue.idle) { const c = this.pendingChoices; this.pendingChoices = null; c.length ? this.showChoices(c) : this.end(true); }
     }
     this.updateTag();
     this.updateChatter(dt);
-    g.onTalkAvailable?.(!!this.candidate);
+    const act = g.interiors?.actionLabel?.();
+    g.onTalkAvailable?.(!!this.candidate || !!act, this.candidate && !act ? 'TALK' : act || 'TALK');
   }
 
   updateTag() {
@@ -154,7 +165,8 @@ export class Conversations {
     g.dialogue.clear();
     g.cameraRig.talkFocus = { a: g.player.body, b: c };
     g.cameraRig.talkLook = null;
-    if (c.ai) { c.ai.prevMode = c.ai.mode; c.ai.mode = 'talk'; c.anim = 'idle'; }
+    if (c.ai) { c.ai.prevMode = c.ai.mode; c.ai.mode = 'talk'; if (!c.interiorNpc) c.anim = 'idle'; }
+    if (c.interiorNpc) { c.playGesture?.(c.sit ? 'nod' : 'wave', 1.2); g.player.body.playGesture('nod', 1.1); g.interiors.beginTalk(this, c); return; }
     const story = c === g.missions.giverNpc;
     // Greeting: story people offer a handshake when close enough, townspeople wave or nod.
     const d0 = Math.hypot(c.pos.x - g.player.body.pos.x, c.pos.z - g.player.body.pos.z);
@@ -187,7 +199,7 @@ export class Conversations {
 
   pedChoices() {
     const g = this.game, c = this.partner;
-    const district = districtAt(c.pos.x, c.pos.z);
+    const wp = g.interiors?.inside ? g.interiors.savePosition() : c.pos; const district = districtAt(wp.x, wp.z);
     const all = [
       { label: 'What\'s new around here?', run: () => { this.say('raka', 'So, what\'s new around here?'); this.npc(this.newsLine(district)); return true; } },
       { label: 'Some weather, huh?', run: () => { this.say('raka', 'Some weather, huh?'); this.npc(pickOf(Math.random, WEATHER_TALK[g.weather.state] || WEATHER_TALK.clear)); return true; } },
@@ -248,7 +260,7 @@ export class Conversations {
     if (!this.partner) return;
     if (more) {
       const story = this.game.missions.giverNpc === this.partner;
-      this.pendingChoices = story ? this.storyChoices.filter((c) => !this.used.has(c.label)) : this.used.size >= 3 ? [] : this.pedChoices();
+      this.pendingChoices = this.partner.interiorNpc ? (this.interiorChoices || []).filter((c) => !this.used.has(c.label)) : story ? this.storyChoices.filter((c) => !this.used.has(c.label)) : this.used.size >= 3 ? [] : this.pedChoices();
     } else this.pendingChoices = [];
   }
 
@@ -280,7 +292,8 @@ export class Conversations {
     this.game.player.body.listening = false;
     if (p) { p.listening = false; if (polite && p.alive && !this.fleeAfter) p.playGesture?.('wave', 1.3); }
     if (!polite) this.game.dialogue.clear();
-    if (p?.ai && p.ai.mode === 'talk') {
+    if (p?.ai?.interior) { p.ai.mode = 'idle'; p.lookAt(null); }
+    else if (p?.ai && p.ai.mode === 'talk') {
       if (this.fleeAfter) { p.ai.mode = 'flee'; p.ai.fleeFrom = { x: this.game.player.pos.x, z: this.game.player.pos.z }; p.ai.timer = 8; }
       else { p.ai.mode = 'walk'; p.anim = 'auto'; p.ai.timer = 6; }
     }

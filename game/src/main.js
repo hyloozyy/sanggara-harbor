@@ -183,7 +183,7 @@ async function boot() {
   const step = (p) => { fill.style.width = `${Math.round(p * 100)}%`; return new Promise((r) => setTimeout(r, 0)); };
   await step(0.05);
   session = new GameSession(gfx, input, audio, radio, (p) => { fill.style.width = `${Math.round(p * 100)}%`; });
-  session.onTalkAvailable = (on) => touch.setTalkAvailable(on);
+  session.onTalkAvailable = (on, label) => { touch.setTalkAvailable(on); touch.setTalkLabel?.(label || 'TALK'); };
   mapScreen = new CityMapScreen(session, session.minimap);
   mapScreen.onClose = () => closeMap();
   window.__game = { session, gfx, input, touch, gamepad, mapScreen };

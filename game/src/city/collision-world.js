@@ -8,6 +8,7 @@ export class CollisionWorld {
   constructor() {
     this.boxes = [];
     this.cells = new Map();
+    this.bounded = true;     // the city's sea walls; interiors switch them off
   }
 
   key(cx, cz) { return cx * 73856093 ^ cz * 19349663; }
@@ -66,7 +67,7 @@ export class CollisionWorld {
       if (!contact || depth > contact.depth) contact = { nx, nz, depth, box: b };
     }
     // Sea walls and the hills at the map edge.
-    const lim = [[pos.x - (-372), 1, 0], [372 - pos.x, -1, 0], [pos.z - (-372), 0, 1], [372 - pos.z, 0, -1]];
+    const lim = this.bounded ? [[pos.x - (-372), 1, 0], [372 - pos.x, -1, 0], [pos.z - (-372), 0, 1], [372 - pos.z, 0, -1]] : [];
     for (const [gap, nx, nz] of lim) {
       if (gap < r) {
         const depth = r - gap;

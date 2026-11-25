@@ -121,6 +121,14 @@ export class TouchController {
     this.els.talk.classList.toggle('tc-hide', !on);
   }
 
+  // The contextual button says what it will do: TALK, ENTER, EXIT, SIT, STAND, USE.
+  setTalkLabel(text) {
+    if (text === this.talkLabel) return;
+    this.talkLabel = text;
+    const sym = this.els.talk?.querySelector('.tc-sym');
+    if (sym) sym.textContent = text;
+  }
+
   update() {
     if (!this.visible) return;
     this.updateCaptions();

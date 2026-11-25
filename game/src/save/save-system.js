@@ -26,7 +26,7 @@ export function writeSave(game, label = '') {
     side: game.side.serialize(),
     world: game.worldEvents.serialize(),
     arsenal: p.arsenal.serialize(),
-    player: { x: p.pos.x, z: p.pos.z, health: p.body.health, armour: p.body.armour },
+    player: { ...(game.interiors?.savePosition() || { x: p.pos.x, z: p.pos.z }), health: p.body.health, armour: p.body.armour },
   };
   try { localStorage.setItem(KEY, JSON.stringify(data)); return true; } catch { return false; }
 }
@@ -34,6 +34,7 @@ export function writeSave(game, label = '') {
 export function applySave(game, data) {
   if (!data) return false;
   // Loading mid-game: step out of any car, drop the current job and the police.
+  game.interiors?.forceExit();
   if (game.player.vehicle) game.player.exitVehicle(game, false, true);
   if (game.missions.active) game.missions.cleanupMission();
   if (game.started) { game.wanted.clear('load'); game.police.clearAll(); }

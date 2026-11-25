@@ -590,6 +590,41 @@ const SCENES = {
     await finish(s, gfx);
   },
 
+  // Enterable interiors: ?shot=interior&room=bar|home|shop|clinic
+  //   &phase=door (outside, door swinging open) | in (default: inside after the walk-in)
+  //   &sit=<seat index> &order=beer|tea|coffee &juke=<station> &view=<room view> &t=<extra seconds>
+  // window.__interior.advance(seconds) steps the game for frame sequences.
+  async interior(session, gfx, ctx) {
+    const s = session, p = ctx.params, I = s.interiors;
+    const log = (...a) => console.log('[interior]', ...a);
+    s.start({ freeRoam: true });
+    const id = p.get('room') || 'bar';
+    const door = I.doors.find((d) => d.def.id === id);
+    s.player.body.pos.set(door.x + door.nx * 2.2, door.y, door.z + door.nz * 2.2);
+    s.player.body.heading = door.heading + Math.PI;
+    s.cameraRig.yaw = door.heading + Math.PI; s.cameraRig.pitch = 0.12;
+    s.cameraRig.current.set(0, 0, 0);
+    simulate(s, 0.6);
+    I.beginEnter(door);
+    if (p.get('phase') === 'door') {
+      for (let i = 0; i < 200 && !(I.trans?.phase === 'in' && I.trans.t > Number(p.get('dt') || 0.25)); i++) simulate(s, DT);
+      log('door', I.trans?.phase, 'open', door.open.toFixed(2));
+    } else {
+      for (let i = 0; i < 600 && (!I.inside || I.trans); i++) simulate(s, DT);
+      log('inside', I.active?.id, 'pos', s.player.pos.toArray().map((v) => v.toFixed(2)).join(','));
+      if (p.has('sit')) { const seat = I.active.seats[Number(p.get('sit'))]; s.player.body.pos.set(seat.x + Math.cos(seat.heading) * 0.5, 0, seat.z - Math.sin(seat.heading) * 0.5); I.sitOn(seat); simulate(s, 2.5); log('seated', I.sitting?.phase); }
+      if (p.get('order')) { const r = I.active; r.pendingOrder = { kind: p.get('order'), x: s.player.pos.x, done: () => I.serveDrink(p.get('order'), 10) }; r.bartender.clear(); }
+      if (p.get('juke')) I.playJukebox(p.get('juke'));
+      simulate(s, Number(p.get('t') || 1));
+      const v = I.active.views?.[p.get('view')];
+      if (v) s.cameraRig.override = { x: v[0], y: v[1], z: v[2], tx: v[3], ty: v[4], tz: v[5], fov: Number(p.get('fov') || 55) };
+      log('npcs', I.active.npcs.map((n) => `${n.body.name || n.role}:${n.task?.type || '-'}`).join(' '));
+    }
+    window.__interior = { advance: (sec) => { simulate(s, sec); s.cameraRig.update(DT, s.player, s.input); gfx.render(12.5); } };
+    s.cameraRig.update(DT, s.player, s.input);
+    await finish(s, gfx);
+  },
+
   async test(session, gfx) {
     session.start({});
     session.missions.start(session.missions.nextMission);

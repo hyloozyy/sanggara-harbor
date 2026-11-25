@@ -34,7 +34,8 @@ export class CameraRig {
     const mdx = input.mouseDX, mdy = input.mouseDY;
     const sens = this.sensitivity * Math.min(1, this.fov / 62); // finer aim through a scope
     this.yaw -= mdx * sens;
-    this.pitch = clamp(this.pitch + mdy * sens * (this.invertY ? -1 : 1), -0.6, 1.1);
+    const I = this.interior;
+    this.pitch = clamp(this.pitch + mdy * sens * (this.invertY ? -1 : 1), I ? -0.45 : -0.6, I ? 0.75 : 1.1);
     this.idleMouse = Math.abs(mdx) + Math.abs(mdy) > 0 ? 0 : this.idleMouse + dt;
 
     const v = player.vehicle;
@@ -64,6 +65,9 @@ export class CameraRig {
       fov = player.aiming ? 50 / zoom : 62;
       if (zoom > 1) { dist = 1.6; shoulder = 0.55; }
       this.target.set(player.pos.x, player.pos.y, player.pos.z);
+      // Indoors: a closer, lower framing so the room stays in view.
+      if (I) { dist = Math.min(dist, 2.9); shoulder = Math.min(shoulder, 0.28); height = 1.5; lookH = 1.42; }
+      if (I && player.body?.sit?.k > 0.5) { height = 1.25; lookH = 1.15; dist = 2.3; }
     }
     this.distance = damp(this.distance, dist, 6, dt);
     this.fov = damp(this.fov, fov, 6, dt);
@@ -81,8 +85,13 @@ export class CameraRig {
     let dx = -fx * cp, dy = sp, dz = -fz * cp;
     // Pull in when a wall is between the pivot and the camera.
     const hit = this.collision.raycast(pivotX, pivotY, pivotZ, dx, dy, dz, this.distance + 0.4);
-    const d = Math.max(0.8, Math.min(this.distance, hit - 0.4));
+    const d = I ? Math.max(0.25, Math.min(this.distance, hit - 0.3)) : Math.max(0.8, Math.min(this.distance, hit - 0.4));
     let camX = pivotX + dx * d, camY = Math.max(0.4, pivotY + dy * d), camZ = pivotZ + dz * d;
+    if (I) {
+      camY = Math.min(camY, I.ceiling - 0.25);
+      // Very close to a wall: hide Raka rather than look through his head.
+      if (player.body) player.body.mesh.visible = d > 0.55 || !!player.body.sit;
+    }
 
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 2.2);
@@ -102,6 +111,13 @@ export class CameraRig {
     const ux = dx / d, uz = dz / d, rx = uz, rz = -ux;
     const headY = Math.max(a.headY, b.headY) - 0.05;
     const want = new THREE.Vector3(a.pos.x - ux * 1.45 + rx * 0.85, headY + 0.1, a.pos.z - uz * 1.45 + rz * 0.85);
+    if (this.interior) {
+      // Keep the over-the-shoulder shot inside the room.
+      const ox = a.pos.x, oy = headY + 0.05, oz = a.pos.z, wx = want.x - ox, wy = want.y - oy, wz = want.z - oz, wl = Math.hypot(wx, wy, wz) || 1;
+      const hit = this.collision.raycast(ox, oy, oz, wx / wl, wy / wl, wz / wl, wl + 0.3);
+      const k = Math.max(0.2, Math.min(wl, hit - 0.25)) / wl;
+      want.set(ox + wx * k, Math.min(oy + wy * k, this.interior.ceiling - 0.25), oz + wz * k);
+    }
     const look = new THREE.Vector3(b.pos.x + rx * 0.35, b.headY - 0.12, b.pos.z + rz * 0.35);
     this.talkBlend = Math.min(1, (this.talkBlend || 0) + dt * 1.6);
     const k = 1 - Math.exp(-dt * 6);

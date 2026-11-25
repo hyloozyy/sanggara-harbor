@@ -98,4 +98,7 @@ export const PLACES = {
   raceStart: { x: -120, z: 317.4, name: 'Sunset Street Race' },
   deliveryDepot: { x: 200, z: 87.2, name: 'Martabak Bulan (Delivery)' },
   station: { x: 7.5, z: -7.5, name: 'Sanggara Station' },
+  bar: { x: 226, z: 152.75, name: 'Kafe Jangkar (Bar)' },
+  tokoBerkah: { x: -18, z: 152.75, name: 'Toko Berkah (Shop)' },
+  clinic: { x: 47, z: -72.75, name: 'Klinik Sehat (Clinic)' },
 };

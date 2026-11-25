@@ -157,6 +157,17 @@ export class SoundWorld {
     this.a.noise(0.12, { filter: 'bandpass', freq: 1400, gain: 0.05, decay: 0.12, dest });
   }
 
+  // A hinge creak (and the shop bell over the bar door).
+  doorCreak(x, z, bell = false) {
+    if (!this.ctx) return;
+    const dest = this.panner(x, 1.2, z, { ref: 3, life: 2 });
+    this.a.tone(420, 0.45, { type: 'sawtooth', gain: 0.018, slide: 1.35, attack: 0.05, dest });
+    this.a.noise(0.35, { filter: 'bandpass', freq: 1300, q: 6, gain: 0.05, attack: 0.05, decay: 0.35, dest });
+    if (bell) for (let i = 0; i < 5; i++) this.a.tone(2350 + (i % 2) * 340, 0.5, { type: 'sine', gain: 0.035, when: 0.02 + i * 0.07, dest });
+  }
+
+  doorShut(x, z, strength = 1) { this.door(x, 1, z, false); void strength; }
+
   door(x, y, z, open) {
     if (!this.ctx) return;
     const dest = this.panner(x, y, z, { ref: 3, life: 1.5 });
@@ -339,6 +350,20 @@ export class SoundWorld {
       this.amb = { traffic: loop('lowpass', 260), waves: loop('lowpass', 700), crowd: loop('bandpass', 900, 1.6), industry: loop('bandpass', 140, 3), wavePhase: 0, next: 0 };
     }
     const A = this.amb, t = c.currentTime;
+    const ind = this.a.indoor || 0;
+    if (ind > 0.5) {
+      // Indoors: the street is a muffled hum through the walls; a bar has its own crowd murmur.
+      const room = this.room || {};
+      A.traffic.g.gain.setTargetAtTime(0.012 * (room.street ?? 0.3), t, 0.4);
+      A.traffic.f.frequency.setTargetAtTime(140, t, 0.4);
+      A.waves.g.gain.setTargetAtTime(0, t, 0.4);
+      A.industry.g.gain.setTargetAtTime(0, t, 0.4);
+      A.crowd.g.gain.setTargetAtTime(0.03 * (room.chatter ?? 0), t, 0.6);
+      A.wavePhase += dt;
+      A.crowd.f.frequency.setTargetAtTime(650 + 250 * Math.sin(A.wavePhase * 1.3) + 120 * Math.sin(A.wavePhase * 3.1), t, 0.2);
+      return;
+    }
+    A.traffic.f.frequency.setTargetAtTime(260, t, 0.4);
     const d = districtAt(x, z);
     const beach = Math.max(0, Math.min(1, (z - 300) / 50));
     const harbour = Math.max(0, Math.min(1, (x - 280) / 70));

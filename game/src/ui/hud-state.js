@@ -15,6 +15,12 @@ const self = game;
   if (!self.missions.active && next && Math.hypot(b.pos.x - next.start.x, b.pos.z - next.start.z) < 10) {
     hint = `<kbd>${next.chapter}</kbd>${next.title} — step into the yellow circle`;
   }
+  const I = self.interiors;
+  if (I && !v) {
+    const ih = I.hint();
+    if (I.inside || I.trans) hint = null;
+    if (ih && (I.inside || !self.talk?.candidate || Math.hypot(self.talk.candidate.pos.x - b.pos.x, self.talk.candidate.pos.z - b.pos.z) > 1.2)) hint = ih;
+  }
   if (!hint && self.talk?.candidate) hint = `<kbd>E</kbd>Talk to ${self.talk.displayName(self.talk.candidate)}`;
   let aimTarget = false;
   if (b.aiming && !v) {
@@ -34,7 +40,7 @@ const self = game;
     crew: self.crew.hudState(),
     mission: self.missions.panelState(),
     police: self.wanted.level > 0 ? self.police.hudList(p) : [],
-    px: b.pos.x, pz: b.pos.z,
+    px: I?.inside ? I.savePosition().x : b.pos.x, pz: I?.inside ? I.savePosition().z : b.pos.z,
     dialogue: self.dialogue.line,
     vehicle: v ? {
       name: v.spec.name, kmh: sp, maxKmh: v.spec.maxSpeed * 3.6, condition: v.health / v.spec.health, drifting: v.drifting,
@@ -56,10 +62,13 @@ const self = game;
     { ...PLACES.raceStart, color: '#40ffc0', name: 'Race', icon: 'R' }, { ...PLACES.deliveryDepot, color: '#ff8040', name: 'Delivery', icon: 'D' },
     { ...PLACES.paintShop, color: '#8080ff', name: 'Paint Shop', icon: 'P' }, { ...PLACES.gunShop, color: '#ff4040', name: 'Gun Shop', icon: 'G' },
     { ...PLACES.safehouse, color: '#60ff80', name: 'Safehouse', icon: 'S' }, { ...HOSPITAL, color: '#ffffff', name: 'Hospital', icon: '+' },
+    { ...PLACES.bar, color: '#ff5aa0', name: 'Kafe Jangkar', icon: 'B' }, { ...PLACES.tokoBerkah, color: '#ffe060', name: 'Toko Berkah', icon: 'W' },
+    { ...PLACES.clinic, color: '#5affc8', name: 'Klinik Sehat', icon: 'K' },
   ];
+  const inPos = self.interiors?.inside ? self.interiors.savePosition() : null;
   const enemies = [...self.missions.enemies, ...self.worldEvents.gang].filter((e) => e.alive).map((e) => ({ x: e.body.pos.x, z: e.body.pos.z }));
   return {
-    px: p.pos.x, pz: p.pos.z, yaw: self.cameraRig.yaw, heading: p.vehicle ? p.vehicle.heading : p.body.heading,
+    px: inPos ? inPos.x : p.pos.x, pz: inPos ? inPos.z : p.pos.z, yaw: self.cameraRig.yaw, heading: p.vehicle ? p.vehicle.heading : p.body.heading,
     speed: p.vehicle ? Math.abs(p.vehicle.speed) : 0,
     police: self.police.policeCars.filter((v) => !v.wrecked).map((v) => ({ x: v.pos.x, z: v.pos.z })).concat(self.police.officers.filter((o) => o.alive).map((o) => ({ x: o.body.pos.x, z: o.body.pos.z }))),
     heli: self.police.heliActive ? { x: self.police.heli.pos.x, z: self.police.heli.pos.z } : null,

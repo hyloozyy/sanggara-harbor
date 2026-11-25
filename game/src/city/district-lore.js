@@ -50,5 +50,8 @@ export const PLACE_INFO = {
   gunShop: { kind: 'Shop', text: 'Om Beni\'s gun shop behind a hardware counter. Pistols, SMGs, shotguns, armour.' },
   raceStart: { kind: 'Activity', text: 'Sunset Street Race: fourteen gates along the coast against the Kobra Senja record.' },
   deliveryDepot: { kind: 'Activity', text: 'Martabak Bulan: deliver hot martabak by scooter before it goes cold.' },
+  bar: { kind: 'Interior', text: 'Kafe Jangkar, the old harbour bar: cold Bir Jangkar, a pool table, a jukebox and Bang Togar, who hears everything. Walk in and pull up a stool.' },
+  tokoBerkah: { kind: 'Interior', text: 'Toko Berkah, the corner shop: snacks, iced tea, coffee and nasi bungkus that put health back in your legs.' },
+  clinic: { kind: 'Interior', text: 'Klinik Sehat, a small neighbourhood clinic. Nurse Ratih patches you up for a fee.' },
   station: { kind: 'Landmark', text: 'Sanggara Station, where Raka stepped off the train after six years at sea.' },
 };

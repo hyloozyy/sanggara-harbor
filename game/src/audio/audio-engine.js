@@ -253,6 +253,8 @@ export class AudioEngine {
       this.wx = { hiss, roar, wind, cicG, gust: 0 };
     }
     const w = this.wx, t = this.now;
+    const mu = 1 - 0.78 * (this.indoor || 0); // indoors: rain on the roof, wind through the walls
+    rain *= mu; wind *= mu; dry *= mu; night *= mu;
     w.gust += 0.016;
     const gust = 0.6 + 0.4 * Math.sin(w.gust * 0.7) * Math.sin(w.gust * 0.23 + 1);
     w.hiss.gn.gain.setTargetAtTime(0.16 * rain, t, 0.5);

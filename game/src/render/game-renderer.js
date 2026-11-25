@@ -55,7 +55,9 @@ export class GameRenderer {
     this.post.setSize(size.x, size.y);
   }
 
+  // activeScene: an interior being drawn instead of the city.
   render(time) {
+    if (this.activeScene) { this.post.render(this.activeScene, this.camera, time); return; }
     this.sky.position.copy(this.camera.position);
     this.sky.material.uniforms.time.value = time;
     this.post.render(this.scene, this.camera, time);

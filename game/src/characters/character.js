@@ -56,7 +56,7 @@ export class Character {
     this.vel.z = damp(this.vel.z, wishZ, accel, dt);
     this.pos.x += this.vel.x * dt;
     this.pos.z += this.vel.z * dt;
-    const ground = groundHeightAt(this.pos.x, this.pos.z);
+    const ground = world?.groundAt ? world.groundAt(this.pos.x, this.pos.z) : groundHeightAt(this.pos.x, this.pos.z);
     this.vy -= 22 * dt;
     this.pos.y += this.vy * dt;
     if (this.pos.y <= ground) { this.pos.y = damp(this.pos.y, ground, 30, dt); if (this.pos.y < ground) this.pos.y = ground; this.vy = 0; this.grounded = true; }
@@ -181,7 +181,7 @@ export class Character {
       airborne: !this.grounded && Math.abs(this.vy) > 0.6, vy: this.vy, landVy: this.landVy, jumpPrep: this.jumpPrep > 0,
       drawT: this.drawT, reloadT: this.reloadT, recoil: this.recoil,
       reach: this.reach, reachLow: this.reachLow, reachArm: this.reachArm !== false,
-      stagger: this.stagger, panic: this.panic, gesture: this.gesture, handTarget, listening: this.listening,
+      stagger: this.stagger, panic: this.panic, gesture: this.gesture, handTarget, listening: this.listening, sit: this.sit,
     });
     this.recoil = Math.max(0, (this.recoil || 0) - dt * 7);
     if (this.drawT != null && this.drawT < 1) this.drawT = Math.min(1, this.drawT + dt * 3.2);
