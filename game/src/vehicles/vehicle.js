@@ -36,6 +36,10 @@ export class Vehicle {
     this.color = color;
     const built = buildVehicleMesh(spec, color);
     Object.assign(this, { mesh: built.root, body: built.body, wheels: built.wheels, seat: built.seat, sirens: built.sirens });
+    this.steering = built.steering || null;   // turning steering wheel (cars)
+    this.rig = built.rig || null;             // grips/pegs (two-wheelers, bajaj)
+    this.seatTop = built.seatTop ?? null;
+    this.lean = 0;
     this.brakeMeshes = built.brakeMeshes;
     this.headMeshes = built.headMeshes;
     this.mesh.userData.vehicle = this;
@@ -85,6 +89,7 @@ export class Vehicle {
   }
 
   update(dt, world) {
+    this.leanDt = dt;
     const s = this.spec;
     const c = this.wrecked ? { throttle: 0, steer: 0, handbrake: true } : this.controls;
     const fx = Math.sin(this.heading), fz = Math.cos(this.heading);
@@ -251,7 +256,14 @@ export class Vehicle {
     this.mesh.position.set(this.pos.x, this.y, this.pos.z);
     this.mesh.rotation.y = this.heading;
     this.body.rotation.x = this.pitch;
-    this.body.rotation.z = this.spec.twoWheel ? clamp(-this.angVel * this.speed * 0.02, -0.5, 0.5) : this.roll;
+    if (this.spec.twoWheel) {
+      // Two-wheelers lean into the turn (balance angle for speed x yaw rate), eased in and out.
+      const want = clamp(-Math.atan(this.angVel * this.speed / 9.8) * 0.9, -0.55, 0.55);
+      const dt = this.leanDt || 0.016;
+      this.lean += (want - this.lean) * (1 - Math.exp(-8 * dt));
+      this.body.rotation.z = this.lean;
+    } else this.body.rotation.z = this.roll;
+    if (this.steering) this.steering.spin.rotation.z = -this.steer * 1.4 * 2.2;
     for (const w of this.wheels) {
       w.spin.rotation.x = this.wheelSpin;
       if (w.front) w.pivot.rotation.y = this.steer * 1.4;

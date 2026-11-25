@@ -120,6 +120,9 @@ export class Conversations {
       // Face each other; the townsperson stays put while talking.
       // Both turn smoothly (not snapping) and keep eye contact.
       p.heading = angleDamp(p.heading, Math.atan2(b.pos.x - p.pos.x, b.pos.z - p.pos.z), 4, dt);
+      // Whoever is not speaking listens (weight on one leg, small nods).
+      const speaking = (c) => (c.talk || 0) > 0.05;
+      p.listening = !speaking(p); b.listening = !speaking(b) && !b.aiming;
       p.lookAt?.(b.pos.x, b.pos.z, b.pos.y + 1.6);
       if (d < 3.5) b.heading = angleDamp(b.heading, Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z), 5, dt);
       b.lookAt(p.pos.x, p.pos.z, p.pos.y + 1.6);
@@ -151,8 +154,12 @@ export class Conversations {
     g.dialogue.clear();
     g.cameraRig.talkFocus = { a: g.player.body, b: c };
     g.cameraRig.talkLook = null;
-    if (c.ai) { c.ai.prevMode = c.ai.mode; c.ai.mode = 'talk'; c.anim = 'idle'; c.vel.set(0, 0, 0); }
+    if (c.ai) { c.ai.prevMode = c.ai.mode; c.ai.mode = 'talk'; c.anim = 'idle'; }
     const story = c === g.missions.giverNpc;
+    // Greeting: story people offer a handshake when close enough, townspeople wave or nod.
+    const d0 = Math.hypot(c.pos.x - g.player.body.pos.x, c.pos.z - g.player.body.pos.z);
+    if (story && d0 < 1.6) { c.playGesture?.('handshake', 1.9, g.player.body); g.player.body.playGesture('handshake', 1.9, c); }
+    else { c.playGesture?.(Math.random() < 0.5 ? 'wave' : 'nod', 1.3); g.player.body.playGesture('nod', 1.1); }
     const name = this.displayName(c);
     if (story) {
       const key = g.missions.nextMission.giver;
@@ -270,6 +277,8 @@ export class Conversations {
     this.used = null;
     this.game.cameraRig.talkFocus = null;
     this.game.player.body.lookAt(null);
+    this.game.player.body.listening = false;
+    if (p) { p.listening = false; if (polite && p.alive && !this.fleeAfter) p.playGesture?.('wave', 1.3); }
     if (!polite) this.game.dialogue.clear();
     if (p?.ai && p.ai.mode === 'talk') {
       if (this.fleeAfter) { p.ai.mode = 'flee'; p.ai.fleeFrom = { x: this.game.player.pos.x, z: this.game.player.pos.z }; p.ai.timer = 8; }

@@ -5,6 +5,17 @@ import { randomLook } from './humanoid-model.js';
 import { rng } from '../core/rng.js';
 import { BLOCKS, ROAD_HALF, SIDEWALK } from '../city/city-layout.js';
 import { events } from '../core/event-bus.js';
+import { angleDamp } from '../core/math-utils.js';
+
+const angleDampTo = angleDamp;
+// Is the player's gun pointed at this person (within a narrow cone)?
+function aimedAt(p, player) {
+  if (!player.aiming || player.vehicle) return false;
+  const b = player.body || player;
+  const fx = Math.sin(b.heading), fz = Math.cos(b.heading);
+  const dx = p.pos.x - b.pos.x, dz = p.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1;
+  return d < 16 && (dx * fx + dz * fz) / d > 0.93;
+}
 
 const WALK = 1.35, RUN = 5.2;
 const INSET = ROAD_HALF + SIDEWALK * 0.5;
@@ -71,6 +82,7 @@ export class PedestrianSystem {
       const d = Math.hypot(p.pos.x - x, p.pos.z - z);
       if (d < radius) {
         p.ai.mode = severity > 1 && d < 10 && rng.chance(0.35) ? 'cower' : 'flee';
+        if (d < 18) p.flinch = 0.25; // startled first
         p.ai.fleeFrom = { x, z };
         p.ai.timer = rng.range(6, 12);
         if (byPlayer && !p.ai.called && severity > 0 && rng.chance(0.3)) {
@@ -94,7 +106,8 @@ export class PedestrianSystem {
     for (const p of this.list) {
       if (!p.alive) { p.updateVisual(dt); continue; }
       const ai = p.ai;
-      let wx = 0, wz = 0;
+      let wx = 0, wz = 0, faceTo = null;
+      const d = Math.hypot(p.pos.x - px, p.pos.z - pz);
       ai.timer -= dt;
       // Rain: umbrellas go up; people without one hurry along.
       const brolly = rain > 0.2 && p.model.look.props?.umbrella;
@@ -121,6 +134,38 @@ export class PedestrianSystem {
       } else if (ai.mode === 'cower') {
         p.anim = 'cower';
         if (ai.timer <= 0) { ai.mode = 'flee'; ai.timer = 6; }
+      } else if (ai.mode === 'handsup') {
+        // Held at gunpoint: hands up, facing the gun, backing off a little; bolts when let go.
+        p.anim = 'hands-up';
+        const dx = p.pos.x - px, dz = p.pos.z - pz, dd = Math.hypot(dx, dz) || 1;
+        p.heading = angleDampTo(p.heading, Math.atan2(-dx, -dz), 6, dt);
+        if (dd < 3.5) { wx = dx / dd * 0.5; wz = dz / dd * 0.5; }
+        faceTo = p.heading;
+        p.lookAt(px, pz, player.pos.y + 1.6);
+        if (!aimedAt(p, player)) ai.timer = Math.min(ai.timer, 1.2);
+        if (ai.timer <= 0) { ai.mode = 'flee'; ai.fleeFrom = { x: px, z: pz }; ai.timer = rng.range(6, 10); p.anim = 'auto'; }
+      } else if (ai.mode === 'talk') {
+        // In a conversation: walk up to a comfortable distance, then stay put.
+        const dx = px - p.pos.x, dz = pz - p.pos.z, dd = Math.hypot(dx, dz) || 1;
+        if (dd > 1.45) { wx = dx / dd * 1.2; wz = dz / dd * 1.2; }
+        p.anim = 'idle';
+        faceTo = Math.atan2(dx, dz);
+      }
+      p.panic = ai.mode === 'flee';
+      // A gun pointed at someone close by: hands go up.
+      if ((ai.mode === 'walk' || ai.mode === 'idle') && player.aiming && d < 14 && aimedAt(p, player)) {
+        ai.mode = 'handsup'; ai.timer = rng.range(2.5, 5); p.model.showProp('phone', false); p.phoneShown = false;
+        if (!ai.called && rng.chance(0.25)) { ai.called = true; events.emit('witness-report', { x: p.pos.x, z: p.pos.z, severity: 1 }); }
+      }
+      // Step aside for someone walking straight at them.
+      if (ai.mode === 'walk' && !player.vehicle) {
+        const dx = p.pos.x - px, dz = p.pos.z - pz, dd = Math.hypot(dx, dz);
+        const pv = player.body?.vel, ps = pv ? Math.hypot(pv.x, pv.z) : 0;
+        if (dd < 2.2 && dd > 0.01 && ps > 1 && (dx * pv.x + dz * pv.z) / (dd * ps) > 0.6) {
+          const side = (dx * pv.z - dz * pv.x) > 0 ? 1 : -1;
+          wx += pv.z / ps * side * 1.6; wz += -pv.x / ps * side * 1.6;
+          p.lookAt(px, pz, player.pos.y + 1.6);
+        }
       }
       // Dodge cars that are about to hit them.
       for (const v of vehicles.list) {
@@ -135,7 +180,7 @@ export class PedestrianSystem {
           if (fwd > 0.8) { ai.mode = 'flee'; ai.fleeFrom = { x: v.pos.x - v.vel.x, z: v.pos.z - v.vel.z }; ai.timer = 3; }
         }
       }
-      p.move(dt, this.world, wx, wz);
+      p.move(dt, this.world, wx, wz, faceTo, faceTo == null ? 12 : 6);
       if (p.alive) vehicles.pushOut(p);
       p.updateVisual(dt);
     }

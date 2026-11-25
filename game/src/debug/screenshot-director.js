@@ -9,6 +9,7 @@ import { generateLook } from '../characters/character-generator.js';
 import { CAST } from '../missions/story-cast.js';
 import { VEHICLE_MODELS } from '../vehicles/vehicle-catalog.js';
 import { buildWeaponMesh } from '../combat/weapon-meshes.js';
+import { createMotionStage } from './motion-stage.js';
 
 const DT = 1 / 30;
 
@@ -445,6 +446,36 @@ const SCENES = {
     s.cameraRig.override = close ? { x: cx, y: 1.72, z: Z0 + 2.3, tx: cx, ty: 1.55, tz: Z0, fov: 40 } : { x: cx, y: 1.75, z: Z0 + 6.4, tx: cx, ty: 1.05, tz: Z0 - 1, fov: 50 };
     s.cameraRig.update(DT, s.player, s.input);
     s.gfx.lighting.follow(cx, Z0);
+    await finish(s, gfx);
+  },
+
+  // People in motion on Jl. Bandar (?shot=motion): walking, stopping and turning, jogging,
+  // sprinting, a handshake and a chat, a strafing gunman, a brawl, a collapse, riders and a
+  // driver, and people climbing on and off. &t=<s> simulated time, &focus=<actor> frames one
+  // of them (&angle, &dist, &h); window.__motion.advance(s) steps on for frame sequences.
+  async motion(session, gfx, ctx) {
+    const s = session, p = ctx?.params;
+    s.hud.show(false);
+    const OX = 2, OZ = 152;
+    for (const v of [...s.vehicles.list]) if (Math.abs(v.pos.z - OZ - 6) < 30 && Math.abs(v.pos.x - OX - 12) < 45) s.vehicles.remove(v);
+    for (const ped of [...s.peds.list]) s.peds.remove(ped);
+    s.peds.target = 0;
+    const stage = createMotionStage(s.scene, OX, OZ);
+    s.player.body.pos.set(OX - 16, 0, OZ - 6); s.player.body.updateVisual(DT, 0);
+    const focus = p?.get('focus') || 'all';
+    const aim = () => {
+      if (focus === 'all') s.cameraRig.override = { x: OX + 12, y: 13, z: OZ - 20, tx: OX + 12, ty: 0.5, tz: OZ + 5, fov: 48 };
+      else {
+        const a = stage.actors[focus], f = a.focus(), hd = a.ch ? a.ch.heading : a.v.heading;
+        const b = hd + ((Number(p.get('angle') ?? 90) * Math.PI) / 180), d = Number(p.get('dist') || (a.v ? 5.5 : 4.2));
+        s.cameraRig.override = { x: f.x + Math.sin(b) * d, y: Number(p.get('h') || 1.4), z: f.z + Math.cos(b) * d, tx: f.x, ty: f.y, tz: f.z, fov: 36 };
+      }
+      s.cameraRig.update(DT, s.player, s.input);
+      s.gfx.lighting.follow(OX + 12, OZ + 5);
+    };
+    const advance = (sec) => { for (let k = 0; k < Math.round(sec / DT); k++) stage.step(DT); aim(); };
+    advance(Number(p?.get('t') || 2));
+    window.__motion = { stage, advance, render: () => gfx.render(12.5) };
     await finish(s, gfx);
   },
 

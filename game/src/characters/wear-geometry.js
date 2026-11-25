@@ -157,11 +157,13 @@ export function addSkirt(b, P, length, flare = 1) {
   b.sweep(rings, {
     segments: 22, uvFn: (u, v, p) => regionUV('outer', u, 0.3 + 0.7 * (p.y - bottomY) / (top - bottomY)),
     weightFn: (p) => {
+      // Cloth hangs between the legs: each vertex follows both thighs, mostly the nearer one,
+      // so the front and back panels stretch across a stride instead of splitting.
       const t = smooth(0.98, bottomY + 0.05, p.y);
-      const side = p.x >= 0 ? 'L' : 'R';
-      const lw = t * smooth(0.0, 0.1, Math.abs(p.x)) * 0.75;
-      const shin = t * smooth(0.5, 0.3, p.y) * smooth(0.0, 0.1, Math.abs(p.x)) * 0.3;
-      return [[B.hips, 1 - lw], [B['leg' + side], lw - shin], [B['shin' + side], shin]];
+      const mixL = smooth(-0.13, 0.13, p.x);
+      const lw = t * 0.78;
+      const shin = t * smooth(0.5, 0.25, p.y) * 0.3;
+      return [[B.hips, 1 - lw], [B.legL, (lw - shin) * mixL], [B.legR, (lw - shin) * (1 - mixL)], [B.shinL, shin * mixL], [B.shinR, shin * (1 - mixL)]];
     },
   });
 }

@@ -156,6 +156,7 @@ export class WeaponSystem {
 
   punch(shooter, w) {
     shooter.punchT = 0;
+    shooter.meleeKind = w.id === 'fists' ? 'fists' : 'swing';
     const fx = Math.sin(shooter.heading), fz = Math.cos(shooter.heading);
     events.emit('punch', { shooter });
     let target = null, bd = w.range;

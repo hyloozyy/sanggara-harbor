@@ -7,6 +7,50 @@ import { HumanoidModel } from '../characters/humanoid-model.js';
 import { animateHumanoid } from '../characters/humanoid-animator.js';
 import { events } from '../core/event-bus.js';
 
+// Handles, pegs, the steering wheel and the ground in the seated person's model space.
+export function driverRig(v, model) {
+  const sc = model.root.scale.y || 1, seat = v.seat;
+  const R = model.rigCache || (model.rigCache = { grips: [[0, 0, 0], [0, 0, 0]], pegs: [[0, 0, 0], [0, 0, 0]], stand: [0, 0, 0], ground: 0, hipY: 0, wheel: null, wheelTurn: 0, stepThrough: false });
+  const toM = (x, y, z, out) => { out[0] = (x - seat.x) / sc; out[1] = (y - seat.y) / sc; out[2] = (z - seat.z) / sc; return out; };
+  R.ground = -seat.y / sc;
+  const seatTop = v.seatTop ?? (v.rig?.seatTop ?? seat.y + 0.1);
+  R.hipY = v.rig ? (seatTop + 0.13 - seat.y) / sc : 0.04 / sc; // car seats are deep: the hips sink into the cushion
+  const side = v.spec.twoWheel ? 0.62 : v.spec.width / 2 + 0.42;
+  toM(-side, 0, seat.z + (v.spec.twoWheel ? 0.05 : 0.1), R.stand); R.stand[1] = 0;
+  if (v.rig) {
+    const a = v.steer * 1.4, c = Math.cos(a), s = Math.sin(a), P = v.rig.pivot;
+    for (let i = 0; i < 2; i++) {
+      const g = v.rig.grips[i], dx = g[0] - P[0], dz = g[2] - P[2];
+      toM(P[0] + dx * c + dz * s, g[1], P[2] - dx * s + dz * c, R.grips[i]);
+      const p = v.rig.pegs[i]; toM(p[0], p[1], p[2], R.pegs[i]);
+    }
+    R.stepThrough = !!v.rig.stepThrough; R.seated = !!v.rig.seated;
+  }
+  if (v.steering) {
+    const st = v.steering, t = st.tilt;
+    R.wheel = R.wheel || { c: [0, 0, 0], x: [1, 0, 0], u: [0, 1, 0], r: 0.18 };
+    toM(st.center.x, st.center.y, st.center.z, R.wheel.c);
+    R.wheel.u[0] = 0; R.wheel.u[1] = Math.cos(t); R.wheel.u[2] = Math.sin(t);
+    R.wheel.r = st.r / sc;
+    R.wheelTurn = v.steer * 1.4 * 2.2;
+  }
+  return R;
+}
+
+// Where someone getting out stands, in world space.
+export function standSpot(v) {
+  const side = v.spec.twoWheel ? 0.62 : v.spec.width / 2 + 0.42;
+  const fz = v.seat.z + (v.spec.twoWheel ? 0.05 : 0.1);
+  const c = Math.cos(v.heading), s = Math.sin(v.heading);
+  return { x: v.pos.x + (-side) * c + fz * s, z: v.pos.z - (-side) * s + fz * c, heading: v.heading };
+}
+
+export function animateDriver(v, model, dt) {
+  const rig = driverRig(v, model);
+  const ride = v.spec.twoWheel || !!v.rig;
+  animateHumanoid(model, ride ? 'ride' : 'drive', 0, dt, { steer: v.controls.steer, rig, mount: v.mount ?? 1, vSpeed: v.speed, lookYaw: v.lookYaw || 0 });
+}
+
 export class VehicleManager {
   constructor(scene, world) {
     this.scene = scene;
@@ -23,18 +67,29 @@ export class VehicleManager {
     return v;
   }
 
-  seatDriver(v, look) {
+  // Seat a person in the vehicle. animateIn: they climb on / get in from the left-hand door
+  // side (mount 0 → 1) instead of appearing seated.
+  seatDriver(v, look, { animateIn = false } = {}) {
+    if (v.driverModel) this.removeDriverModel(v);
     const model = new HumanoidModel(look);
-    model.setShadows(false);
+    model.setShadows(!!animateIn);
     model.root.position.copy(v.seat);
     v.body.add(model.root);
-    animateHumanoid(model, v.spec.twoWheel ? 'ride' : 'drive', 0, 1);
+    v.mount = animateIn ? 0 : 1; v.mountDir = 1; v.onDismounted = null;
+    animateDriver(v, model, 1);
     v.driverModel = model;
     return model;
   }
 
+  // Climb off / get out (mount 1 → 0), then call done() with the standing spot in world space.
+  dismount(v, done) {
+    if (!v.driverModel) { done?.(standSpot(v)); return; }
+    v.mountDir = -1; v.onDismounted = done;
+  }
+
   removeDriverModel(v) {
     if (v.driverModel) { v.body.remove(v.driverModel.root); v.driverModel.dispose(); v.driverModel = null; }
+    v.mountDir = 1; v.onDismounted = null;
   }
 
   remove(v) {
@@ -79,7 +134,14 @@ export class VehicleManager {
   update(dt) {
     for (const v of this.list) {
       v.update(dt, this.world);
-      if (v.driverModel) animateHumanoid(v.driverModel, v.spec.twoWheel ? 'ride' : 'drive', 0, dt, { steer: v.controls.steer });
+      if (v.driverModel) {
+        const dur = v.spec.twoWheel ? 0.95 : 1.1;
+        if (v.mountDir < 0) {
+          v.mount = Math.max(0, (v.mount ?? 1) - dt / dur);
+          if (v.mount <= 0) { const cb = v.onDismounted, spot = standSpot(v); this.removeDriverModel(v); cb?.(spot); continue; }
+        } else if (v.mount < 1) v.mount = Math.min(1, v.mount + dt / dur);
+        animateDriver(v, v.driverModel, dt);
+      }
     }
     this.collidePairs();
   }

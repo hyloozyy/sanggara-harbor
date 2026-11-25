@@ -73,6 +73,7 @@ export class PlayerController {
     if (input.hit('KeyR') && !b.vehicle) this.arsenal.startReload();
     this.syncHeldWeapon();
 
+    if (this.exiting) { b.updateVisual(dt); return; } // climbing out
     if (input.hit('KeyF')) { if (this.entering) this.entering = null; else if (b.vehicle) this.exitVehicle(game); else this.beginEnter(game); }
     if (b.vehicle) { this.drive(dt, input, game); return; }
     if (this.entering && this.updateEnter(dt, input, game)) return;
@@ -115,7 +116,8 @@ export class PlayerController {
 
   drive(dt, input, game) {
     const v = this.body.vehicle;
-    const throttle = input.axis('KeyS', 'KeyW');
+    // No pulling away until Raka has sat down.
+    const throttle = (v.mount ?? 1) < 0.8 ? 0 : input.axis('KeyS', 'KeyW');
     v.controls.throttle = throttle;
     v.controls.steer = -input.axis('KeyA', 'KeyD');
     v.controls.handbrake = input.down('Space');
@@ -173,25 +175,39 @@ export class PlayerController {
     b.aiming = false;
     b.mesh.visible = false;
     if (v.ai && v.ai.kind === 'traffic') v.ai.kind = 'stolen';
-    game.vehicles.seatDriver(v, PLAYER_LOOK);
+    game.vehicles.seatDriver(v, PLAYER_LOOK, { animateIn: true });
     events.emit('vehicle-entered', { vehicle: v, stolen: hadDriver || !v.ownedByPlayer, carjack: hadDriver });
   }
 
-  exitVehicle(game, bail = false) {
+  exitVehicle(game, bail = false, instant = false) {
     const b = this.body, v = b.vehicle;
     if (!v) return;
-    game.vehicles.removeDriverModel(v);
     v.driver = null;
     v.controls.throttle = 0; v.controls.steer = 0; v.controls.handbrake = !bail;
-    const side = v.spec.twoWheel ? 1.0 : v.spec.width / 2 + 0.7;
-    const rx = Math.cos(v.heading), rz = -Math.sin(v.heading);
-    b.pos.set(v.pos.x - rx * side, v.y + 0.1, v.pos.z - rz * side);
-    game.world.collision.resolveCircle(b.pos, 0.5);
-    b.heading = v.heading;
-    b.vel.set(v.vel.x * 0.5, 0, v.vel.z * 0.5);
-    if (bail) b.knock = 0.8;
-    else { this.pickT = 0.5; this.rising = true; } // step out of the seat and straighten up
     b.vehicle = null;
+    if (bail || instant || Math.abs(v.speed) > 6 || !v.driverModel) {
+      game.vehicles.removeDriverModel(v);
+      this.placeOutside(game, v, null, bail);
+      return;
+    }
+    // Climb off / step out (the seated model plays it), then Raka stands where it ended.
+    this.exiting = v;
+    game.vehicles.dismount(v, (spot) => { this.exiting = null; this.placeOutside(game, v, spot, false); });
+  }
+
+  placeOutside(game, v, spot, bail) {
+    const b = this.body;
+    if (spot) b.pos.set(spot.x, v.y + 0.02, spot.z);
+    else {
+      const side = v.spec.twoWheel ? 1.0 : v.spec.width / 2 + 0.7;
+      const rx = Math.cos(v.heading), rz = -Math.sin(v.heading);
+      b.pos.set(v.pos.x - rx * side, v.y + 0.1, v.pos.z - rz * side);
+    }
+    game.world.collision.resolveCircle(b.pos, 0.5);
+    b.heading = v.heading; b.lastHeading = v.heading;
+    b.vel.set(v.vel.x * 0.5, 0, v.vel.z * 0.5);
+    if (bail) b.knock = b.knockTotal = 1.1;
+    b.model.anim.fresh = true;  // start from the standing pose the dismount ended in
     b.mesh.visible = true;
     events.emit('vehicle-exited', { vehicle: v });
   }

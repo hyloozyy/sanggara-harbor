@@ -78,7 +78,8 @@ function scooterTemplate(spec) {
   parts.add(hug, 'trim', mat4(0, r, zr, 0, Math.PI / 2, Math.PI * 0.45));
   const tailGeo = lensGeo(roundBox(0.18, 0.05, 0.03, 0.012), mat4(0, 0.71, -0.89));
   parts.add(roundBox(0.18, 0.09, 0.012, 0.004), 'white', mat4(0, 0.58, -0.86, 0.3));
-  return { paint, parts, fPaint, fParts, headGeo, tailGeo, seat: new THREE.Vector3(0, 0.62, -0.3), wheel: { w: 0.1, rimRatio: 0.58, spokes: 5 } };
+  const rig = { grips: [[0.385, 1.04, zf - 0.39], [-0.385, 1.04, zf - 0.39]], pegs: [[0.12, 0.47, 0.16], [-0.12, 0.47, 0.16]], pivot: [0, r, zf], seatTop: 0.83, stepThrough: true };
+  return { paint, parts, fPaint, fParts, headGeo, tailGeo, rig, seat: new THREE.Vector3(0, 0.62, -0.3), wheel: { w: 0.1, rimRatio: 0.58, spokes: 5 } };
 }
 
 function sportTemplate(spec) {
@@ -137,7 +138,8 @@ function sportTemplate(spec) {
   const hug = new THREE.TorusGeometry(r + 0.025, 0.03, 5, 12, Math.PI * 0.45);
   parts.add(hug, 'trim', mat4(0, r, zr, 0, Math.PI / 2, Math.PI * 0.5));
   const tailGeo = lensGeo(roundBox(0.12, 0.035, 0.03, 0.012), mat4(0, 0.99, -0.99));
-  return { paint, parts, fPaint, fParts, headGeo, tailGeo, screen, seat: new THREE.Vector3(0, 0.66, -0.32), wheel: { w: 0.13, rimRatio: 0.66, spokes: spec.spokes ?? 3 } };
+  const rig = { grips: [[0.3, 0.9, zf - 0.39], [-0.3, 0.9, zf - 0.39]], pegs: [[0.17, 0.44, -0.2], [-0.17, 0.44, -0.2]], pivot: [0, r, zf], seatTop: 0.93, stepThrough: false };
+  return { paint, parts, fPaint, fParts, headGeo, tailGeo, screen, rig, seat: new THREE.Vector3(0, 0.66, -0.32), wheel: { w: 0.13, rimRatio: 0.66, spokes: spec.spokes ?? 3 } };
 }
 
 function bajajTemplate() {
@@ -174,7 +176,8 @@ function bajajTemplate() {
     return g;
   })();
   parts.add(roundBox(0.3, 0.1, 0.012, 0.004), 'white', mat4(0, 0.45, -1.2));
-  return { paint, parts, fPaint, fParts, headGeo, tailGeo, screen, seat: new THREE.Vector3(0, 0.82, 0.1), wheel: { w: 0.12, rimRatio: 0.55, spokes: 4, steel: true } };
+  const rig = { grips: [[0.33, 1.05, 0.43], [-0.33, 1.05, 0.43]], pegs: [[0.13, 0.42, 0.42], [-0.13, 0.42, 0.42]], pivot: [0, 0.24, 0.75], seatTop: 0.94, stepThrough: true, seated: true };
+  return { paint, parts, fPaint, fParts, headGeo, tailGeo, screen, rig, seat: new THREE.Vector3(0, 0.82, 0.1), wheel: { w: 0.12, rimRatio: 0.55, spokes: 4, steel: true } };
 }
 
 function getTemplate(spec) {
@@ -226,7 +229,7 @@ function assemble(spec, color, T) {
     head = add(spec.body === 'scooter' ? f.pivot : body, T.headGeo, assets.material('headlight'), false);
     wheelAt(0, -wb / 2, false);
   }
-  return { root, body, wheels, seat: T.seat.clone(), sirens: null, brakeMeshes: [tail], headMeshes: [head], wipers: [] };
+  return { root, body, wheels, seat: T.seat.clone(), sirens: null, brakeMeshes: [tail], headMeshes: [head], wipers: [], rig: T.rig, seatTop: T.rig?.seatTop };
 }
 
 export function buildTwoWheeler(spec, color) { return assemble(spec, color, getTemplate(spec)); }

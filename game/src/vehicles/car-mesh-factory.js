@@ -364,7 +364,7 @@ function buildTemplate(spec, lod) {
   const floorY = sSeat.bot + 0.1;
   const seatY = sSeat.bot + 0.16;
   const seatZ = zOf(seatU);
-  let steerGroup = null;
+  let steerGroup = null, steerGeo = null;
   if (hi) {
     const u0 = Math.max(-0.495, Math.min(g.dlo.r[0], g.dlo.r[1], lay.hasRear ? g.deck : 1, D.bed ? D.bed[1] + 0.02 : 1) - 0.01);
     const u1 = Math.min(0.495, g.cowl + 0.01);
@@ -439,11 +439,16 @@ function buildTemplate(spec, lod) {
     sw.position.set(-cabinW * 0.5, sSeat.belt + 0.04, seatZ + 0.48);
     sw.rotation.x = -0.42;
     sw.updateMatrix();
-    mp.add(torusGeo(0.18, 0.017, 6, 22), 'dash', sw.matrix.clone());
-    mp.add(roundBox(0.3, 0.035, 0.03, 0.012), 'dash', sw.matrix.clone());
-    mp.add(cylGeo(0.06, 0.06, 0.05, 12), 'dash', sw.matrix.clone().multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2)));
+    // The wheel itself (rim, spokes, hub) is its own small mesh so it can turn with the steering;
+    // the column stays in the dashboard.
+    const wl = new PartList();
+    wl.add(torusGeo(0.18, 0.017, 6, 22), 'dash');
+    wl.add(roundBox(0.3, 0.035, 0.03, 0.012), 'dash');
+    wl.add(roundBox(0.035, 0.15, 0.03, 0.012), 'dash', mat4(0, -0.08, 0));
+    wl.add(cylGeo(0.06, 0.06, 0.05, 12), 'dash', new THREE.Matrix4().makeRotationX(Math.PI / 2));
     mp.add(cylGeo(0.025, 0.025, 0.4, 8), 'dash', sw.matrix.clone().multiply(mat4(0, 0, 0.2, Math.PI / 2, 0, 0)));
     steerGroup = sw;
+    steerGeo = wl.build();
   }
 
   // ---------------- model extras
@@ -611,7 +616,9 @@ function buildTemplate(spec, lod) {
   return {
     shell, lamps, decals, wheels, equip, D, surf,
     seat: new THREE.Vector3(-cabinW * 0.48, seatY - 0.02, seatZ),
+    seatTop: seatY + 0.125,
     steer: steerGroup ? steerGroup.position.clone() : null,
+    steerWheel: steerGroup ? { geo: steerGeo, position: steerGroup.position.clone(), tilt: steerGroup.rotation.x, r: 0.18 } : null,
   };
 }
 
@@ -734,9 +741,22 @@ export function buildVehicleMesh(spec, color) {
     root.add(pivot);
     wheels.push({ pivot, spin, front: false, x: 0, z: -wb / 2 });
   }
+  // Steering wheel (drawn up close only).
+  let steering = null;
+  if (T0.steerWheel) {
+    const sw = T0.steerWheel;
+    const mount = new THREE.Group();
+    mount.position.copy(sw.position); mount.rotation.x = sw.tilt;
+    const spin = new THREE.Group();
+    const l = new THREE.LOD();
+    l.addLevel(new THREE.Mesh(sw.geo, multiMaterial()), 0);
+    l.addLevel(new THREE.Object3D(), LOD_FAR);
+    spin.add(l); mount.add(spin); body.add(mount);
+    steering = { spin, center: sw.position.clone(), tilt: sw.tilt, r: sw.r };
+  }
   return {
-    root, body, wheels, sirens, brakeMeshes: [tail], headMeshes: [headR, headL], wipers: [], steering: null,
-    seat: T0.seat.clone(),
+    root, body, wheels, sirens, brakeMeshes: [tail], headMeshes: [headR, headL], wipers: [], steering,
+    seat: T0.seat.clone(), seatTop: T0.seatTop,
   };
 }
 
