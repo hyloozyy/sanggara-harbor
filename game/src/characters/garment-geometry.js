@@ -84,21 +84,23 @@ export function addSkirt(b, P, length, flare = 1) {
     for (let j = 0; j <= cols; j++) {
       const u = j / cols, phi = (u - 0.5) * Math.PI * 2;
       let p;
-      if (y >= hipY) p = torsoPoint(P, y, phi, 0.009);
+      if (y >= hipY) p = torsoPoint(P, y, phi, 0.009 + 0.01 * smooth(1.0, hipY, y));
       else {
-        const h = torsoPoint(P, hipY, phi, 0.009);
-        const k = 1 + flare * (hipY - y) * (0.16 + 0.05 * Math.cos(phi * 2) ** 2);
+        const h = torsoPoint(P, hipY, phi, 0.019);
+        const k = 1 + flare * (hipY - y) * (0.2 + 0.06 * Math.cos(phi * 2) ** 2) + 0.06 * smooth(hipY, hipY - 0.2, y);
         // Soft folds in the hanging part.
         const fold = 1 + 0.025 * smooth(hipY, bottomY, y) * Math.sin(phi * 9 + 1.3);
         p = V(h.x * k * fold, y, h.z * k * fold + 0.004);
       }
       row.push(p); ur.push(regionUV('outer', u, 0.3 + 0.7 * (y - bottomY) / (top - bottomY)));
       // Cloth hangs between the legs: each vertex follows both thighs, mostly the nearer one.
+      // The front and back panels ride on skirt bones that the leading / trailing leg pushes;
+      // the sides follow the nearer thigh.
       const tt = smooth(0.98, bottomY + 0.05, y);
+      const cf = Math.cos(phi), fr = smooth(0.35, 0.85, cf), bk = smooth(-0.35, -0.85, cf), sd = 1 - fr - bk;
       const mixL = smooth(-0.13, 0.13, p.x);
-      const lw = tt * 0.74;
-      const shin = tt * smooth(0.5, 0.25, y) * 0.3;
-      wr.push([[B.hips, 1 - lw], [B.legL, (lw - shin) * mixL], [B.legR, (lw - shin) * (1 - mixL)], [B.shinL, shin * mixL], [B.shinR, shin * (1 - mixL)]]);
+      const lw = tt * 0.8;
+      wr.push([[B.hips, 1 - lw], [B.skirtF, lw * fr], [B.skirtB, lw * bk], [B.legL, lw * sd * mixL], [B.legR, lw * sd * (1 - mixL)]]);
     }
     pts.push(row); uvs.push(ur); ws.push(wr);
   }

@@ -39,6 +39,7 @@ export class Vehicle {
     this.steering = built.steering || null;   // turning steering wheel (cars)
     this.rig = built.rig || null;             // grips/pegs (two-wheelers, bajaj)
     this.seatTop = built.seatTop ?? null;
+    this.floorY = built.floorY ?? null;
     this.lean = 0;
     this.brakeMeshes = built.brakeMeshes;
     this.headMeshes = built.headMeshes;

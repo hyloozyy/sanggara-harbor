@@ -27,14 +27,14 @@ export const B = {
 {
   let i = 23;
   for (const side of ['L', 'R']) for (const f of FINGERS) { B[f + side + '1'] = i++; B[f + side + '2'] = i++; }
-  for (const k of ['browL', 'browR', 'cornerL', 'cornerR', 'eyeL', 'eyeR']) B[k] = i++;
+  for (const k of ['browL', 'browR', 'cornerL', 'cornerR', 'eyeL', 'eyeR', 'skirtF', 'skirtB']) B[k] = i++;
 }
 export const BONE_NAMES = Object.keys(B);
 const PARENT = {
   hips: 'root', spine: 'hips', chest: 'spine', neck: 'chest', head: 'neck', jaw: 'head', lidL: 'head', lidR: 'head',
   armL: 'chest', foreL: 'armL', handL: 'foreL', armR: 'chest', foreR: 'armR', handR: 'foreR',
   legL: 'hips', shinL: 'legL', footL: 'shinL', legR: 'hips', shinR: 'legR', footR: 'shinR', hairTail: 'head', mouth: 'head',
-  browL: 'head', browR: 'head', cornerL: 'head', cornerR: 'head', eyeL: 'head', eyeR: 'head',
+  browL: 'head', browR: 'head', cornerL: 'head', cornerR: 'head', eyeL: 'head', eyeR: 'head', skirtF: 'hips', skirtB: 'hips',
 };
 for (const side of ['L', 'R']) for (const f of FINGERS) { PARENT[f + side + '1'] = 'hand' + side; PARENT[f + side + '2'] = f + side + '1'; }
 export { PARENT };
@@ -195,7 +195,7 @@ export function bindJoints(P) {
     armR: [-P.shoulderX, 1.455, -0.01], foreR: [-P.shoulderX, 1.165, -0.012], handR: [-P.shoulderX, 0.915, 0],
     legL: [P.legX, 0.93, 0], shinL: [P.legX, 0.5, 0.005], footL: [P.legX, 0.085, -0.01],
     legR: [-P.legX, 0.93, 0], shinR: [-P.legX, 0.5, 0.005], footR: [-P.legX, 0.085, -0.01],
-    hairTail: [0, 1.765, -0.09],
+    hairTail: [0, 1.765, -0.09], skirtF: [0, 0.93, 0.02], skirtB: [0, 0.93, -0.02],
   };
   J.jaw = [0, H[1] - 0.028, H[2] - 0.012];
   J.mouth = [0, H[1] + F.ym, H[2] + F.mz + 0.004];

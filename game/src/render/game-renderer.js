@@ -1,5 +1,6 @@
 // Owns the WebGL renderer, the scene, the main camera, the dusk lighting rig, the sky and the
 // post-processing chain, and applies the graphics quality settings.
+import { VIEW } from '../characters/view-point.js';
 import * as THREE from 'three';
 import { PostProcessPipeline } from './post-process-pipeline.js';
 import { createSkyDome, bakeSkyEnvironment } from './sky-dome.js';
@@ -57,6 +58,7 @@ export class GameRenderer {
 
   // activeScene: an interior being drawn instead of the city.
   render(time) {
+    VIEW.x = this.camera.position.x; VIEW.y = this.camera.position.y; VIEW.z = this.camera.position.z; VIEW.set = true;
     if (this.activeScene) { this.post.render(this.activeScene, this.camera, time); return; }
     this.sky.position.copy(this.camera.position);
     this.sky.material.uniforms.time.value = time;

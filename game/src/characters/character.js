@@ -182,6 +182,7 @@ export class Character {
       drawT: this.drawT, reloadT: this.reloadT, recoil: this.recoil,
       reach: this.reach, reachLow: this.reachLow, reachArm: this.reachArm !== false,
       stagger: this.stagger, panic: this.panic, gesture: this.gesture, handTarget, listening: this.listening, sit: this.sit,
+      expression: this.expression || (this.panic || anim === 'hands-up' || anim === 'cower' ? 'fear' : this.flinch > 0 ? 'surprise' : ['wave', 'handshake', 'laugh', 'cheers'].includes(this.gesture?.kind) ? 'smile' : this.stagger > 0 ? 'frown' : null),
     });
     this.recoil = Math.max(0, (this.recoil || 0) - dt * 7);
     if (this.drawT != null && this.drawT < 1) this.drawT = Math.min(1, this.drawT + dt * 3.2);

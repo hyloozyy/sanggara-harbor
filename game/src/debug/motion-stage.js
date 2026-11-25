@@ -8,7 +8,7 @@ import { generateLook } from '../characters/character-generator.js';
 import { Vehicle } from '../vehicles/vehicle.js';
 import { VEHICLE_MODELS } from '../vehicles/vehicle-catalog.js';
 import { HumanoidModel } from '../characters/humanoid-model.js';
-import { animateDriver } from '../vehicles/vehicle-manager.js';
+import { animateDriver, animatePassenger, passengerSeat } from '../vehicles/vehicle-manager.js';
 import { buildWeaponMesh } from '../combat/weapon-meshes.js';
 
 const look = (seed, o = {}) => generateLook(seed, o.role || 'auto', o);
@@ -49,9 +49,17 @@ export function createMotionStage(scene, ox = 0, oz = 0) {
     actors[name] = { v, focus: () => ({ x: v.pos.x, y: 0.9, z: v.pos.z }) };
     return v;
   };
+  const addPassenger = (v, seed, role = 'auto') => {
+    const m = new HumanoidModel(look(seed, { role }));
+    v.passengerSeat = passengerSeat(v); m.root.position.copy(v.passengerSeat.pos); v.body.add(m.root); v.passengerModel = m;
+  };
   const sc = addVeh('scooter', 'bebek', -4, 14, 0, 107);
+  addPassenger(sc, 211, 'rider');
   const bk = addVeh('bike', 'kilat', 10, 16, 0, 118);
   const car = addVeh('car', 'lestari', 24, 14, 0, 129);
+  addPassenger(car, 223);
+  const bj = addVeh('bajaj', 'bajaj', 44, 14, 0, 167);
+  addPassenger(bj, 231);
   const mb = addVeh('mountBike', 'kilat', 30, 4, 0, 131);
   const ms = addVeh('mountScooter', 'bebek', 33, 4, 0, 142);
   const mc = addVeh('mountCar', 'kancil', 37, 4, 0, 153);
@@ -132,6 +140,7 @@ export function createMotionStage(scene, ox = 0, oz = 0) {
       v.speed = 0; v.angVel = 0;
       driveScripted(v, dt);
     }
+    { bj.speed = 5; bj.angVel = 0.3 * Math.sin(t * 0.7); driveScripted(bj, dt); }
     {
       car.speed = 4;
       car.angVel = 0.35 * Math.sin(t * 0.8);
@@ -148,6 +157,7 @@ export function createMotionStage(scene, ox = 0, oz = 0) {
     v.leanDt = dt;
     v.syncMesh();
     animateDriver(v, v.driverModel, dt);
+    if (v.passengerModel) animatePassenger(v, v.passengerModel, dt);
   }
   return { actors, people, vehicles, step, get time() { return t; } };
 }

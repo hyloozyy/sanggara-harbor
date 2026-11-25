@@ -16,6 +16,8 @@
 import * as THREE from 'three';
 import { damp, clamp } from '../core/math-utils.js';
 import { B } from './body-geometry.js';
+import { VIEW } from './view-point.js';
+const lodPos = new THREE.Vector3();
 
 const NB = 23;
 const TAU = Math.PI * 2;
@@ -80,6 +82,14 @@ export function animateHumanoid(m, state, speed, dt, extra = {}) {
   dt = Math.min(dt, 0.1);
   const A = m.anim;
   if (!A.cur) initState(m);
+  // Level of detail: the light body beyond ~16 m from the camera (with some hysteresis).
+  A.lodT = (A.lodT ?? Math.random() * 0.4) - dt;
+  if (A.lodT < 0 && m.setDetail && VIEW.set) {
+    A.lodT = 0.35 + Math.random() * 0.2;
+    m.root.getWorldPosition(lodPos);
+    const d = Math.hypot(lodPos.x - VIEW.x, lodPos.y - VIEW.y, lodPos.z - VIEW.z);
+    m.setDetail(d > (m.detail === 'far' ? 14 : 17) ? 'far' : 'near');
+  }
   A.breath = (A.breath || 0) + dt * (speed > 3 || state === 'flee' ? 3.0 : 1.25);
   A.idleShift = (A.idleShift || 0) + dt;
   faceUpdate(m, A, dt, extra);
@@ -90,6 +100,7 @@ export function animateHumanoid(m, state, speed, dt, extra = {}) {
   A.headFree = true;
 
   if (state === 'drive' || state === 'ride') seatedPose(m, A, state === 'ride', dt, extra);
+  else if (state === 'passenger') passengerPose(m, A, dt, extra);
   else if (state === 'dead') downPose(m, A, dt, extra);
   else {
     locomotion(m, A, state, speed, dt, extra); layers(m, A, state, dt, extra);
@@ -128,6 +139,7 @@ export function animateHumanoid(m, state, speed, dt, extra = {}) {
   }
 
   handPose(m, A, dt, state, extra);
+  skirtPose(m, A, dt);
 
   // Hair and ponytail: a damped spring lagging behind the head.
   const run = smooth(2.2, 4, A.speedS);
@@ -215,7 +227,7 @@ function locomotion(m, A, state, speedIn, dt, extra) {
     let [lx, lz] = f.planted ? toLocal(f) : [f.lx, f.lz];
     // Neutral stance spot and the gait's landing target.
     const nx = f.side * (0.1 + 0.015 * idle), nz = f.side * 0.025;
-    const reach = beta * C * 0.5;
+    const reach = beta * C * 0.5 * (1 - 0.3 * jog - 0.08 * sprint);   // runners land under the body
     const landX = f.side * width + ux * reach * 0.85, landZ = uz * reach + 0.03 * walk * uz;
     if (f.planted) {
       let lift0 = false;
@@ -351,7 +363,7 @@ function locomotion(m, A, state, speedIn, dt, extra) {
     A.arms[0].x -= 0.45 + Math.sin(t) * 0.25; A.arms[1].x -= 0.45 + Math.cos(t * 1.1) * 0.25;
     A.arms[0].z += 0.3; A.arms[1].z -= 0.3;
   }
-  A.armK = 11 + 16 * jog;
+  A.armK = 8 + 2 * walk + 14 * jog;   // softer at a walk: the arms lag and follow through
   A.wrist = [-0.16 - 0.15 * jog - dn * 0.08 * walk, -0.16 - 0.15 * jog + dn * 0.08 * walk];
 
   // Look direction: idle glances, look-at targets, the head leads turns.
@@ -822,12 +834,27 @@ function seatedPose(m, A, ride, dt, extra) {
     A.headYaw = steer * 0.3 + (extra.lookYaw || 0); A.headPitch = 0.05;
     A.headFree = true;
     A.ikLegT = 0;
+    A.ht[2] = lerp(stand[2], -0.07, seatK);          // buttocks back against the backrest
     // Legs: from standing (outside) swinging in, then forward to the pedals.
     const inK = smooth(0.55, 1, mount);
     T(A, B.legL, lerp(0, -1.4, seatK), lerp(0, 0, inK), lerp(0, 0.08, inK), 10);
     T(A, B.legR, lerp(0, -1.45, seatK), 0, lerp(0, -0.04, inK), 10);
     T(A, B.shinL, lerp(0.05, 1.25, seatK), 0, 0, 10); T(A, B.shinR, lerp(0.05, 1.3, seatK), 0, 0, 10);
     T(A, B.footL, lerp(0, 0.15, seatK), 0, 0, 10); T(A, B.footR, lerp(0, 0.05, seatK), 0, 0, 10);
+    // Seated in a car: feet placed by IK on the floor pedals (left on the footrest / clutch, right
+    // on the throttle), heels down, toes up; knees bend up under the dashboard.
+    if (rig?.wheel && rig.floor != null) {
+      const pk = smooth(0.75, 1, mount);
+      if (pk > 0.01) {
+        A.ikLegT = pk; A.ikLegRate = 9;
+        const hz = A.ht[2], fy = rig.floor + 0.085;
+        const reach = 0.8;
+        A.legT[0].set(0.15, fy + 0.03, hz + reach - 0.04);
+        A.legT[1].set(-0.13, fy + 0.02 + 0.015 * Math.max(0, extra.throttle || 0), hz + reach);
+        A.legPole[0].set(0.15, 1, 0.6); A.legPole[1].set(-0.1, 1, 0.6);
+        for (let s2 = 0; s2 < 2; s2++) { eu.set(-0.42, s2 === 0 ? 0.1 : -0.05, 0, 'YXZ'); A.footQ[s2].setFromEuler(eu); }
+      }
+    }
     if (rig?.wheel) {
       // Hands at ten-to-two on the rim, travelling round it with the steering.
       const w = rig.wheel, rot = (rig.wheelTurn ?? steer * 2.4);
@@ -993,6 +1020,7 @@ function handPose(m, A, dt, state, extra) {
   const relaxed = 0.46 + 0.16 * (A.jog || 0);
   const want = [relaxed, relaxed], spread = [0.05, 0.05], thumb = [0.3, 0.3];
   if (state === 'drive' || state === 'ride') { for (let s = 0; s < 2; s++) if (A.ikArmT[s] > 0.3) { want[s] = 0.82; thumb[s] = 0.75; } }
+  if (state === 'passenger') { want[0] = want[1] = extra.passenger?.hands ? 0.6 : 0.4; }
   if (m.heldItem && m.heldItem.visible !== false) { want[1] = 0.88; thumb[1] = 0.8; if (extra.aiming && extra.twoHanded) { want[0] = 0.8; thumb[0] = 0.7; } }
   if (state === 'punch' && (extra.melee || 'fists') === 'fists') { want[0] = want[1] = 1; thumb[0] = thumb[1] = 0.95; }
   if (m.props?.phone?.visible) { want[1] = 0.62; thumb[1] = 0.55; }
@@ -1030,3 +1058,50 @@ function handPose(m, A, dt, state, extra) {
   }
 }
 
+
+// Skirt panels: the front panel is pushed by whichever knee is ahead, the back one by the leg
+// behind; a lagging spring gives the cloth some follow-through.
+const vSk = new THREE.Vector3();
+function skirtPose(m, A, dt) {
+  if (!m.skirtF) return;
+  const ang = (leg, shin) => { vSk.copy(shin.position).applyQuaternion(leg.quaternion); return Math.atan2(vSk.z, -vSk.y); };
+  const aL = ang(m.legL, m.shinL), aR = ang(m.legR, m.shinR);
+  const f = Math.max(0, aL, aR) * 0.95, bb = Math.min(0, aL, aR) * 0.9;
+  A.skF = A.skF ?? f; A.skFv = A.skFv ?? 0; A.skB = A.skB ?? bb; A.skBv = A.skBv ?? 0;
+  const k = 90, c = 13;
+  A.skFv += ((f - A.skF) * k - A.skFv * c) * dt; A.skF += A.skFv * dt;
+  A.skBv += ((bb - A.skB) * k - A.skBv * c) * dt; A.skB += A.skBv * dt;
+  m.skirtF.rotation.x = -Math.max(f, A.skF);
+  m.skirtB.rotation.x = -Math.min(bb, A.skB);
+}
+
+// A passenger: seated (hips placed from the vehicle's seat), feet by IK on the pegs, the bench
+// floor or the car floor; hands at the rider's waist on a bike, otherwise resting on the
+// thighs; the head looks around at the street.
+function passengerPose(m, A, dt, extra) {
+  const P = extra.passenger;
+  A.speedS = 0; A.gaitOn = false;
+  A.feet[0].init = A.feet[1].init = false;
+  A.ht[0] = 0; A.ht[1] = P.hipY; A.ht[2] = P.hipZ;
+  A.hipK = 14; A.hipCap = null;
+  const t = A.idleShift || 0;
+  T(A, B.hips, P.lean * 0.6 + (P.car ? -0.12 : 0), 0, 0, 10);
+  T(A, B.spine, P.lean * 0.5 + 0.01 * Math.sin(A.breath || 0), 0, 0, 10);
+  T(A, B.chest, P.lean * 0.3, 0, 0, 10);
+  A.headYaw = Math.sin(t * 0.27 + A.seed) * 0.55 * (Math.sin(t * 0.11 + A.seed * 2) > -0.2 ? 1 : 0.2);
+  A.headPitch = 0.04 * Math.sin(t * 0.4);
+  A.headFree = true;
+  A.ikLegT = 1; A.ikLegRate = 10;
+  for (let s = 0; s < 2; s++) {
+    A.legT[s].set(P.feet[s][0], P.feet[s][1], P.feet[s][2]);
+    A.legPole[s].set(s === 0 ? 0.3 : -0.3, 0.8, 1);
+    eu.set(P.car ? -0.35 : 0.1, s === 0 ? 0.1 : -0.1, 0, 'YXZ'); A.footQ[s].setFromEuler(eu);
+    A.ikArmT[s] = 1;
+    if (P.hands) A.armT[s].set(P.hands[s][0], P.hands[s][1], P.hands[s][2]);
+    else A.armT[s].set(s === 0 ? 0.13 : -0.13, P.hipY + 0.09, P.hipZ + 0.3);
+    A.armPole[s].set(s === 0 ? 0.8 : -0.8, -0.6, -0.4);
+  }
+  A.ikArmRate = 8;
+  T(A, B.legL, -1.3, 0, 0.12, 10); T(A, B.legR, -1.3, 0, -0.12, 10); T(A, B.shinL, 1.3, 0, 0, 10); T(A, B.shinR, 1.3, 0, 0, 10);
+  T(A, B.armL, -0.5, 0, -0.1, 10); T(A, B.armR, -0.5, 0, 0.1, 10); T(A, B.foreL, -0.8, 0, 0, 10); T(A, B.foreR, -0.8, 0, 0, 10);
+}

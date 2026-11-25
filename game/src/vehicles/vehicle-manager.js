@@ -6,6 +6,7 @@ import { VEHICLE_MODELS } from './vehicle-catalog.js';
 import { HumanoidModel } from '../characters/humanoid-model.js';
 import { animateHumanoid } from '../characters/humanoid-animator.js';
 import { events } from '../core/event-bus.js';
+import { generateLook } from '../characters/character-generator.js';
 
 // Handles, pegs, the steering wheel and the ground in the seated person's model space.
 export function driverRig(v, model) {
@@ -13,6 +14,7 @@ export function driverRig(v, model) {
   const R = model.rigCache || (model.rigCache = { grips: [[0, 0, 0], [0, 0, 0]], pegs: [[0, 0, 0], [0, 0, 0]], stand: [0, 0, 0], ground: 0, hipY: 0, wheel: null, wheelTurn: 0, stepThrough: false });
   const toM = (x, y, z, out) => { out[0] = (x - seat.x) / sc; out[1] = (y - seat.y) / sc; out[2] = (z - seat.z) / sc; return out; };
   R.ground = -seat.y / sc;
+  R.floor = v.floorY != null ? (v.floorY - seat.y) / sc : null;   // cabin floor (cars)
   const seatTop = v.seatTop ?? (v.rig?.seatTop ?? seat.y + 0.1);
   R.hipY = v.rig ? (seatTop + 0.13 - seat.y) / sc : 0.04 / sc; // car seats are deep: the hips sink into the cushion
   const side = v.spec.twoWheel ? 0.62 : v.spec.width / 2 + 0.42;
@@ -45,6 +47,37 @@ export function standSpot(v) {
   return { x: v.pos.x + (-side) * c + fz * s, z: v.pos.z - (-side) * s + fz * c, heading: v.heading };
 }
 
+// Passengers: on the back of a scooter or sport bike (feet on the rear pegs, hands at the
+// rider's waist), on the bajaj's rear bench, or in a car's front passenger seat.
+export function passengerSeat(v) {
+  const k = v.modelKey || v.spec.key, s = v.seat;
+  if (k === 'bajaj') return { kind: 'bench', pos: new THREE.Vector3(0.12, s.y - 0.02, s.z - 0.62) };
+  if (v.spec.twoWheel) return { kind: 'pillion', pos: new THREE.Vector3(0, s.y + 0.035, s.z - 0.3) };
+  return { kind: 'car', pos: new THREE.Vector3(-s.x, s.y, s.z) };
+}
+
+export function animatePassenger(v, model, dt) {
+  const sc = model.root.scale.y || 1, ps = v.passengerSeat;
+  const seatTop = v.seatTop ?? (v.rig?.seatTop ?? v.seat.y + 0.1);
+  const P = model.passengerRig || (model.passengerRig = { feet: [[0, 0, 0], [0, 0, 0]], hands: null, hipY: 0, hipZ: 0, lean: 0, car: false });
+  const ground = -ps.pos.y / sc;
+  if (ps.kind === 'car') {
+    P.car = true; P.hipY = (seatTop + 0.13 - ps.pos.y) / sc; P.hipZ = -0.07; P.lean = -0.06;
+    const fy = (v.floorY != null ? (v.floorY - ps.pos.y) / sc : ground + 0.3) + 0.085;
+    P.feet[0] = [0.13, fy, 0.68]; P.feet[1] = [-0.11, fy, 0.66];
+    P.hands = null;
+  } else if (ps.kind === 'pillion') {
+    P.car = false; P.hipY = (seatTop + 0.15 - ps.pos.y) / sc; P.hipZ = 0; P.lean = 0.14;
+    P.feet[0] = [0.17, (0.43 - ps.pos.y) / sc, 0.1]; P.feet[1] = [-0.17, (0.43 - ps.pos.y) / sc, 0.1];
+    P.hands = [[0.15, P.hipY + 0.06, 0.24], [-0.15, P.hipY + 0.06, 0.24]];
+  } else {
+    P.car = false; P.hipY = (seatTop + 0.08 - ps.pos.y) / sc; P.hipZ = 0; P.lean = -0.05;
+    P.feet[0] = [0.13, ground + 0.36, 0.45]; P.feet[1] = [-0.11, ground + 0.36, 0.45];
+    P.hands = null;
+  }
+  animateHumanoid(model, 'passenger', 0, dt, { passenger: P, vSpeed: v.speed });
+}
+
 export function animateDriver(v, model, dt) {
   const rig = driverRig(v, model);
   const ride = v.spec.twoWheel || !!v.rig;
@@ -58,12 +91,13 @@ export class VehicleManager {
     this.list = [];
   }
 
-  spawn(modelKey, x, z, heading, { color, driverLook = null } = {}) {
+  spawn(modelKey, x, z, heading, { color, driverLook = null, passengerChance = 0 } = {}) {
     const spec = VEHICLE_MODELS[modelKey];
     const v = new Vehicle(spec, modelKey, color ?? spec.colors[Math.floor(Math.random() * spec.colors.length)], x, z, heading);
     this.scene.add(v.mesh);
     this.list.push(v);
     if (driverLook) this.seatDriver(v, driverLook);
+    if (driverLook && Math.random() < passengerChance) this.seatPassenger(v, generateLook(Math.floor(Math.random() * 1e9), v.spec.twoWheel && modelKey !== 'bajaj' ? 'rider' : 'auto'));
     return v;
   }
 
@@ -71,6 +105,7 @@ export class VehicleManager {
   // side (mount 0 → 1) instead of appearing seated.
   seatDriver(v, look, { animateIn = false } = {}) {
     if (v.driverModel) this.removeDriverModel(v);
+    if (animateIn) this.removePassenger(v);   // whoever rode along gets off when Raka takes over
     const model = new HumanoidModel(look);
     model.setShadows(!!animateIn);
     model.root.position.copy(v.seat);
@@ -79,6 +114,22 @@ export class VehicleManager {
     animateDriver(v, model, 1);
     v.driverModel = model;
     return model;
+  }
+
+  seatPassenger(v, look) {
+    this.removePassenger(v);
+    const model = new HumanoidModel(look);
+    model.setShadows(false);
+    v.passengerSeat = passengerSeat(v);
+    model.root.position.copy(v.passengerSeat.pos);
+    v.body.add(model.root);
+    v.passengerModel = model;
+    animatePassenger(v, model, 1);
+    return model;
+  }
+
+  removePassenger(v) {
+    if (v.passengerModel) { v.body.remove(v.passengerModel.root); v.passengerModel.dispose(); v.passengerModel = null; }
   }
 
   // Climb off / get out (mount 1 → 0), then call done() with the standing spot in world space.
@@ -96,6 +147,7 @@ export class VehicleManager {
 
   remove(v) {
     this.removeDriverModel(v);
+    this.removePassenger(v);
     this.scene.remove(v.mesh);
     v.dispose?.();
     const i = this.list.indexOf(v);
@@ -144,6 +196,7 @@ export class VehicleManager {
         } else if (v.mount < 1) v.mount = Math.min(1, v.mount + dt / dur);
         animateDriver(v, v.driverModel, dt);
       }
+      if (v.passengerModel) animatePassenger(v, v.passengerModel, dt);
     }
     this.collidePairs();
   }

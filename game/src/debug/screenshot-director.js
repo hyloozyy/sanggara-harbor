@@ -479,20 +479,42 @@ const SCENES = {
     await finish(s, gfx);
   },
 
-  // A line-up of townspeople (for checking the character models).
-  async people(session, gfx) {
-    const s = session;
+  // People close-ups (?shot=people): a line-up of generated townspeople (and Raka) on Jl. Bandar.
+  // &part=face|head|body|hands|feet frames them close, &who=<i> picks one (default: a wide
+  // line-up), &talk=1 makes them speak, &expr=smile|frown|surprise|fear, &roles=a,b,c, &seed=.
+  async people(session, gfx, ctx) {
+    const s = session, p = ctx?.params;
     s.hud.show(false);
-    for (let i = 0; i < 8; i++) {
-      const p = s.peds.spawn(-40, 87, 0, 400);
-      if (!p) continue;
-      p.pos.set(-46 + i * 1.3, 0.16, 87.5); p.ai.mode = 'idle'; p.anim = i % 3 ? 'idle' : 'walk'; p.heading = 0.3;
-      p.updateVisual(0.5); p.updateVisual(0.5);
+    for (const v of [...s.vehicles.list]) if (Math.hypot(v.pos.x + 57, v.pos.z - 84) < 30) s.vehicles.remove(v);
+    for (const q of [...s.peds.list]) s.peds.remove(q);
+    s.peds.target = 0;
+    const roles = (p?.get('roles') || 'auto,auto,market,worker,police,auto,gang,auto').split(',');
+    const seed0 = Number(p?.get('seed') || 9100);
+    const X0 = -60, Z0 = 86.6, people = [];
+    roles.forEach((role, i) => {
+      const c = new Character(generateLook(seed0 + i * 53, role), X0 + i * 0.85, Z0, { atlasSize: 512 });
+      c.heading = Math.PI + 0.12 - i * 0.03; c.anim = 'idle'; c.pos.y = 0.16;
+      if (p?.get('expr')) c.expression = p.get('expr');
+      s.scene.add(c.mesh); people.push(c);
+    });
+    s.player.body.pos.set(X0 - 1.0, 0.16, Z0); s.player.body.heading = Math.PI + 0.2;
+    for (let k = 0; k < 90; k++) {
+      for (const c of people) { if (p?.get('talk')) c.talk = Math.max(0, Math.sin(k * 0.9)) * 0.9; c.pos.y = 0.16; c.updateVisual(DT, 0); }
+      s.player.body.updateVisual(DT, 0);
     }
-    s.player.body.pos.set(-36, 0.16, 87.5); s.player.body.heading = -0.4; s.player.body.updateVisual(0.1);
-    s.cameraRig.override = { x: -41, y: 1.9, z: 93.5, tx: -41, ty: 1.0, tz: 87.5, fov: 50 };
+    const PART = { face: [1.64, 0.62, 24], head: [1.6, 0.95, 26], body: [1.0, 3.0, 34], hands: [0.88, 0.75, 30], feet: [0.12, 1.0, 30] };
+    const part = PART[p?.get('part')];
+    const who = p?.has('who') ? people[Number(p.get('who')) % people.length] : null;
+    if (part && who) {
+      const ang = who.heading + (Number(p.get('angle') || 20) * Math.PI) / 180;
+      const fy = who.pos.y + part[0];
+      s.cameraRig.override = { x: who.pos.x + Math.sin(ang) * part[1], y: fy + 0.02, z: who.pos.z + Math.cos(ang) * part[1], tx: who.pos.x, ty: fy, tz: who.pos.z, fov: part[2] };
+    } else {
+      const cx = X0 + (people.length - 1) * 0.42;
+      s.cameraRig.override = { x: cx, y: 1.7, z: Z0 - 5.4, tx: cx, ty: 1.0, tz: Z0, fov: 40 };
+    }
     s.cameraRig.update(DT, s.player, s.input);
-    s.gfx.lighting.follow(-41, 87);
+    s.gfx.lighting.follow(X0 + 3, Z0);
     await finish(s, gfx);
   },
 

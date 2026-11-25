@@ -436,7 +436,7 @@ function buildTemplate(spec, lod) {
     mp.add(roundBox(sd.wt * 1.85, 0.2, 0.42, 0.08), 'dash', mat4(0, dashTop - 0.1, dashZ, 0.1));
     mp.add(roundBox(0.18, 0.2, 0.62, 0.05), 'dash', mat4(0, floorY + 0.12, seatZ + 0.25));
     const sw = new THREE.Group();
-    sw.position.set(-cabinW * 0.5, sSeat.belt + 0.04, seatZ + 0.48);
+    sw.position.set(-cabinW * 0.5, sSeat.belt + 0.02, seatZ + 0.39);   // within a bent-elbow reach of the driver
     sw.rotation.x = -0.42;
     sw.updateMatrix();
     // The wheel itself (rim, spokes, hub) is its own small mesh so it can turn with the steering;
@@ -616,7 +616,7 @@ function buildTemplate(spec, lod) {
   return {
     shell, lamps, decals, wheels, equip, D, surf,
     seat: new THREE.Vector3(-cabinW * 0.48, seatY - 0.02, seatZ),
-    seatTop: seatY + 0.125,
+    seatTop: seatY + 0.125, floorY,
     steer: steerGroup ? steerGroup.position.clone() : null,
     steerWheel: steerGroup ? { geo: steerGeo, position: steerGroup.position.clone(), tilt: steerGroup.rotation.x, r: 0.18 } : null,
   };
@@ -756,7 +756,7 @@ export function buildVehicleMesh(spec, color) {
   }
   return {
     root, body, wheels, sirens, brakeMeshes: [tail], headMeshes: [headR, headL], wipers: [], steering,
-    seat: T0.seat.clone(), seatTop: T0.seatTop,
+    seat: T0.seat.clone(), seatTop: T0.seatTop, floorY: T0.floorY,
   };
 }
 

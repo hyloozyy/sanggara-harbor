@@ -39,7 +39,7 @@ export class TrafficSystem {
     const L = laneLine(from, to);
     const x = L.ax + (L.bx - L.ax) * t, z = L.az + (L.bz - L.az) * t;
     const key = modelKey || rng.pick(TRAFFIC_MIX);
-    const v = this.vehicles.spawn(key, x, z, Math.atan2(L.dx, L.dz), { driverLook: randomLook(rng, VEHICLE_MODELS[key]?.twoWheel ? { role: 'rider' } : {}) });
+    const v = this.vehicles.spawn(key, x, z, Math.atan2(L.dx, L.dz), { driverLook: randomLook(rng, VEHICLE_MODELS[key]?.twoWheel ? { role: 'rider' } : {}), passengerChance: VEHICLE_MODELS[key]?.twoWheel ? 0.32 : 0.22 });
     v.ai = { kind: 'traffic', from, to, panic: 0, cruise: CRUISE * rng.range(0.85, 1.12), honk: 0 };
     v.vel.set(L.dx * 8, 0, L.dz * 8);
     return v;
