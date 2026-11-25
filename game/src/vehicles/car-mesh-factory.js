@@ -50,7 +50,7 @@ function materials() {
     angkotStripe: decal(label([['KOTA LAMA · PASAR IKAN · 04', 0.5, 0.5]], 'rgba(255,255,255,0.92)', '#1b1b1b', 1024, 64)),
     truck: decal(label([['KERBAU EXPRESS', 0.36, 0.42], ['logistik pelabuhan · sejak 1987', 0.12, 0.66, 'normal']], null, '#b02a1a', 1024, 256, { stripes: [['rgba(28,74,138,0.95)', 0.8, 0.9]] })),
     taxiSign: (() => { const t = label([['TAXI', 0.62, 0.52]], '#f2c230', '#1a1a1a', 256, 96); return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.3, roughness: 0.4 }); })(),
-    route: (() => { const t = label([['04  KOTA LAMA - PASAR IKAN', 0.48, 0.5]], '#101010', '#ffd24a', 512, 96); return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.1 }); })(),
+    route: (() => { const t = label([['04  KOTA LAMA - PASAR IKAN', 0.36, 0.52]], '#101010', '#ffd24a', 640, 96); return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 1.1 }); })(),
     lightbarClear: new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, transparent: true, opacity: 0.25, depthWrite: false }),
   };
   return M;
@@ -194,8 +194,8 @@ function buildTemplate(spec, lod) {
     }
     // Windscreen and rear glass black frit bands.
     const across = (u0, u1) => [[u0, KV.rail], [u1, KV.rail], [u1, K], [u1, 2 * K - KV.rail], [u0, 2 * K - KV.rail], [u0, K]];
-    addRaw(mp, ribbon(surf, across(g.cowl, g.roofF), 0.045, 0.0025, { closed: true, mirror: false }), 'gloss');
-    if (lay.hasRear) addRaw(mp, ribbon(surf, across(g.deck, g.roofR), 0.04, 0.0025, { closed: true, mirror: false }), 'gloss');
+    addRaw(mp, ribbon(surf, across(Math.min(g.cowl, 0.5 - 0.004), g.roofF), 0.045, 0.0025, { closed: true, mirror: false }), 'gloss');
+    if (lay.hasRear) addRaw(mp, ribbon(surf, across(Math.max(g.deck, -0.5 + 0.004), g.roofR), 0.04, 0.0025, { closed: true, mirror: false }), 'gloss');
     // A-pillars dark between the windscreen and the side glass.
     addRaw(mp, patch(surf, (v) => g.roofF, (v) => dF(v) + 0.003, KV.win1, KV.rail + 0.15, 0.0018, { nu: 3, nv: 2 }), 'gloss');
   }
@@ -319,13 +319,18 @@ function buildTemplate(spec, lod) {
     addRaw(mp, endQuad(surf, [[0.8 * D.hw, y + 0.06], [0.92 * D.hw, y + 0.06], [0.92 * D.hw, y + 0.03], [0.8 * D.hw, y + 0.03]], -1, 0.006, { nx: 2, ny: 1 }), 'redLens');
   }
   for (const ex of D.exhaust || []) {
-    const x = ex * D.hw, y = (D.diffuser ?? 0.34 * D.ky) - 0.02;
-    const z = rearZ(x, y + 0.03) + 0.02;
+    const x = ex * D.hw, y = Math.max((D.diffuser ?? 0.34 * D.ky) - 0.02, st(-0.49).bot - 0.03);
+    const z = Math.max(rearZ(x, y + 0.06), rearZ(x, y + 0.12)) + 0.04;
     const r = D.exhaustBig ? 0.045 : 0.034;
     mp.add(cylGeo(r, r, 0.1, hi ? 14 : 8, true), 'exhaust', mat4(x, y, z - 0.03, Math.PI / 2, 0, 0));
     mp.add(cylGeo(r * 0.8, r * 0.8, 0.012, hi ? 14 : 8), 'gloss', mat4(x, y, z - 0.01, Math.PI / 2, 0, 0));
   }
 
+  if (D.rearBumper) {
+    const y = D.rearBumper * D.ky - 0.08, z = rearZ(0, y + 0.1);
+    mp.add(roundBox(W * 0.94, 0.13, 0.16, 0.03), 'steel', mat4(0, y, z - 0.02));
+    mp.add(roundBox(W * 0.3, 0.02, 0.1, 0.008), 'trim', mat4(0, y + 0.068, z - 0.05));
+  }
   // ---------------- wheel arches: liners (and black cladding for SUVs)
   const tx = W / 2 - tw / 2 - 0.035;
   for (const a of D.arches) for (const side of [1, -1]) {

@@ -40,14 +40,25 @@ changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pau
   normals), PMREM reflections baked from a procedural dusk sky, low warm sun with soft shadows that
   follow the player, fog, hand-written HDR bloom and ACES grade, instanced props, chunked merged
   buildings for culling.
-- **Vehicles** (parked ones are stealable too): 16 models, each with its own lofted body design and
+- **Vehicles** (parked ones are stealable too): 16 models, each with its own body design and
   handling (Lestari sedan, Sentosa executive saloon, Kancil hatchback, Garuda SUV, Banteng pickup,
   Angkot Merpati minibus, Kerbau box truck, Rajawali GT coupe, Macan V8 muscle car, Ombak taxi MPV,
-  police interceptor, tactical van, ambulance, Bebek scooter, Kilat sport bike, Bajaj three-wheeler)
-  with smooth bodies, glass cabins, steering/spinning wheels, glowing lights, sirens, contact shadows, a real
-  headlight beam on the player's car. Arcade physics with weight transfer, grip-limited cornering,
-  handbrake drifts, tyre smoke, collisions, dents in the bodywork, broken headlights, smoke, fire
-  and explosions.
+  police interceptor, tactical van, ambulance, Bebek scooter, Kilat sport bike, Bajaj three-wheeler).
+  Bodies are smooth parametric surfaces (`vehicles/car-body.js`): stations along the car with
+  monotone-cubic interpolation, 14 named key points per section on a centripetal spline, rounded
+  domed nose and tail, true-circle wheel arches with flared fenders. The surface is one structured
+  grid whose column lines lean with the window and pillar edges, so glass, pillars and the pickup
+  bed are exact cells (no jagged edges). Lamps, grilles, intakes and plates are outlines projected
+  onto the nose and tail; frames, seams and wipers are ribbons on the surface
+  (`car-surface-tools.js`). Clearcoat factory paints (solid, metallic flake, pearl) in
+  `car-paint.js`; tinted glass with a headliner, seats, dashboard and steering wheel behind it;
+  projector headlamps with LED strips, tail lamps that brighten under braking; treaded tyres on
+  multi-spoke alloys (or steelies) with discs and calipers. Each model is built once per level of
+  detail (full / far, switch at 30 m) and shared; every static part uses one vertex-coloured
+  material (`car-parts.js`), so a car is about a dozen draw calls. Dents copy the body geometry
+  for that car only. Sirens, a headlight beam on the player's car, contact shadows. Arcade physics
+  with weight transfer, grip-limited cornering, handbrake drifts, tyre smoke, collisions, dents,
+  broken headlights, smoke, fire and explosions.
 - **Character animation**: one continuous gait blended by a smoothed speed (idle, walk, jog,
   sprint) with stride-matched foot planting, pelvis bob/sway/twist, counter-rotating shoulders,
   arm swing and relaxed elbows; idle breathing, weight shifts and glances; a tucked jump pose and a
@@ -112,7 +123,11 @@ changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pau
 which opens the game with the `?shot=cover|combat|drive|menu` scenes of
 `game/src/debug/screenshot-director.js`; those stage a moment with the game's own systems and
 simulate it on a fixed time step. `?shot=stress` exercises every mission and system and logs;
-`?shot=garage`, `?shot=weapons` and `?shot=characters` line up every vehicle, weapon and person.
+`?shot=garage`, `?shot=weapons` and `?shot=characters` line up every vehicle, weapon and person
+(`?shot=garage&close=<model>&angle=<deg>&color=<n>` frames one vehicle in the street).
+`game/debug/cars.html` is a vehicle lab with only the cars on a lot, in the game's renderer
+(`?view=lineup|sheet|close&model=..&angle=..`, `&side=1|top=1|front=1`, `&only=paint|glass|multi`);
+`node tools/carshot.mjs "<query>" out.png` renders it in about 20 s.
 `tools/touchtest.mjs` plays the game on a phone-sized touch viewport with real touch events (CDP)
 and checks every on-screen control: stick, camera drag, jump/sprint, punch, D-pad weapons, aim and
 shoot, reload, enter/drive/leave a car, map, pause menu, layout editor (drag, reset, save) and TALK.

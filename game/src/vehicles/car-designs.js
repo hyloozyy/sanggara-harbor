@@ -10,7 +10,8 @@
 // metres before scaling) projected onto the nose or tail; quads list top-inner, top-outer,
 // bottom-outer, bottom-inner (right-hand lamp; mirrored for the left).
 
-const S = (rows) => rows.map(([z, w, bot, belt, top, wt, bulge]) => ({ z, w, bot, belt, top, wt, bulge }));
+// An optional 8th value dips the middle of the bonnet below the fenders (sports cars).
+const S = (rows) => rows.map(([z, w, bot, belt, top, wt, bulge, dip]) => ({ z, w, bot, belt, top, wt, bulge, dip }));
 
 export const CAR_DESIGNS = {
   // Lestari: mid-size four-door family sedan with a fastback-ish roof and slim swept lamps.
@@ -134,8 +135,8 @@ export const CAR_DESIGNS = {
     stations: S([
       [-0.5, 0.86, 0.33, 0.72, 0.72, 0.62], [-0.47, 0.93, 0.25, 0.85, 0.86, 0.72], [-0.38, 0.97, 0.21, 0.88, 0.9, 0.7],
       [-0.26, 0.97, 0.2, 0.85, 0.98, 0.58], [-0.14, 0.95, 0.2, 0.8, 1.12, 0.6], [0.0, 0.94, 0.2, 0.78, 1.18, 0.62],
-      [0.1, 0.94, 0.2, 0.76, 1.03, 0.68], [0.2, 0.95, 0.2, 0.72, 0.79, 0.8], [0.32, 0.95, 0.2, 0.66, 0.68, 0.84],
-      [0.43, 0.92, 0.21, 0.58, 0.59, 0.82], [0.485, 0.86, 0.23, 0.5, 0.5, 0.74], [0.5, 0.8, 0.27, 0.44, 0.44, 0.66],
+      [0.1, 0.94, 0.2, 0.78, 1.03, 0.68], [0.2, 0.95, 0.2, 0.79, 0.81, 0.8, 0.03, 0.06], [0.32, 0.95, 0.2, 0.78, 0.79, 0.84, 0.03, 0.1],
+      [0.43, 0.92, 0.21, 0.66, 0.67, 0.82, 0.03, 0.07], [0.485, 0.86, 0.23, 0.53, 0.53, 0.74, 0.03, 0.03], [0.5, 0.8, 0.27, 0.46, 0.46, 0.66],
     ]),
     rNose: 0.05, rTail: 0.05, flare: 0.04,
     glass: { cowl: 0.2, roofF: 0.02, roofR: -0.13, deck: -0.3, dlo: { f: [0.165, 0.035], r: [-0.17, -0.11] }, pillars: [] },

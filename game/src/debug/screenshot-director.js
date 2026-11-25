@@ -371,6 +371,7 @@ const SCENES = {
     const p = ctx?.params;
     const close = p?.get('close');
     const colorIdx = Number(p?.get('color') || 0);
+    // Without &color the line-up mixes each model's factory colours.
     const keys = close ? [close] : Object.keys(VEHICLE_MODELS);
     for (const v of [...s.vehicles.list]) if (Math.abs(v.pos.z - 160) < 50 && Math.abs(v.pos.x) < 90) s.vehicles.remove(v);
     for (const ped of [...s.peds.list]) if (Math.abs(ped.pos.z - 160) < 40 && Math.abs(ped.pos.x) < 60) s.peds.remove(ped);
@@ -378,8 +379,8 @@ const SCENES = {
     keys.forEach((k, i) => {
       const spec = VEHICLE_MODELS[k];
       const row = i % 2, col = Math.floor(i / 2);
-      const x = close ? 0 : -27 + col * 6.6 + row * 3.3, z = close ? 158.5 : 156.8 + row * 5.2;
-      const v = s.vehicles.spawn(k, x, z, close ? Math.PI / 2 : Math.PI / 2 + 0.62, { color: spec.colors[colorIdx % spec.colors.length] });
+      const x = close ? 0 : -19 + col * 5.4 + row * 2.7, z = close ? 158.5 : 156.9 + row * 5.6;
+      const v = s.vehicles.spawn(k, x, z, close ? Math.PI / 2 : -Math.PI / 2 + (row ? -0.62 : 0.62), { color: spec.colors[(p?.get('color') != null ? colorIdx : i * 2 + 1) % spec.colors.length] });
       v.ai = { kind: 'parked' };
       if (p?.get('brake') === '1') v.braking = true;
       v.syncMesh();
@@ -391,10 +392,10 @@ const SCENES = {
       const d = Number(p.get('dist') || Math.max(4.2, v.spec.length * 1.25));
       s.cameraRig.override = { x: v.pos.x + Math.sin(a) * d, y: Number(p.get('h') || 1.45), z: v.pos.z + Math.cos(a) * d, tx: v.pos.x, ty: v.spec.height * 0.42, tz: v.pos.z, fov: 42 };
     } else {
-      s.cameraRig.override = { x: 0.5, y: 6.2, z: 144.5, tx: -0.5, ty: 0.6, tz: 159.5, fov: 64 };
+      s.cameraRig.override = { x: -33, y: 9.5, z: 159.7, tx: 3, ty: -1.2, tz: 159.7, fov: 46 };
     }
     s.cameraRig.update(DT, s.player, s.input);
-    s.gfx.lighting.follow(0, 159);
+    s.gfx.lighting.follow(close ? 0 : 4, 159);
     await finish(s, gfx);
   },
 

@@ -39,7 +39,7 @@ function pchip(xs, ys, ms, x) {
   return (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * h * ms[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * h * ms[i + 1];
 }
 
-const FIELDS = ['w', 'bot', 'belt', 'top', 'wt', 'bulge'];
+const FIELDS = ['w', 'bot', 'belt', 'top', 'wt', 'bulge', 'dip'];
 
 // ------------------------------------------------------------------ the surface
 export class BodySurface {
@@ -109,8 +109,8 @@ export class BodySurface {
       [gb + (wt - gb) * 0.14, belt + cy + (C - cy) * 0.1],
       [gb + (wt - gb) * 0.9, belt + cy + (C - cy) * 0.9],
       [wt - 0.002, belt + C * 0.975],
-      [wt * 0.84, top + crown * 0.55],
-      [0, top + crown],
+      [wt * 0.84, top + crown * 0.55 - (s.dip ?? 0) * 0.45],
+      [0, top + crown - (s.dip ?? 0)],
     ];
   }
 
