@@ -59,7 +59,10 @@ export class Hud {
     this.banner.show(success ? 'activity-ok' : 'activity-bad', { title, sub: '', detail: `<span class="eb-small">${detail}</span>`, seconds: 4 });
   }
 
-  wantedUp(level, reason) { this.banner.wantedUp(level, reason); }
+  wantedUp(level, reason) {
+    if (this.banner.kind) this.notify(`${'★'.repeat(level)}  ${reason}`, 'police'); // a big banner is up
+    else this.banner.wantedUp(level, reason);
+  }
 
   damageFlash(amount) {
     this.el['damage-flash'].style.boxShadow = `inset 0 0 160px rgba(220,0,0,${Math.min(0.8, amount / 40)})`;
