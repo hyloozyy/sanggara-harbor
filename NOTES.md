@@ -169,6 +169,27 @@ changes sliders, options and toggles (same with arrow keys or WASD + Enter). Pau
   rain drumming on the roof in a car; six radio stations (dangdut, lo-fi, keroncong, funky kota,
   synthwave, news-talk with babbling hosts) that duck under dialogue; UI clicks, stingers, money;
   master / music / effects / voice volume sliders.
+- **Typography** (`game/fonts/`, `css/fonts.css`, `src/ui/fonts.js`): four SIL OFL families bundled as
+  local files with their licences — Bebas Neue (titles, banners, district and speaker names),
+  Barlow (HUD, menus, subtitles, dialogue), Barlow Condensed (buttons, labels, map text) and Saira
+  Stencil One (money, ammo, speedometer, stats). Canvases (minimap, city map, speedometer) use the
+  same faces; `loadFonts()` loads them before the first frame.
+- **Event banners** (`src/ui/event-banner.js`, `css/banners.css`): WASTED / TERBUNUH (the world
+  drops to 0.28x speed and eases back, greyscale grade, red vignette, fade to black before the
+  hospital), BUSTED / DITANGKAP (desaturated, blue-red siren glow), MISSION PASSED (gold light
+  sweep, reward in stencil numbers) / MISSION FAILED, mission title cards, activity results and
+  rank-ups, a WANTED strip with stars stamping in, a district title when crossing into a new
+  district. Zoom/blur-in, letter-spacing settle, dark band; the grade is a CSS filter on the canvas.
+- **Dialogue box** (`src/ui/dialogue-box.js`, `src/ui/portrait-renderer.js`): every spoken line shows
+  at the bottom with the speaker's portrait, name and typewriter text. Portraits are rendered from
+  the speaker's own 3D model when they first speak in a conversation (the character is lifted
+  into a small studio scene for one frame: key, fill and rim lights, 4x MSAA HDR target, ACES
+  grade, read back into a 256² canvas). Townspeople and cast speak from the left, Raka from the
+  right, the listener waits dimmed on the other side; phone callers are built once from their
+  cast look, the police radio gets an icon. Phone landscape puts the box low between the stick
+  and the buttons, phone portrait above the controller. `node tools/uishot.mjs <prefix> <w> <h>
+  [touch]` plays the game headless and screenshots title, conversation, phone call, MISSION
+  PASSED, district title, WASTED and BUSTED (~15-25 min on this box).
 - **UI**: title screen with briefing and chapter list, pause with stats, settings (quality,
   volumes, sensitivity), save/load in localStorage with autosave; HUD with rotating minimap,
   objective marker, mission panel, police unit list, stars, money, rank bar, weapon slots, crew,

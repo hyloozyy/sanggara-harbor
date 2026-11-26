@@ -124,17 +124,20 @@ body.grade-wasted #hud::after { background: radial-gradient(ellipse at center, t
 }
 @media (max-height: 500px) and (orientation: landscape) {
   /* between the stick and the face buttons, low on the screen */
-  #dialogue-box { width: min(560px, 62vw); bottom: 8px; }
+  #dialogue-box { width: min(560px, 62vw); bottom: 34px; }
+  #talk-choices { bottom: 40px; min-width: 260px; gap: 3px; }
+  #talk-choices button { font-size: 14px; padding: 5px 12px; }
   .dlg-face { width: 74px; height: 74px; }
   .dlg-card { min-height: 64px; padding: 6px 16px 8px; }
   .dlg-name { font-size: 19px; }
   .dlg-text { font-size: 14px; line-height: 1.3; }
-  #event-banner .eb-word { font-size: clamp(54px, 13vh, 96px); }
+  #event-banner .eb-word { font-size: clamp(64px, 21vh, 112px); }
   #event-strip.es-district { bottom: 30%; }
 }
 @media (max-width: 820px) and (orientation: portrait) {
   /* above the on-screen controller */
   #dialogue-box { width: calc(100vw - 16px); bottom: auto; top: 46%; }
+  #talk-choices { bottom: auto; top: 44%; width: calc(100vw - 32px); min-width: 0; }
   .dlg-face { width: 78px; height: 78px; }
   .dlg-face:not(.active) { width: 0; opacity: 0; margin: 0; }
   .dlg-card { min-height: 74px; padding: 7px 14px 9px; }
